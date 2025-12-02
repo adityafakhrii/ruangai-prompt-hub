@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchViralPromptsWithCreator, PromptWithCreator } from "@/lib/promptQueries";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PromptCard from "@/components/PromptCard";
@@ -9,24 +10,21 @@ import PromptDetailModal from "@/components/PromptDetailModal";
 import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
 
-interface Prompt {
-  id: string;
-  title: string;
-  category: string;
-  prompt_text: string;
-  full_prompt: string;
-  image_url: string | null;
-  copy_count: number;
-}
-
 const ViralPrompts = () => {
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [prompts, setPrompts] = useState<PromptWithCreator[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPrompt, setSelectedPrompt] = useState<any>(null);
+  const [selectedPrompt, setSelectedPrompt] = useState<{
+    title: string;
+    category: string;
+    prompt: string;
+    fullPrompt: string;
+    imageUrl: string;
+    creatorName: string;
+  } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [copyCount, setCopyCount] = useState(0);
-  
+
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -36,12 +34,8 @@ const ViralPrompts = () => {
 
   const fetchViralPrompts = async () => {
     setLoading(true);
-    
-    const { data, error } = await supabase
-      .from("prompts")
-      .select("*")
-      .eq("is_viral", true)
-      .order("copy_count", { ascending: false });
+
+    const { data, error } = await fetchViralPromptsWithCreator(100);
 
     if (error) {
       toast({
@@ -58,7 +52,7 @@ const ViralPrompts = () => {
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     navigator.clipboard.writeText(fullPrompt);
-    
+
     // Increment copy count in database
     const prompt = prompts.find(p => p.id === promptId);
     if (prompt) {
@@ -83,13 +77,14 @@ const ViralPrompts = () => {
     }
   };
 
-  const handleCardClick = (prompt: Prompt) => {
+  const handleCardClick = (prompt: PromptWithCreator) => {
     setSelectedPrompt({
       title: prompt.title,
       category: prompt.category,
       prompt: prompt.prompt_text,
       fullPrompt: prompt.full_prompt,
       imageUrl: prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop",
+      creatorName: prompt.creator_name,
     });
     setIsDetailModalOpen(true);
   };
@@ -97,7 +92,7 @@ const ViralPrompts = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-12">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">🔥 Prompt Viral</h1>
@@ -125,7 +120,9 @@ const ViralPrompts = () => {
                 title={prompt.title}
                 category={prompt.category}
                 prompt={prompt.prompt_text}
+                fullPrompt={prompt.full_prompt}
                 imageUrl={prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop"}
+                creatorName={prompt.creator_name}
                 onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                 onClick={() => handleCardClick(prompt)}
               />
@@ -141,7 +138,14 @@ const ViralPrompts = () => {
         open={isDetailModalOpen}
         onOpenChange={setIsDetailModalOpen}
         prompt={selectedPrompt}
-        onCopy={() => selectedPrompt && handleCopy(selectedPrompt.id, selectedPrompt.fullPrompt)}
+        onCopy={() => {
+          if (selectedPrompt) {
+            const originalPrompt = prompts.find(p => p.full_prompt === selectedPrompt.fullPrompt);
+            if (originalPrompt) {
+              handleCopy(originalPrompt.id, selectedPrompt.fullPrompt);
+            }
+          }
+        }}
       />
       <LoginModal
         open={isLoginModalOpen}
