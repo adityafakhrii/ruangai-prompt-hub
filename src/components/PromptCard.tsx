@@ -38,17 +38,25 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
       onClick={onClick}
     >
       {/* Preview Image */}
-      <div className="relative aspect-video w-full overflow-hidden bg-muted">
-        <img
-          src={imageUrl}
-          alt={title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        <Badge className="absolute top-3 left-3 bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border-none">
-          {category}
-        </Badge>
-      </div>
+      {imageUrl ? (
+        <div className="relative aspect-video w-full overflow-hidden bg-muted">
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <Badge className="absolute top-3 left-3 bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border-none">
+            {category}
+          </Badge>
+        </div>
+      ) : (
+        <div className="px-4 pt-4">
+          <Badge variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/80">
+            {category}
+          </Badge>
+        </div>
+      )}
 
       {/* Content */}
       <div className="p-4 space-y-3 flex-1 flex flex-col">
@@ -56,9 +64,14 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
           <h3 className="font-semibold text-lg text-heading line-clamp-1" title={title}>
             {title}
           </h3>
-          {creatorName && (
+          {creatorName && creatorName !== 'Unknown' && (
             <p className="text-xs text-muted-foreground mt-1">
               Oleh: {creatorName}
+            </p>
+          )}
+          {(creatorName === 'Unknown' || !creatorName) && (
+             <p className="text-xs text-muted-foreground mt-1">
+              Oleh: Pengguna RuangAI
             </p>
           )}
         </div>

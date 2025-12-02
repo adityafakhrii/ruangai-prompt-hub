@@ -56,6 +56,7 @@ const PromptSaya = () => {
     const [imageUrl, setImageUrl] = useState("");
     const [imageMode, setImageMode] = useState<'url' | 'upload'>('url');
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [additionalInfo, setAdditionalInfo] = useState("");
     const [isViral, setIsViral] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
@@ -77,7 +78,7 @@ const PromptSaya = () => {
 
             if (error) throw error;
             setPrompts(data || []);
-        } catch (error: any) {
+        } catch (error) {
             toast({
                 title: "Error fetching prompts",
                 description: error.message,
@@ -95,6 +96,7 @@ const PromptSaya = () => {
         setImageUrl("");
         setImageMode('url');
         setImageFile(null);
+        setAdditionalInfo("");
         setIsViral(false);
         setEditingId(null);
     };
@@ -125,7 +127,7 @@ const PromptSaya = () => {
                 title: "Berhasil dihapus",
                 description: "Prompt telah dihapus.",
             });
-        } catch (error: any) {
+        } catch (error) {
             toast({
                 title: "Gagal menghapus",
                 description: error.message,
@@ -187,7 +189,7 @@ const PromptSaya = () => {
             await fetchPrompts();
             setView('list');
             resetForm();
-        } catch (error: any) {
+        } catch (error) {
             toast({
                 title: "Gagal menyimpan",
                 description: error.message,
@@ -310,6 +312,17 @@ const PromptSaya = () => {
                                     </Select>
                                 </div>
 
+                                <div className="space-y-2">
+                                    <Label htmlFor="additional-info">Keterangan Tambahan (Opsional)</Label>
+                                    <Input
+                                        id="additional-info"
+                                        value={additionalInfo}
+                                        onChange={(e) => setAdditionalInfo(e.target.value)}
+                                        placeholder="Info tambahan..."
+                                        disabled
+                                        className="bg-input border-border"
+                                    />
+                                </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="full-prompt">Full Prompt</Label>
