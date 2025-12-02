@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import {
+  fetchViralPromptsWithCreator,
+  fetchMostCopiedPromptsWithCreator,
+  fetchLatestPromptsWithCreator,
+  fetchAllPromptsWithCreator,
+  PromptWithCreator
+} from "@/lib/promptQueries";
 import Navbar from "@/components/Navbar";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
@@ -15,27 +22,22 @@ import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
 import Footer from "@/components/Footer";
 
-interface Prompt {
-  id: string;
-  title: string;
-  category: string;
-  prompt_text: string;
-  full_prompt: string;
-  image_url: string | null;
-  copy_count: number;
-  is_viral: boolean;
-  created_at: string;
-}
-
 const Index = () => {
-  const [viralPrompts, setViralPrompts] = useState<Prompt[]>([]);
-  const [mostCopiedPrompts, setMostCopiedPrompts] = useState<Prompt[]>([]);
-  const [latestPrompts, setLatestPrompts] = useState<Prompt[]>([]);
-  const [allPrompts, setAllPrompts] = useState<Prompt[]>([]);
+  const [viralPrompts, setViralPrompts] = useState<PromptWithCreator[]>([]);
+  const [mostCopiedPrompts, setMostCopiedPrompts] = useState<PromptWithCreator[]>([]);
+  const [latestPrompts, setLatestPrompts] = useState<PromptWithCreator[]>([]);
+  const [allPrompts, setAllPrompts] = useState<PromptWithCreator[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
 
-  const [selectedPrompt, setSelectedPrompt] = useState<any>(null);
+  const [selectedPrompt, setSelectedPrompt] = useState<{
+    title: string;
+    category: string;
+    prompt: string;
+    fullPrompt: string;
+    imageUrl: string;
+    creatorName: string;
+  } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [copyCount, setCopyCount] = useState(0);
@@ -47,7 +49,6 @@ const Index = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [sortBy, setSortBy] = useState("trending");
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -81,38 +82,22 @@ const Index = () => {
 
   const fetchViralPrompts = async () => {
     setLoadingViral(true);
-    const { data, error } = await supabase
-      .from("prompts")
-      .select("*")
-      .eq("is_viral", true)
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    if (!error) setViralPrompts(data || []);
+    const { data, error } = await fetchViralPromptsWithCreator(5);
+    if (!error && data) setViralPrompts(data);
     setLoadingViral(false);
   };
 
   const fetchMostCopiedPrompts = async () => {
     setLoadingMostCopied(true);
-    const { data, error } = await supabase
-      .from("prompts")
-      .select("*")
-      .order("copy_count", { ascending: false })
-      .limit(5);
-
-    if (!error) setMostCopiedPrompts(data || []);
+    const { data, error } = await fetchMostCopiedPromptsWithCreator(5);
+    if (!error && data) setMostCopiedPrompts(data);
     setLoadingMostCopied(false);
   };
 
   const fetchLatestPrompts = async () => {
     setLoadingLatest(true);
-    const { data, error } = await supabase
-      .from("prompts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(6);
-
-    if (!error) setLatestPrompts(data || []);
+    const { data, error } = await fetchLatestPromptsWithCreator(6);
+    if (!error && data) setLatestPrompts(data);
     setLoadingLatest(false);
   };
 
@@ -123,11 +108,7 @@ const Index = () => {
 
     setLoadingMore(true);
     const pageSize = 12;
-    const { data, error } = await supabase
-      .from("prompts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .range(pageNum * pageSize, (pageNum + 1) * pageSize - 1);
+    const { data, error } = await fetchAllPromptsWithCreator(pageNum, pageSize);
 
     if (!error && data) {
       setAllPrompts(prev => pageNum === 0 ? data : [...prev, ...data]);
@@ -166,19 +147,20 @@ const Index = () => {
     }
   };
 
-  const handleCardClick = (prompt: Prompt) => {
+  const handleCardClick = (prompt: PromptWithCreator) => {
     setSelectedPrompt({
       title: prompt.title,
       category: prompt.category,
       prompt: prompt.prompt_text,
       fullPrompt: prompt.full_prompt,
       imageUrl: prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop",
+      creatorName: prompt.creator_name,
     });
     setIsDetailModalOpen(true);
   };
 
   // Filter prompts based on search/category
-  const filterPrompts = (promptList: Prompt[]) => {
+  const filterPrompts = (promptList: PromptWithCreator[]) => {
     let filtered = [...promptList];
 
     if (searchQuery) {
@@ -209,8 +191,6 @@ const Index = () => {
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
       />
       <InfoBar />
 
@@ -340,7 +320,7 @@ const Index = () => {
         open={isDetailModalOpen}
         onOpenChange={setIsDetailModalOpen}
         prompt={selectedPrompt}
-        onCopy={() => selectedPrompt && handleCopy(selectedPrompt.id, selectedPrompt.fullPrompt)}
+        onCopy={() => selectedPrompt && handleCopy("0", selectedPrompt.fullPrompt)}
       />
       <LoginModal
         open={isLoginModalOpen}
