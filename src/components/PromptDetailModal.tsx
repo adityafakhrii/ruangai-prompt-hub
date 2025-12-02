@@ -60,7 +60,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 pb-4">
               <Button
                 className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={onCopy}

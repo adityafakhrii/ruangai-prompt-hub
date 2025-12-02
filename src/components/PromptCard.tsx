@@ -33,7 +33,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -8 }}
+      whileHover={{ boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)" }}
       className="group relative bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all hover:border-primary hover:shadow-[var(--shadow-card-hover)] flex flex-col h-full"
       onClick={onClick}
     >
