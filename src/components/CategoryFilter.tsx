@@ -18,7 +18,12 @@ const additionalCategories = [
   { name: "Portrait", icon: Camera },
 ];
 
-const CategoryFilter = () => {
+interface CategoryFilterProps {
+  selectedCategory: string;
+  onSelectCategory: (category: string) => void;
+}
+
+const CategoryFilter = ({ selectedCategory, onSelectCategory }: CategoryFilterProps) => {
   return (
     <section className="w-full py-8" id="kategori">
       <div className="container mx-auto px-4">
@@ -33,7 +38,12 @@ const CategoryFilter = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -2 }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-primary-light text-heading rounded-full font-medium hover:shadow-lg transition-all"
+              onClick={() => onSelectCategory(selectedCategory === category.name ? "" : category.name)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium hover:shadow-lg transition-all ${
+                selectedCategory === category.name
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-primary-light text-heading"
+              }`}
             >
               <category.icon className="h-4 w-4" />
               {category.name}
@@ -55,7 +65,12 @@ const CategoryFilter = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4 + index * 0.05 }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="relative overflow-hidden rounded-xl aspect-square bg-card border border-border hover:border-primary transition-all group"
+              onClick={() => onSelectCategory(selectedCategory === category.name ? "" : category.name)}
+              className={`relative overflow-hidden rounded-xl aspect-square bg-card transition-all group ${
+                selectedCategory === category.name
+                  ? "border-2 border-primary"
+                  : "border border-border hover:border-primary"
+              }`}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 opacity-50 group-hover:opacity-70 transition-opacity" />
               <div className="relative h-full flex flex-col items-center justify-center gap-2 p-4">
