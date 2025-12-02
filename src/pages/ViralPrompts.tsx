@@ -83,7 +83,7 @@ const ViralPrompts = () => {
       category: prompt.category,
       prompt: prompt.prompt_text,
       fullPrompt: prompt.full_prompt,
-      imageUrl: prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop",
+      imageUrl: prompt.image_url,
       creatorName: prompt.creator_name,
     });
     setIsDetailModalOpen(true);
@@ -121,7 +121,7 @@ const ViralPrompts = () => {
                 category={prompt.category}
                 prompt={prompt.prompt_text}
                 fullPrompt={prompt.full_prompt}
-                imageUrl={prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop"}
+                imageUrl={prompt.image_url}
                 creatorName={prompt.creator_name}
                 onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                 onClick={() => handleCardClick(prompt)}
