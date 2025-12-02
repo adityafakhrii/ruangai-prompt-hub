@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { Sparkles, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const getLinkClass = ({ isActive }: { isActive: boolean }) => 
+    `text-sm transition-colors ${isActive ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'}`;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -13,32 +16,34 @@ const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
             <a href="/" className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <Sparkles className="h-6 w-6 text-primary" />
+              <img src="/iconbiru.png" alt="RuangAI Logo" className="h-11 w-10" />
               RuangAI Prompt
             </a>
             <div className="hidden md:flex items-center gap-6">
-              <a href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <NavLink to="/" className={getLinkClass}>
                 Home
-              </a>
-              <a href="/#kategori" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Kategori
-              </a>
-              <a href="/viral" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              </NavLink>
+              <NavLink to="/viral" className={getLinkClass}>
                 Prompt Viral
-              </a>
+              </NavLink>
               {user && (
-                <a href="/prompt-saya" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <NavLink to="/prompt-saya" className={getLinkClass}>
                   Prompt Saya
-                </a>
+                </NavLink>
               )}
             </div>
           </div>
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <span className="text-sm text-muted-foreground hidden sm:inline">
-                  {user.email}
-                </span>
+                <NavLink 
+                  to="/profile"
+                  className={({ isActive }) => 
+                    `text-sm hidden sm:inline transition-colors mr-2 font-medium ${isActive ? 'text-primary font-bold' : 'text-foreground hover:text-primary'}`
+                  }
+                >
+                  {user.user_metadata?.full_name || user.email}
+                </NavLink>
                 <Button
                   size="sm"
                   variant="outline"
@@ -67,3 +72,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
