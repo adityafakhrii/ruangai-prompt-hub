@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
@@ -10,106 +12,189 @@ import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
 import Footer from "@/components/Footer";
 
-// Mock data for prompts
-const mockPrompts = [
-  {
-    id: 1,
-    title: "Cinematic Portrait Photography",
-    category: "Portrait",
-    prompt: "Create a professional cinematic portrait with dramatic lighting...",
-    fullPrompt: "Create a professional cinematic portrait with dramatic lighting, shallow depth of field, warm color grading. Subject should be positioned with rule of thirds, soft natural light from window creating Rembrandt lighting pattern. Camera settings: 85mm f/1.4, ISO 400. Style: Editorial magazine quality.",
-    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop",
-  },
-  {
-    id: 2,
-    title: "Product Photography Setup",
-    category: "Image",
-    prompt: "Professional product photography with clean white background...",
-    fullPrompt: "Professional product photography with clean white background, studio lighting setup with key light at 45 degrees, fill light opposite side, rim light from behind. High-key lighting for clean commercial look. Camera: 100mm macro, f/11, ISO 100. Post-processing: Slight color correction, sharp details.",
-    imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=600&fit=crop",
-  },
-  {
-    id: 3,
-    title: "AI Assistant Persona",
-    category: "Persona",
-    prompt: "Act as a professional business consultant with 10 years experience...",
-    fullPrompt: "Act as a professional business consultant with 10 years experience in digital transformation. Your communication style is professional yet approachable. You provide strategic insights backed by data and real-world examples. Always structure your responses with clear action items and consider both short-term and long-term implications.",
-    imageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=600&fit=crop",
-  },
-  {
-    id: 4,
-    title: "Cinematic Drone Shot",
-    category: "Video",
-    prompt: "Epic aerial drone shot descending through clouds at golden hour...",
-    fullPrompt: "Epic aerial drone shot descending through clouds at golden hour, revealing a stunning coastal landscape. Camera movement: Slow descending spiral with slight forward push. Settings: 4K 24fps, ND16 filter, manual exposure locked. Color grade: Warm tones with crushed blacks and lifted highlights for that cinematic look.",
-    imageUrl: "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=800&h=600&fit=crop",
-  },
-  {
-    id: 5,
-    title: "React Component Generator",
-    category: "Vibe Coding",
-    prompt: "Generate a reusable React component with TypeScript...",
-    fullPrompt: "Generate a reusable React component with TypeScript that follows best practices: functional component with proper typing, custom hooks for logic separation, memoization where appropriate, accessibility features (ARIA labels), responsive design with Tailwind CSS, comprehensive prop validation, JSDoc comments for documentation.",
-    imageUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop",
-  },
-  {
-    id: 6,
-    title: "Fashion Editorial Style",
-    category: "Fashion",
-    prompt: "High fashion editorial shoot with avant-garde styling...",
-    fullPrompt: "High fashion editorial shoot with avant-garde styling. Composition: Dynamic angular poses, unconventional framing. Lighting: High contrast with colored gels (magenta/cyan). Location: Urban industrial setting. Styling: Bold geometric shapes, metallic textures. Camera: 50mm f/1.2, shot on medium format. Post: Saturated colors, film grain, vignette.",
-    imageUrl: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&h=600&fit=crop",
-  },
-];
+interface Prompt {
+  id: string;
+  title: string;
+  category: string;
+  prompt_text: string;
+  full_prompt: string;
+  image_url: string | null;
+  copy_count: number;
+  created_at: string;
+}
 
 const Index = () => {
-  const [selectedPrompt, setSelectedPrompt] = useState<typeof mockPrompts[0] | null>(null);
+  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [filteredPrompts, setFilteredPrompts] = useState<Prompt[]>([]);
+  const [selectedPrompt, setSelectedPrompt] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [copyCount, setCopyCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [sortBy, setSortBy] = useState("trending");
+  
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleCopy = (prompt: string) => {
-    navigator.clipboard.writeText(prompt);
+  useEffect(() => {
+    fetchPrompts();
+  }, []);
+
+  useEffect(() => {
+    filterAndSortPrompts();
+  }, [prompts, searchQuery, selectedCategory, sortBy]);
+
+  const fetchPrompts = async () => {
+    setLoading(true);
+    
+    const { data, error } = await supabase
+      .from("prompts")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Gagal memuat prompts",
+        variant: "destructive",
+      });
+    } else {
+      setPrompts(data || []);
+    }
+
+    setLoading(false);
+  };
+
+  const filterAndSortPrompts = () => {
+    let filtered = [...prompts];
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (p) =>
+          p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.prompt_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.category.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Filter by category
+    if (selectedCategory) {
+      filtered = filtered.filter((p) => p.category === selectedCategory);
+    }
+
+    // Sort
+    switch (sortBy) {
+      case "terbaru":
+        // Already sorted by created_at desc from query
+        break;
+      case "viral":
+        filtered.sort((a, b) => (b.copy_count || 0) - (a.copy_count || 0));
+        break;
+      case "most-copied":
+        filtered.sort((a, b) => (b.copy_count || 0) - (a.copy_count || 0));
+        break;
+      case "trending":
+      default:
+        // Mix of recency and copy count
+        filtered.sort((a, b) => {
+          const scoreA = (a.copy_count || 0) * 0.7 + (new Date(a.created_at).getTime() / 1000000);
+          const scoreB = (b.copy_count || 0) * 0.7 + (new Date(b.created_at).getTime() / 1000000);
+          return scoreB - scoreA;
+        });
+    }
+
+    setFilteredPrompts(filtered);
+  };
+
+  const handleCopy = async (promptId: string, fullPrompt: string) => {
+    navigator.clipboard.writeText(fullPrompt);
+    
+    // Increment copy count
+    const { error } = await supabase
+      .from("prompts")
+      .update({ copy_count: prompts.find(p => p.id === promptId)?.copy_count! + 1 })
+      .eq("id", promptId);
+
     toast({
       title: "Prompt disalin!",
       description: "Prompt berhasil disalin ke clipboard.",
     });
 
-    const newCount = copyCount + 1;
-    setCopyCount(newCount);
+    // Refresh prompts to get updated copy count
+    fetchPrompts();
 
-    if (newCount >= 3) {
-      setIsLoginModalOpen(true);
-      setCopyCount(0);
+    if (!user) {
+      const newCount = copyCount + 1;
+      setCopyCount(newCount);
+      if (newCount >= 3) {
+        setIsLoginModalOpen(true);
+        setCopyCount(0);
+      }
     }
   };
 
-  const handleCardClick = (prompt: typeof mockPrompts[0]) => {
-    setSelectedPrompt(prompt);
+  const handleCardClick = (prompt: Prompt) => {
+    setSelectedPrompt({
+      title: prompt.title,
+      category: prompt.category,
+      prompt: prompt.prompt_text,
+      fullPrompt: prompt.full_prompt,
+      imageUrl: prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop",
+    });
     setIsDetailModalOpen(true);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <CategoryFilter />
-      <SearchBar />
+      <CategoryFilter 
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
+      <SearchBar 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
       <InfoBar />
       
       {/* Prompt Grid */}
       <section className="w-full py-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockPrompts.map((prompt) => (
-              <PromptCard
-                key={prompt.id}
-                {...prompt}
-                onCopy={() => handleCopy(prompt.fullPrompt)}
-                onClick={() => handleCardClick(prompt)}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-96 bg-card animate-pulse rounded-xl" />
+              ))}
+            </div>
+          ) : filteredPrompts.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-2xl text-lightText">
+                {searchQuery || selectedCategory
+                  ? "Tidak ada prompt yang sesuai dengan filter"
+                  : "Belum ada prompt. Jadilah yang pertama menambahkan!"}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPrompts.map((prompt) => (
+                <PromptCard
+                  key={prompt.id}
+                  id={parseInt(prompt.id)}
+                  title={prompt.title}
+                  category={prompt.category}
+                  prompt={prompt.prompt_text}
+                  imageUrl={prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop"}
+                  onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
+                  onClick={() => handleCardClick(prompt)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -121,7 +206,7 @@ const Index = () => {
         open={isDetailModalOpen}
         onOpenChange={setIsDetailModalOpen}
         prompt={selectedPrompt}
-        onCopy={() => selectedPrompt && handleCopy(selectedPrompt.fullPrompt)}
+        onCopy={() => selectedPrompt && handleCopy(selectedPrompt.id, selectedPrompt.fullPrompt)}
       />
       <LoginModal
         open={isLoginModalOpen}
