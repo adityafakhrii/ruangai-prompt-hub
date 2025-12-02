@@ -14,7 +14,116 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookmarks: {
+        Row: {
+          created_at: string | null
+          id: string
+          prompt_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          prompt_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          prompt_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      prompts: {
+        Row: {
+          category: string
+          copy_count: number | null
+          created_at: string | null
+          full_prompt: string
+          id: string
+          image_url: string | null
+          is_viral: boolean | null
+          prompt_text: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          copy_count?: number | null
+          created_at?: string | null
+          full_prompt: string
+          id?: string
+          image_url?: string | null
+          is_viral?: boolean | null
+          prompt_text: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          copy_count?: number | null
+          created_at?: string | null
+          full_prompt?: string
+          id?: string
+          image_url?: string | null
+          is_viral?: boolean | null
+          prompt_text?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
