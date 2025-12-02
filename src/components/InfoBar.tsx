@@ -1,10 +1,10 @@
 import { Info } from "lucide-react";
 
 const InfoBar = () => {
-  const currentDate = new Date().toLocaleDateString('id-ID', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const currentDate = new Date().toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
 
   return (
@@ -14,6 +14,7 @@ const InfoBar = () => {
           <Info className="h-5 w-5 text-heading flex-shrink-0" />
           <p className="text-sm text-heading">
             Prompt terus di-update berkala. Update terakhir: {currentDate}.
+            Disclaimer: Hak cipta prompt ini dilindungi. Kami tidak bertanggung jawab atas penyalahgunaan, dan tidak boleh diperjualbelikan.
           </p>
         </div>
       </div>

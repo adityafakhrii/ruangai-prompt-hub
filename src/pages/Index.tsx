@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
 import InfoBar from "@/components/InfoBar";
 import PromptCard from "@/components/PromptCard";
+import PromptSlider from "@/components/PromptSlider";
+import SkeletonCard from "@/components/SkeletonCard";
 import PromptDetailModal from "@/components/PromptDetailModal";
 import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
@@ -20,111 +23,138 @@ interface Prompt {
   full_prompt: string;
   image_url: string | null;
   copy_count: number;
+  is_viral: boolean;
   created_at: string;
 }
 
 const Index = () => {
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
-  const [filteredPrompts, setFilteredPrompts] = useState<Prompt[]>([]);
+  const [viralPrompts, setViralPrompts] = useState<Prompt[]>([]);
+  const [mostCopiedPrompts, setMostCopiedPrompts] = useState<Prompt[]>([]);
+  const [latestPrompts, setLatestPrompts] = useState<Prompt[]>([]);
+  const [allPrompts, setAllPrompts] = useState<Prompt[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+
   const [selectedPrompt, setSelectedPrompt] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [copyCount, setCopyCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+
+  const [loadingViral, setLoadingViral] = useState(true);
+  const [loadingMostCopied, setLoadingMostCopied] = useState(true);
+  const [loadingLatest, setLoadingLatest] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [sortBy, setSortBy] = useState("trending");
-  
+
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchPrompts();
+    fetchViralPrompts();
+    fetchMostCopiedPrompts();
+    fetchLatestPrompts();
+    fetchAllPrompts(0);
   }, []);
 
+  // Lazy loading observer
   useEffect(() => {
-    filterAndSortPrompts();
-  }, [prompts, searchQuery, selectedCategory, sortBy]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          fetchAllPrompts(page + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-  const fetchPrompts = async () => {
-    setLoading(true);
-    
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, page]);
+
+  const fetchViralPrompts = async () => {
+    setLoadingViral(true);
     const { data, error } = await supabase
       .from("prompts")
       .select("*")
-      .order("created_at", { ascending: false });
+      .eq("is_viral", true)
+      .order("created_at", { ascending: false })
+      .limit(5);
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Gagal memuat prompts",
-        variant: "destructive",
-      });
-    } else {
-      setPrompts(data || []);
-    }
-
-    setLoading(false);
+    if (!error) setViralPrompts(data || []);
+    setLoadingViral(false);
   };
 
-  const filterAndSortPrompts = () => {
-    let filtered = [...prompts];
+  const fetchMostCopiedPrompts = async () => {
+    setLoadingMostCopied(true);
+    const { data, error } = await supabase
+      .from("prompts")
+      .select("*")
+      .order("copy_count", { ascending: false })
+      .limit(5);
 
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (p) =>
-          p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.prompt_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    if (!error) setMostCopiedPrompts(data || []);
+    setLoadingMostCopied(false);
+  };
+
+  const fetchLatestPrompts = async () => {
+    setLoadingLatest(true);
+    const { data, error } = await supabase
+      .from("prompts")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(6);
+
+    if (!error) setLatestPrompts(data || []);
+    setLoadingLatest(false);
+  };
+
+  const fetchAllPrompts = async (pageNum: number) => {
+    if (pageNum === 0) {
+      setAllPrompts([]);
     }
 
-    // Filter by category
-    if (selectedCategory) {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
-    }
+    setLoadingMore(true);
+    const pageSize = 12;
+    const { data, error } = await supabase
+      .from("prompts")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(pageNum * pageSize, (pageNum + 1) * pageSize - 1);
 
-    // Sort
-    switch (sortBy) {
-      case "terbaru":
-        // Already sorted by created_at desc from query
-        break;
-      case "viral":
-        filtered.sort((a, b) => (b.copy_count || 0) - (a.copy_count || 0));
-        break;
-      case "most-copied":
-        filtered.sort((a, b) => (b.copy_count || 0) - (a.copy_count || 0));
-        break;
-      case "trending":
-      default:
-        // Mix of recency and copy count
-        filtered.sort((a, b) => {
-          const scoreA = (a.copy_count || 0) * 0.7 + (new Date(a.created_at).getTime() / 1000000);
-          const scoreB = (b.copy_count || 0) * 0.7 + (new Date(b.created_at).getTime() / 1000000);
-          return scoreB - scoreA;
-        });
+    if (!error && data) {
+      setAllPrompts(prev => pageNum === 0 ? data : [...prev, ...data]);
+      setHasMore(data.length === pageSize);
+      setPage(pageNum);
     }
-
-    setFilteredPrompts(filtered);
+    setLoadingMore(false);
   };
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     navigator.clipboard.writeText(fullPrompt);
-    
+
     // Increment copy count
-    const { error } = await supabase
-      .from("prompts")
-      .update({ copy_count: prompts.find(p => p.id === promptId)?.copy_count! + 1 })
-      .eq("id", promptId);
+    const currentPrompt = [...viralPrompts, ...mostCopiedPrompts, ...latestPrompts, ...allPrompts]
+      .find(p => p.id === promptId);
+
+    if (currentPrompt) {
+      await supabase
+        .from("prompts")
+        .update({ copy_count: (currentPrompt.copy_count || 0) + 1 })
+        .eq("id", promptId);
+    }
 
     toast({
       title: "Prompt disalin!",
       description: "Prompt berhasil disalin ke clipboard.",
     });
-
-    // Refresh prompts to get updated copy count
-    fetchPrompts();
 
     if (!user) {
       const newCount = copyCount + 1;
@@ -147,31 +177,122 @@ const Index = () => {
     setIsDetailModalOpen(true);
   };
 
+  // Filter prompts based on search/category
+  const filterPrompts = (promptList: Prompt[]) => {
+    let filtered = [...promptList];
+
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (p) =>
+          p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.prompt_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.category.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (selectedCategory) {
+      filtered = filtered.filter((p) => p.category === selectedCategory);
+    }
+
+    return filtered;
+  };
+
+  const showSections = !searchQuery && !selectedCategory;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <CategoryFilter 
+      <CategoryFilter
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />
-      <SearchBar 
+      <SearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         sortBy={sortBy}
         onSortChange={setSortBy}
       />
       <InfoBar />
-      
-      {/* Prompt Grid */}
+
+      {showSections && (
+        <>
+          {/* Viral Prompts Slider */}
+          {loadingViral ? (
+            <section className="w-full py-8">
+              <div className="container mx-auto px-4">
+                <h2 className="text-2xl font-bold text-foreground mb-6">Prompt Viral</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
+                </div>
+              </div>
+            </section>
+          ) : viralPrompts.length > 0 && (
+            <PromptSlider
+              title="Prompt Viral"
+              prompts={viralPrompts}
+              onCopy={handleCopy}
+              onCardClick={handleCardClick}
+              onViewAll={() => navigate('/viral')}
+            />
+          )}
+
+          {/* Most Copied Slider */}
+          {loadingMostCopied ? (
+            <section className="w-full py-8">
+              <div className="container mx-auto px-4">
+                <h2 className="text-2xl font-bold text-foreground mb-6">Paling Banyak Copy</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
+                </div>
+              </div>
+            </section>
+          ) : mostCopiedPrompts.length > 0 && (
+            <PromptSlider
+              title="Paling Banyak Copy"
+              prompts={mostCopiedPrompts}
+              onCopy={handleCopy}
+              onCardClick={handleCardClick}
+            />
+          )}
+
+          {/* Latest Prompts Grid */}
+          <section className="w-full py-8">
+            <div className="container mx-auto px-4">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Terbaru</h2>
+              {loadingLatest ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {latestPrompts.map((prompt) => (
+                    <PromptCard
+                      key={prompt.id}
+                      id={parseInt(prompt.id)}
+                      title={prompt.title}
+                      category={prompt.category}
+                      prompt={prompt.prompt_text}
+                      fullPrompt={prompt.full_prompt}
+                      imageUrl={prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop"}
+                      onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
+                      onClick={() => handleCardClick(prompt)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* All Prompts Section with Lazy Loading */}
       <section className="w-full py-8">
         <div className="container mx-auto px-4">
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-96 bg-card animate-pulse rounded-xl" />
-              ))}
-            </div>
-          ) : filteredPrompts.length === 0 ? (
+          <h2 className="text-2xl font-bold text-foreground mb-6">
+            {showSections ? "Semua Prompt" : "Hasil Pencarian"}
+          </h2>
+
+          {allPrompts.length === 0 && !loadingMore ? (
             <div className="text-center py-20">
               <p className="text-2xl text-lightText">
                 {searchQuery || selectedCategory
@@ -180,20 +301,33 @@ const Index = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPrompts.map((prompt) => (
-                <PromptCard
-                  key={prompt.id}
-                  id={parseInt(prompt.id)}
-                  title={prompt.title}
-                  category={prompt.category}
-                  prompt={prompt.prompt_text}
-                  imageUrl={prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop"}
-                  onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
-                  onClick={() => handleCardClick(prompt)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filterPrompts(allPrompts).map((prompt) => (
+                  <PromptCard
+                    key={prompt.id}
+                    id={parseInt(prompt.id)}
+                    title={prompt.title}
+                    category={prompt.category}
+                    prompt={prompt.prompt_text}
+                    fullPrompt={prompt.full_prompt}
+                    imageUrl={prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop"}
+                    onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
+                    onClick={() => handleCardClick(prompt)}
+                  />
+                ))}
+              </div>
+
+              {/* Loading More Indicator */}
+              {loadingMore && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                  {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
+                </div>
+              )}
+
+              {/* Intersection Observer Target */}
+              <div ref={observerTarget} className="h-10" />
+            </>
           )}
         </div>
       </section>

@@ -9,46 +9,55 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* RuangAI Color Palette - HSL Format */
-    --background: 0 0% 7%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 23%;
 
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 23%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 23%;
 
-    --primary: 195 56% 68%;
-    --primary-foreground: 0 0% 98%;
-    --primary-light: 195 56% 87%;
-    --primary-ultra-light: 39 50% 97%;
+    /* Primary: #7BBEDE -> 199 63% 68% */
+    --primary: 199 63% 68%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 16 94% 57%;
-    --secondary-foreground: 0 0% 98%;
-    --secondary-light: 16 100% 92%;
+    /* Primary Light: #C9E5F0 -> 200 54% 86% */
+    --primary-light: 200 54% 86%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 70%;
+    /* Primary Ultra Light: #FBF8F1 -> 43 67% 96% */
+    --primary-ultra-light: 43 67% 96%;
 
-    --accent: 195 56% 68%;
+    /* Secondary: #F96E2B -> 20 94% 57% */
+    --secondary: 20 94% 57%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Secondary Light: #FFE4D7 -> 20 100% 92% */
+    --secondary-light: 20 100% 92%;
+
+    --muted: 200 54% 86%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 200 54% 86%;
     --accent-foreground: 0 0% 23%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 13%;
-    --input: 0 0% 10%;
-    --ring: 195 56% 68%;
+    /* Border: #F2F2F2 -> 0 0% 95% */
+    --border: 0 0% 95%;
+    --input: 0 0% 95%;
+    --ring: 199 63% 68%;
 
+    /* Heading: #3A3A3A -> 0 0% 23% */
     --heading: 0 0% 23%;
+
+    /* Light Text: #B3B3B3 -> 0 0% 70% */
     --light-text: 0 0% 70%;
+
     --border-light: 0 0% 95%;
 
     --radius: 1rem;
-
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --shadow-card: 0 4px 24px -6px hsl(0 0% 0% / 0.2);
-    --shadow-card-hover: 0 8px 32px -8px hsl(0 0% 0% / 0.3);
   }
 }
 

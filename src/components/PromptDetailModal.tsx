@@ -49,8 +49,8 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
 
             {/* Preview Image */}
             <div className="rounded-xl overflow-hidden">
-              <img 
-                src={prompt.imageUrl} 
+              <img
+                src={prompt.imageUrl}
                 alt={prompt.title}
                 className="w-full aspect-video object-cover"
               />
@@ -60,7 +60,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-heading">Full Prompt</h3>
               <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm text-lightText leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
                   {prompt.fullPrompt}
                 </p>
               </div>
@@ -70,7 +70,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-heading">Output Example</h3>
               <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm text-lightText">
+                <p className="text-sm">
                   Output preview akan ditampilkan di sini berdasarkan hasil generate dari prompt.
                 </p>
               </div>
@@ -78,14 +78,14 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
+              <Button
                 className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={onCopy}
               >
                 <Copy className="h-4 w-4 mr-2" />
                 Copy Prompt
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 className="flex-1 border-border hover:border-primary hover:text-primary"
                 onClick={() => window.open('https://chat.openai.com', '_blank')}
@@ -93,7 +93,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Buka di ChatGPT
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 className="flex-1 border-border hover:border-primary hover:text-primary"
                 onClick={() => window.open('https://gemini.google.com', '_blank')}

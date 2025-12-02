@@ -26,9 +26,11 @@ const Navbar = () => {
               <a href="/viral" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Prompt Viral
               </a>
-              <a href="/tambah" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Tambah Prompt
-              </a>
+              {user && (
+                <a href="/prompt-saya" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Prompt Saya
+                </a>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -37,9 +39,9 @@ const Navbar = () => {
                 <span className="text-sm text-muted-foreground hidden sm:inline">
                   {user.email}
                 </span>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   className="rounded-full"
                   onClick={signOut}
                 >
@@ -48,9 +50,9 @@ const Navbar = () => {
                 </Button>
               </>
             ) : (
-              <Button 
-                size="sm" 
-                variant="outline" 
+              <Button
+                size="sm"
+                variant="outline"
                 className="rounded-full"
                 onClick={() => navigate('/auth')}
               >
