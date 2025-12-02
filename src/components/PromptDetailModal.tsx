@@ -1,9 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, ExternalLink, Bookmark } from "lucide-react";
+import { Copy, ExternalLink } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
 
 interface PromptDetailModalProps {
   open: boolean;
@@ -14,30 +13,24 @@ interface PromptDetailModalProps {
     prompt: string;
     imageUrl: string;
     fullPrompt: string;
+    creatorName?: string;
   } | null;
   onCopy: () => void;
 }
 
 const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailModalProps) => {
-  const [isBookmarked, setIsBookmarked] = useState(false);
-
   if (!prompt) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] bg-popover text-popover-foreground border-border">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-heading flex items-center justify-between">
+          <DialogTitle className="text-2xl font-bold text-heading">
             {prompt.title}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsBookmarked(!isBookmarked)}
-              className="hover:text-primary"
-            >
-              <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
-            </Button>
           </DialogTitle>
+          {prompt.creatorName && (
+            <p className="text-sm text-muted-foreground mt-1">Oleh: {prompt.creatorName}</p>
+          )}
         </DialogHeader>
 
         <ScrollArea className="max-h-[70vh]">
@@ -66,16 +59,6 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
               </div>
             </div>
 
-            {/* Output Example */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-heading">Output Example</h3>
-              <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm">
-                  Output preview akan ditampilkan di sini berdasarkan hasil generate dari prompt.
-                </p>
-              </div>
-            </div>
-
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
@@ -90,7 +73,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                 className="flex-1 border-border hover:border-primary hover:text-primary"
                 onClick={() => window.open('https://chat.openai.com', '_blank')}
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
+                <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-4 w-4 mr-2" />
                 Buka di ChatGPT
               </Button>
               <Button
@@ -98,7 +81,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                 className="flex-1 border-border hover:border-primary hover:text-primary"
                 onClick={() => window.open('https://gemini.google.com', '_blank')}
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
+                <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-4 w-4 mr-2" />
                 Buka di Gemini
               </Button>
             </div>

@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Bot, Sparkles } from "lucide-react";
+import { Copy, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -83,7 +83,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, onCopy, onC
               onClick={(e) => handleOpenAI(e, 'https://chatgpt.com/', 'ChatGPT')}
               title="Copy & Open ChatGPT"
             >
-              <Bot className="h-4 w-4" />
+              <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-5 w-5" />
             </Button>
             <Button
               size="icon"
@@ -92,7 +92,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, onCopy, onC
               onClick={(e) => handleOpenAI(e, 'https://gemini.google.com/app', 'Gemini')}
               title="Copy & Open Gemini"
             >
-              <Sparkles className="h-4 w-4" />
+              <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-5 w-5" />
             </Button>
           </div>
         </div>
