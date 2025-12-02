@@ -1,8 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PromptCardProps {
@@ -12,11 +11,12 @@ interface PromptCardProps {
   prompt: string;
   fullPrompt: string;
   imageUrl: string;
+  creatorName?: string;
   onCopy: () => void;
   onClick: () => void;
 }
 
-const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, onCopy, onClick }: PromptCardProps) => {
+const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName, onCopy, onClick }: PromptCardProps) => {
   const { toast } = useToast();
 
   const handleOpenAI = (e: React.MouseEvent, url: string, name: string) => {
@@ -52,9 +52,16 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, onCopy, onC
 
       {/* Content */}
       <div className="p-4 space-y-3 flex-1 flex flex-col">
-        <h3 className="font-semibold text-lg text-heading line-clamp-1" title={title}>
-          {title}
-        </h3>
+        <div>
+          <h3 className="font-semibold text-lg text-heading line-clamp-1" title={title}>
+            {title}
+          </h3>
+          {creatorName && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Oleh: {creatorName}
+            </p>
+          )}
+        </div>
 
         {/* Prompt Preview */}
         <p className="text-sm line-clamp-3 leading-relaxed flex-1">

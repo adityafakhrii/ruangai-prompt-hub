@@ -11,6 +11,7 @@ interface Prompt {
     prompt_text: string;
     full_prompt: string;
     image_url: string | null;
+    creator_name?: string;
 }
 
 interface PromptSliderProps {
@@ -64,6 +65,7 @@ const PromptSlider = ({
                                     prompt={prompt.prompt_text}
                                     fullPrompt={prompt.full_prompt}
                                     imageUrl={prompt.image_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop"}
+                                    creatorName={prompt.creator_name}
                                     onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
                                     onClick={() => onCardClick(prompt)}
                                 />
