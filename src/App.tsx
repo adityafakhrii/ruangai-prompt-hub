@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import PromptSaya from "./pages/PromptSaya";
 import ViralPrompts from "./pages/ViralPrompts";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const AnimatedRoutes = () => {
         <Route path="/auth" element={<Auth />} />
         <Route path="/prompt-saya" element={<PromptSaya />} />
         <Route path="/viral" element={<ViralPrompts />} />
+        <Route path="/profile" element={<Profile />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
