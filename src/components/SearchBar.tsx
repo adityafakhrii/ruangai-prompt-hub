@@ -1,15 +1,12 @@
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
 
 interface SearchBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  sortBy: string;
-  onSortChange: (sort: string) => void;
 }
 
-const SearchBar = ({ searchQuery, onSearchChange, sortBy, onSortChange }: SearchBarProps) => {
+const SearchBar = ({ searchQuery, onSearchChange }: SearchBarProps) => {
   return (
     <section className="w-full py-6 bg-background">
       <div className="container mx-auto px-4">
@@ -24,17 +21,6 @@ const SearchBar = ({ searchQuery, onSearchChange, sortBy, onSortChange }: Search
               className="pl-12 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground rounded-xl"
             />
           </div>
-          <Select value={sortBy} onValueChange={onSortChange}>
-            <SelectTrigger className="w-full md:w-[200px] h-12 bg-input border-border rounded-xl">
-              <SelectValue placeholder="Sort" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border-border">
-              <SelectItem value="trending">Trending</SelectItem>
-              <SelectItem value="terbaru">Terbaru</SelectItem>
-              <SelectItem value="viral">Viral</SelectItem>
-              <SelectItem value="most-copied">Paling banyak dicopy</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
     </section>

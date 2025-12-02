@@ -3,10 +3,10 @@ import { Image, Video, User, Code } from "lucide-react";
 import { motion } from "framer-motion";
 
 const mainCategories = [
-  { name: "Image", icon: Image, isNew: false },
-  { name: "Video", icon: Video, isNew: true },
+  { name: "Image", icon: Image, isNew: true },
+  { name: "Video", icon: Video, isNew: false },
   { name: "Persona", icon: User, isNew: false },
-  { name: "Vibe Coding", icon: Code, isNew: true },
+  { name: "Vibe Coding", icon: Code, isNew: false },
 ];
 
 interface CategoryFilterProps {
