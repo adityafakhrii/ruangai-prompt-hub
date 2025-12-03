@@ -14,9 +14,10 @@ interface PromptCardProps {
   creatorName?: string;
   onCopy: () => void;
   onClick: () => void;
+  priority?: boolean; // Added prop for eager loading
 }
 
-const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName, onCopy, onClick }: PromptCardProps) => {
+const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName, onCopy, onClick, priority = false }: PromptCardProps) => {
   const { toast } = useToast();
 
   const handleOpenAI = (e: React.MouseEvent, url: string, name: string) => {
@@ -46,8 +47,8 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
             <img
               src={imageUrl}
               alt={title}
-              loading="lazy"
-              decoding="async"
+              loading={priority ? "eager" : "lazy"}
+              decoding={priority ? "sync" : "async"}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

@@ -52,7 +52,7 @@ const PromptSlider = ({
                         <CarouselPrevious className="hidden sm:flex left-2 z-10" />
                         <CarouselNext className="hidden sm:flex right-2 z-10" />
                         <CarouselContent>
-                        {prompts.map((prompt) => (
+                        {prompts.map((prompt, index) => (
                             <CarouselItem key={prompt.id} className="sm:basis-1/2 lg:basis-1/3">
                                 <PromptCard
                                     id={parseInt(prompt.id)}
@@ -64,6 +64,7 @@ const PromptSlider = ({
                                     creatorName={prompt.creator_name}
                                     onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
                                     onClick={() => onCardClick(prompt)}
+                                    priority={index < 3}
                                 />
                             </CarouselItem>
                         ))}
