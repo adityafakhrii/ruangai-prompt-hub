@@ -102,7 +102,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
                   onClick={(e) => handleOpenAI(e, 'https://chatgpt.com/', 'ChatGPT')}
                   title="Copy & Open ChatGPT"
                 >
-                  <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-5 w-5" />
+                  <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-5 w-5" loading="lazy" />
                 </Button>
                 <Button
                   size="icon"
@@ -111,7 +111,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
                   onClick={(e) => handleOpenAI(e, 'https://gemini.google.com/app', 'Gemini')}
                   title="Copy & Open Gemini"
                 >
-                  <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-5 w-5" />
+                  <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-5 w-5" loading="lazy" />
                 </Button>
               </div>
             </div>
@@ -167,7 +167,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
                 onClick={(e) => handleOpenAI(e, 'https://chatgpt.com/', 'ChatGPT')}
                 title="Copy & Open ChatGPT"
               >
-                <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-5 w-5" />
+                <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-5 w-5" loading="lazy" />
               </Button>
               <Button
                 size="icon"
@@ -176,7 +176,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
                 onClick={(e) => handleOpenAI(e, 'https://gemini.google.com/app', 'Gemini')}
                 title="Copy & Open Gemini"
               >
-                <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-5 w-5" />
+                <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-5 w-5" loading="lazy" />
               </Button>
             </div>
           </div>

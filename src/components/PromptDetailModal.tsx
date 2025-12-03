@@ -47,6 +47,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                   src={prompt.imageUrl}
                   alt={prompt.title}
                   className="w-full h-auto object-contain max-h-[400px]"
+                  loading="lazy"
                 />
               </div>
             )}
@@ -75,7 +76,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                 className="flex-1 border-border hover:border-primary hover:text-primary"
                 onClick={() => window.open('https://chat.openai.com', '_blank')}
               >
-                <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-4 w-4 mr-2" />
+                <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-4 w-4 mr-2" loading="lazy" />
                 Buka di ChatGPT
               </Button>
               <Button
@@ -83,7 +84,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                 className="flex-1 border-border hover:border-primary hover:text-primary"
                 onClick={() => window.open('https://gemini.google.com', '_blank')}
               >
-                <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-4 w-4 mr-2" />
+                <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-4 w-4 mr-2" loading="lazy" />
                 Buka di Gemini
               </Button>
             </div>

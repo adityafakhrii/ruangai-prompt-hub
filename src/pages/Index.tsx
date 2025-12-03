@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -63,10 +63,21 @@ const Index = () => {
   } = useCopyLimit(!!user);
 
   useEffect(() => {
-    fetchViralPrompts();
-    fetchMostCopiedPrompts();
-    fetchLatestPrompts();
-    fetchAllPrompts(0);
+    // Prioritize above-the-fold content
+    const loadCritical = async () => {
+      await Promise.all([
+        fetchViralPrompts(),
+        fetchMostCopiedPrompts()
+      ]);
+      
+      // Load below-the-fold content after critical content
+      setTimeout(() => {
+        fetchLatestPrompts();
+        fetchAllPrompts(0);
+      }, 100);
+    };
+    
+    loadCritical();
   }, []);
 
   // Lazy loading observer
@@ -169,15 +180,16 @@ const Index = () => {
   };
 
   // Filter prompts based on search/category
-  const filterPrompts = (promptList: PromptWithCreator[]) => {
-    let filtered = [...promptList];
+  const filteredPrompts = useMemo(() => {
+    let filtered = [...allPrompts];
 
     if (searchQuery) {
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (p) =>
-          p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.prompt_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.category.toLowerCase().includes(searchQuery.toLowerCase())
+          p.title.toLowerCase().includes(query) ||
+          p.prompt_text.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query)
       );
     }
 
@@ -186,7 +198,7 @@ const Index = () => {
     }
 
     return filtered;
-  };
+  }, [allPrompts, searchQuery, selectedCategory]);
 
   const showSections = !searchQuery && !selectedCategory;
 
@@ -293,7 +305,7 @@ const Index = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {filterPrompts(allPrompts).map((prompt) => (
+                {filteredPrompts.map((prompt) => (
                   <PromptCard
                     key={prompt.id}
                     id={parseInt(prompt.id)}
