@@ -16,6 +16,12 @@ const ViralPrompts = lazy(() => import("./pages/ViralPrompts"));
 const Profile = lazy(() => import("./pages/Profile"));
 const MostCopiedPrompts = lazy(() => import("./pages/MostCopiedPrompts"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const About = lazy(() => import("./pages/About"));
+const CaraKerja = lazy(() => import("./pages/CaraKerja"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const Contact = lazy(() => import("./pages/Contact"));
+const FAQ = lazy(() => import("./pages/FAQ"));
 
 const queryClient = new QueryClient();
 
@@ -39,6 +45,12 @@ const AnimatedRoutes = () => {
           <Route path="/viral" element={<ViralPrompts />} />
           <Route path="/paling-banyak-copy" element={<MostCopiedPrompts />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/cara-kerja" element={<CaraKerja />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<FAQ />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
