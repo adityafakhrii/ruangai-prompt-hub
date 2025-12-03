@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useCopyLimit } from "@/hooks/useCopyLimit";
 import {
   fetchViralPromptsWithCreator,
   fetchMostCopiedPromptsWithCreator,
@@ -39,8 +40,6 @@ const Index = () => {
     creatorName: string;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [copyCount, setCopyCount] = useState(0);
 
   const [loadingViral, setLoadingViral] = useState(true);
   const [loadingMostCopied, setLoadingMostCopied] = useState(true);
@@ -54,6 +53,13 @@ const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const observerTarget = useRef<HTMLDivElement>(null);
+  
+  const { 
+    showLoginModal, 
+    setShowLoginModal, 
+    incrementCopyCount,
+    remainingCopies 
+  } = useCopyLimit(!!user);
 
   useEffect(() => {
     fetchViralPrompts();
@@ -119,23 +125,33 @@ const Index = () => {
   };
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
+    // Check if user can copy (respects 3-copy limit for non-logged users)
+    const canProceed = incrementCopyCount();
+    
+    if (!canProceed) {
+      toast({
+        title: "Batas copy tercapai",
+        description: "Silakan login untuk melanjutkan copy prompt.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     navigator.clipboard.writeText(fullPrompt);
 
     // Increment copy count using secure RPC function (bypasses RLS)
     await supabase.rpc('increment_copy_count', { prompt_id: promptId });
 
-    toast({
-      title: "Prompt disalin!",
-      description: "Prompt berhasil disalin ke clipboard.",
-    });
-
-    if (!user) {
-      const newCount = copyCount + 1;
-      setCopyCount(newCount);
-      if (newCount >= 3) {
-        setIsLoginModalOpen(true);
-        setCopyCount(0);
-      }
+    if (!user && remainingCopies > 0) {
+      toast({
+        title: "Prompt disalin!",
+        description: `Sisa ${remainingCopies - 1} copy gratis. Login untuk copy tanpa batas.`,
+      });
+    } else {
+      toast({
+        title: "Prompt disalin!",
+        description: "Prompt berhasil disalin ke clipboard.",
+      });
     }
   };
 
@@ -306,8 +322,8 @@ const Index = () => {
         onCopy={() => selectedPrompt && handleCopy("0", selectedPrompt.fullPrompt)}
       />
       <LoginModal
-        open={isLoginModalOpen}
-        onOpenChange={setIsLoginModalOpen}
+        open={showLoginModal}
+        onOpenChange={setShowLoginModal}
       />
     </div>
   );
