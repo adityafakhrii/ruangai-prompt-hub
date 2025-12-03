@@ -22,6 +22,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { promptSchema } from "@/lib/validationSchemas";
 
 const categories = [
     "Image", "Video", "Persona", "Vibe Coding"
@@ -47,6 +48,7 @@ const PromptSaya = () => {
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     // Form states
     const [title, setTitle] = useState("");
@@ -96,6 +98,7 @@ const PromptSaya = () => {
         setImageFile(null);
         setAdditionalInfo("");
         setEditingId(null);
+        setErrors({});
     };
 
     const handleEdit = (prompt: Prompt) => {
@@ -106,6 +109,7 @@ const PromptSaya = () => {
         setImageMode('url');
         setImageFile(null);
         setEditingId(prompt.id);
+        setErrors({});
         setView('edit');
     };
 
@@ -135,6 +139,25 @@ const PromptSaya = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
+
+        setErrors({});
+
+        // Validate form data
+        const result = promptSchema.safeParse({
+            title,
+            category,
+            fullPrompt,
+            imageUrl: imageMode === 'url' ? imageUrl : '',
+        });
+
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.errors.forEach((err) => {
+                if (err.path[0]) fieldErrors[String(err.path[0])] = err.message;
+            });
+            setErrors(fieldErrors);
+            return;
+        }
 
         setSubmitting(true);
 
@@ -286,14 +309,17 @@ const PromptSaya = () => {
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder="e.g., Cinematic Portrait Photography"
-                                        required
                                         className="bg-input border-border"
+                                        maxLength={200}
                                     />
+                                    {errors.title && (
+                                        <p className="text-sm text-destructive">{errors.title}</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="category">Kategori</Label>
-                                    <Select value={category} onValueChange={setCategory} required>
+                                    <Select value={category} onValueChange={setCategory}>
                                         <SelectTrigger className="bg-input border-border">
                                             <SelectValue placeholder="Pilih kategori" />
                                         </SelectTrigger>
@@ -305,6 +331,9 @@ const PromptSaya = () => {
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                    {errors.category && (
+                                        <p className="text-sm text-destructive">{errors.category}</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -326,12 +355,15 @@ const PromptSaya = () => {
                                         value={fullPrompt}
                                         onChange={(e) => setFullPrompt(e.target.value)}
                                         placeholder="Tulis full prompt lengkap di sini..."
-                                        required
                                         rows={8}
                                         className="bg-input border-border"
+                                        maxLength={50000}
                                     />
+                                    {errors.fullPrompt && (
+                                        <p className="text-sm text-destructive">{errors.fullPrompt}</p>
+                                    )}
                                     <p className="text-xs text-muted-foreground">
-                                        Preview otomatis akan dibuat dari 200 karakter pertama
+                                        Preview otomatis akan dibuat dari 200 karakter pertama. Min. 10 karakter, max. 50.000 karakter.
                                     </p>
                                 </div>
 
@@ -357,14 +389,19 @@ const PromptSaya = () => {
                                     </div>
 
                                     {imageMode === 'url' ? (
-                                        <Input
-                                            id="image-url"
-                                            type="url"
-                                            value={imageUrl}
-                                            onChange={(e) => setImageUrl(e.target.value)}
-                                            placeholder="https://example.com/image.jpg"
-                                            className="bg-input border-border"
-                                        />
+                                        <>
+                                            <Input
+                                                id="image-url"
+                                                type="url"
+                                                value={imageUrl}
+                                                onChange={(e) => setImageUrl(e.target.value)}
+                                                placeholder="https://example.com/image.jpg"
+                                                className="bg-input border-border"
+                                            />
+                                            {errors.imageUrl && (
+                                                <p className="text-sm text-destructive">{errors.imageUrl}</p>
+                                            )}
+                                        </>
                                     ) : (
                                         <Input
                                             id="image-file"
