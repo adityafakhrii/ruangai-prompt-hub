@@ -26,6 +26,9 @@ const Navbar = () => {
               <NavLink to="/viral" className={getLinkClass}>
                 Prompt Viral
               </NavLink>
+              <NavLink to="/paling-banyak-copy" className={getLinkClass}>
+                Paling Banyak Copy
+              </NavLink>
               {user && (
                 <NavLink to="/prompt-saya" className={getLinkClass}>
                   Prompt Saya

@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import PromptSaya from "./pages/PromptSaya";
 import ViralPrompts from "./pages/ViralPrompts";
 import Profile from "./pages/Profile";
+import MostCopiedPrompts from "./pages/MostCopiedPrompts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const AnimatedRoutes = () => {
         <Route path="/auth" element={<Auth />} />
         <Route path="/prompt-saya" element={<PromptSaya />} />
         <Route path="/viral" element={<ViralPrompts />} />
+        <Route path="/paling-banyak-copy" element={<MostCopiedPrompts />} />
         <Route path="/profile" element={<Profile />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
