@@ -53,14 +53,8 @@ const ViralPrompts = () => {
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     navigator.clipboard.writeText(fullPrompt);
 
-    // Increment copy count in database
-    const prompt = prompts.find(p => p.id === promptId);
-    if (prompt) {
-      const { error } = await supabase
-        .from("prompts")
-        .update({ copy_count: prompt.copy_count + 1 })
-        .eq("id", promptId);
-    }
+    // Increment copy count using secure RPC function (bypasses RLS)
+    await supabase.rpc('increment_copy_count', { prompt_id: promptId });
 
     toast({
       title: "Prompt disalin!",

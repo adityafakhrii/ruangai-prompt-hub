@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Loader2, Plus, Pencil, Trash2, X } from "lucide-react";
@@ -57,7 +56,6 @@ const PromptSaya = () => {
     const [imageMode, setImageMode] = useState<'url' | 'upload'>('url');
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [additionalInfo, setAdditionalInfo] = useState("");
-    const [isViral, setIsViral] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -97,7 +95,6 @@ const PromptSaya = () => {
         setImageMode('url');
         setImageFile(null);
         setAdditionalInfo("");
-        setIsViral(false);
         setEditingId(null);
     };
 
@@ -108,7 +105,6 @@ const PromptSaya = () => {
         setImageUrl(prompt.image_url || "");
         setImageMode('url');
         setImageFile(null);
-        setIsViral(prompt.is_viral);
         setEditingId(prompt.id);
         setView('edit');
     };
@@ -168,7 +164,6 @@ const PromptSaya = () => {
                 prompt_text: promptText,
                 full_prompt: fullPrompt,
                 image_url: finalImageUrl || null,
-                is_viral: isViral,
             };
 
             if (view === 'edit' && editingId) {
@@ -379,17 +374,6 @@ const PromptSaya = () => {
                                             className="bg-input border-border"
                                         />
                                     )}
-                                </div>
-
-                                <div className="flex items-center space-x-2">
-                                    <Switch
-                                        id="is-viral"
-                                        checked={isViral}
-                                        onCheckedChange={setIsViral}
-                                    />
-                                    <Label htmlFor="is-viral" className="cursor-pointer">
-                                        Tandai sebagai Prompt Viral
-                                    </Label>
                                 </div>
 
                                 <div className="flex gap-4 pt-4">

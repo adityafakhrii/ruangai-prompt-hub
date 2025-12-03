@@ -121,16 +121,8 @@ const Index = () => {
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     navigator.clipboard.writeText(fullPrompt);
 
-    // Increment copy count
-    const currentPrompt = [...viralPrompts, ...mostCopiedPrompts, ...latestPrompts, ...allPrompts]
-      .find(p => p.id === promptId);
-
-    if (currentPrompt) {
-      await supabase
-        .from("prompts")
-        .update({ copy_count: (currentPrompt.copy_count || 0) + 1 })
-        .eq("id", promptId);
-    }
+    // Increment copy count using secure RPC function (bypasses RLS)
+    await supabase.rpc('increment_copy_count', { prompt_id: promptId });
 
     toast({
       title: "Prompt disalin!",
