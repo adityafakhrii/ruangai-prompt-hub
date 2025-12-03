@@ -130,6 +130,7 @@ export type Database = {
     }
     Functions: {
       get_creator_name: { Args: { creator_id: string }; Returns: string }
+      increment_copy_count: { Args: { prompt_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
