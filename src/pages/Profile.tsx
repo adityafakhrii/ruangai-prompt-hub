@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { profileNameSchema, passwordChangeSchema } from "@/lib/validationSchemas";
 
 const Profile = () => {
   const { user, loading } = useAuth();
@@ -16,6 +17,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [loadingName, setLoadingName] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [fullName, setFullName] = useState("");
   
@@ -38,6 +40,18 @@ const Profile = () => {
 
   const handleUpdateName = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+
+    const result = profileNameSchema.safeParse({ fullName });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) fieldErrors[`name_${err.path[0]}`] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
     setLoadingName(true);
 
     try {
@@ -64,12 +78,15 @@ const Profile = () => {
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Konfirmasi password baru tidak cocok.",
+    setErrors({});
+
+    const result = passwordChangeSchema.safeParse({ oldPassword, newPassword, confirmPassword });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) fieldErrors[`pwd_${err.path[0]}`] = err.message;
       });
+      setErrors(fieldErrors);
       return;
     }
 
@@ -139,6 +156,9 @@ const Profile = () => {
                     onChange={(e) => setFullName(e.target.value)} 
                     placeholder="Masukkan nama lengkap anda"
                   />
+                  {errors.name_fullName && (
+                    <p className="text-sm text-destructive">{errors.name_fullName}</p>
+                  )}
                 </div>
                 <Button type="submit" disabled={loadingName}>
                   {loadingName && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -164,7 +184,6 @@ const Profile = () => {
                       type={showOldPassword ? "text" : "password"}
                       value={oldPassword}
                       onChange={(e) => setOldPassword(e.target.value)}
-                      required
                       placeholder="Masukkan password lama"
                     />
                     <Button
@@ -177,6 +196,9 @@ const Profile = () => {
                       {showOldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
+                  {errors.pwd_oldPassword && (
+                    <p className="text-sm text-destructive">{errors.pwd_oldPassword}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">Password Baru</Label>
@@ -186,7 +208,6 @@ const Profile = () => {
                       type={showNewPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      required
                       placeholder="Masukkan password baru"
                     />
                     <Button
@@ -199,6 +220,12 @@ const Profile = () => {
                       {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
+                  {errors.pwd_newPassword && (
+                    <p className="text-sm text-destructive">{errors.pwd_newPassword}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Min. 8 karakter, huruf kapital, huruf kecil, dan angka
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
@@ -208,7 +235,6 @@ const Profile = () => {
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
                       placeholder="Konfirmasi password baru"
                     />
                     <Button
@@ -221,6 +247,9 @@ const Profile = () => {
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
+                  {errors.pwd_confirmPassword && (
+                    <p className="text-sm text-destructive">{errors.pwd_confirmPassword}</p>
+                  )}
                 </div>
                 <Button type="submit" disabled={loadingPassword}>
                   {loadingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

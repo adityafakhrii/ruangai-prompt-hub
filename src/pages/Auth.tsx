@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { loginSchema, signupSchema } from "@/lib/validationSchemas";
 
 const Auth = () => {
   const [loginEmail, setLoginEmail] = useState("");
@@ -17,6 +18,7 @@ const Auth = () => {
   const [signupPassword, setSignupPassword] = useState("");
   const [signupFullName, setSignupFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
@@ -33,8 +35,19 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setErrors({});
+    
+    const result = loginSchema.safeParse({ email: loginEmail, password: loginPassword });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) fieldErrors[`login_${err.path[0]}`] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
 
+    setLoading(true);
     const { error } = await signIn(loginEmail, loginPassword);
 
     if (error) {
@@ -55,8 +68,24 @@ const Auth = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setErrors({});
 
+    const result = signupSchema.safeParse({ 
+      fullName: signupFullName, 
+      email: signupEmail, 
+      password: signupPassword 
+    });
+    
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) fieldErrors[`signup_${err.path[0]}`] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setLoading(true);
     const { error } = await signUp(signupEmail, signupPassword, signupFullName);
 
     if (error) {
@@ -107,9 +136,11 @@ const Auth = () => {
                       placeholder="nama@email.com"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      required
                       className="bg-input border-border"
                     />
+                    {errors.login_email && (
+                      <p className="text-sm text-destructive">{errors.login_email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="login-password">Password</Label>
@@ -120,7 +151,6 @@ const Auth = () => {
                         placeholder="••••••••"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
-                        required
                         className="bg-input border-border pr-10"
                       />
                       <Button
@@ -133,6 +163,9 @@ const Auth = () => {
                         {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
+                    {errors.login_password && (
+                      <p className="text-sm text-destructive">{errors.login_password}</p>
+                    )}
                   </div>
                   <Button
                     type="submit"
@@ -164,9 +197,11 @@ const Auth = () => {
                       placeholder="John Doe"
                       value={signupFullName}
                       onChange={(e) => setSignupFullName(e.target.value)}
-                      required
                       className="bg-input border-border"
                     />
+                    {errors.signup_fullName && (
+                      <p className="text-sm text-destructive">{errors.signup_fullName}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -176,9 +211,11 @@ const Auth = () => {
                       placeholder="nama@email.com"
                       value={signupEmail}
                       onChange={(e) => setSignupEmail(e.target.value)}
-                      required
                       className="bg-input border-border"
                     />
+                    {errors.signup_email && (
+                      <p className="text-sm text-destructive">{errors.signup_email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
@@ -189,8 +226,6 @@ const Auth = () => {
                         placeholder="••••••••"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
-                        required
-                        minLength={6}
                         className="bg-input border-border pr-10"
                       />
                       <Button
@@ -203,6 +238,12 @@ const Auth = () => {
                         {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
+                    {errors.signup_password && (
+                      <p className="text-sm text-destructive">{errors.signup_password}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Min. 8 karakter, huruf kapital, huruf kecil, dan angka
+                    </p>
                   </div>
                   <Button
                     type="submit"
