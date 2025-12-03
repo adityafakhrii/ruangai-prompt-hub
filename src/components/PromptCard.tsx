@@ -73,7 +73,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
             </div>
 
             {/* Prompt Preview */}
-            <p className="text-sm line-clamp-3 leading-relaxed flex-1">
+            <p className="text-sm line-clamp-3 leading-relaxed flex-1 break-words">
               {prompt}
             </p>
 
