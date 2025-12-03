@@ -10,6 +10,7 @@ import PromptDetailModal from "@/components/PromptDetailModal";
 import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
 import SkeletonCard from "@/components/SkeletonCard";
+import SEO from "@/components/SEO";
 
 const ViralPrompts = () => {
   const [prompts, setPrompts] = useState<PromptWithCreator[]>([]);
@@ -86,6 +87,10 @@ const ViralPrompts = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Prompt Viral"
+        description="Koleksi prompt AI yang sedang viral dan trending saat ini. Dapatkan inspirasi dari prompt populer."
+      />
       <Navbar />
 
       <div className="container mx-auto px-4 py-12">

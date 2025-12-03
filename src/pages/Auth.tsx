@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { loginSchema, signupSchema } from "@/lib/validationSchemas";
+import SEO from "@/components/SEO";
 
 const Auth = () => {
   const [loginEmail, setLoginEmail] = useState("");
@@ -106,6 +107,10 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
+      <SEO
+        title="Login / Register"
+        description="Masuk atau daftar akun RuangAI Prompt Hub untuk mulai berbagi dan menemukan prompt AI terbaik."
+      />
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-4 mb-8">
           <img src="/iconbiru.png" alt="RuangAI Logo" className="h-14 w-13" />

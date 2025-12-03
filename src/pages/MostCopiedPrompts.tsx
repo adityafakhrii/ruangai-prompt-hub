@@ -10,6 +10,7 @@ import PromptDetailModal from "@/components/PromptDetailModal";
 import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
 import SkeletonCard from "@/components/SkeletonCard";
+import SEO from "@/components/SEO";
 
 const MostCopiedPrompts = () => {
   const [prompts, setPrompts] = useState<PromptWithCreator[]>([]);
@@ -85,6 +86,10 @@ const MostCopiedPrompts = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Paling Banyak Copy"
+        description="Daftar prompt AI yang paling banyak disalin dan digunakan oleh komunitas RuangAI."
+      />
       <Navbar />
 
       <div className="container mx-auto px-4 py-12">

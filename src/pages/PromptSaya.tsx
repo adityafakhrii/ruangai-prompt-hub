@@ -23,6 +23,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { promptSchema } from "@/lib/validationSchemas";
+import SEO from "@/components/SEO";
 
 const categories = [
     "Image", "Video", "Persona", "Vibe Coding"
@@ -228,6 +229,10 @@ const PromptSaya = () => {
 
     return (
         <div className="min-h-screen bg-background">
+            <SEO
+                title="Prompt Saya"
+                description="Kelola koleksi prompt AI pribadi Anda di RuangAI Prompt Hub."
+            />
             <Navbar />
 
             <div className="container mx-auto px-4 py-12">

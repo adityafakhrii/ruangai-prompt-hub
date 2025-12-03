@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { profileNameSchema, passwordChangeSchema } from "@/lib/validationSchemas";
+import SEO from "@/components/SEO";
 
 const Profile = () => {
   const { user, loading } = useAuth();
@@ -131,6 +132,10 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Profil Saya"
+        description="Kelola profil dan pengaturan akun RuangAI Prompt Hub Anda."
+      />
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Profil Pengguna</h1>

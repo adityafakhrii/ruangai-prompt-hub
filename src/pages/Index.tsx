@@ -22,6 +22,7 @@ import PromptDetailModal from "@/components/PromptDetailModal";
 import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 const Index = () => {
   const [viralPrompts, setViralPrompts] = useState<PromptWithCreator[]>([]);
@@ -191,6 +192,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Home"
+        description="Temukan prompt AI terbaik untuk ChatGPT, Midjourney, dan lainnya. Koleksi prompt viral dan paling banyak dicopy."
+      />
       <Navbar />
       <CategoryFilter
         selectedCategory={selectedCategory}
