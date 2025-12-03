@@ -102,12 +102,12 @@ export const fetchMostCopiedPromptsWithCreator = async (limit = 5) => {
 /**
  * Fetch latest prompts with creator information
  */
-export const fetchLatestPromptsWithCreator = async (limit = 6) => {
-    return fetchPromptsWithCreator({
-        orderBy: 'created_at',
-        ascending: false,
-        limit,
-    });
+export const fetchLatestPromptsWithCreator = async (limit = 5) => {
+  return fetchPromptsWithCreator({
+    orderBy: 'created_at',
+    ascending: false,
+    limit,
+  });
 };
 
 /**

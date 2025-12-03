@@ -102,7 +102,7 @@ const Index = () => {
 
   const fetchLatestPrompts = async () => {
     setLoadingLatest(true);
-    const { data, error } = await fetchLatestPromptsWithCreator(6);
+    const { data, error } = await fetchLatestPromptsWithCreator(5);
     if (!error && data) setLatestPrompts(data);
     setLoadingLatest(false);
   };
@@ -240,6 +240,7 @@ const Index = () => {
               prompts={mostCopiedPrompts}
               onCopy={handleCopy}
               onCardClick={handleCardClick}
+              onViewAll={() => navigate('/paling-banyak-copy')}
             />
           )}
 
@@ -259,13 +260,18 @@ const Index = () => {
               prompts={latestPrompts}
               onCopy={handleCopy}
               onCardClick={handleCardClick}
+              onViewAll={() => {
+                const el = document.getElementById('semua-prompt');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              viewAllLabel="Lihat semua"
             />
           )}
         </>
       )}
 
       {/* All Prompts Section with Lazy Loading */}
-      <section className="w-full py-8">
+      <section id="semua-prompt" className="w-full py-8">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold text-foreground mb-6">
             {showSections ? "Semua Prompt" : "Hasil Pencarian"}

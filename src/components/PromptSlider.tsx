@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
-import useEmblaCarousel from "embla-carousel-react";
-import { useCallback } from "react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import PromptCard from "./PromptCard";
 
 interface Prompt {
@@ -31,12 +30,6 @@ const PromptSlider = ({
     onViewAll,
     viewAllLabel = "Lihat semua"
 }: PromptSliderProps) => {
-    const [emblaRef] = useEmblaCarousel({
-        align: "start",
-        slidesToScroll: 1,
-        dragFree: true,
-    });
-
     return (
         <section className="w-full py-8">
             <div className="container mx-auto px-4">
@@ -54,10 +47,10 @@ const PromptSlider = ({
                     )}
                 </div>
 
-                <div className="overflow-hidden" ref={emblaRef}>
-                    <div className="flex gap-4">
+                <Carousel opts={{ align: "start" }}>
+                    <CarouselContent>
                         {prompts.map((prompt) => (
-                            <div key={prompt.id} className="flex-[0_0_calc(100%-16px)] min-w-0 sm:flex-[0_0_calc(50%-8px)] lg:flex-[0_0_calc(33.333%-11px)]">
+                            <CarouselItem key={prompt.id} className="sm:basis-1/2 lg:basis-1/3">
                                 <PromptCard
                                     id={parseInt(prompt.id)}
                                     title={prompt.title}
@@ -69,10 +62,12 @@ const PromptSlider = ({
                                     onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
                                     onClick={() => onCardClick(prompt)}
                                 />
-                            </div>
+                            </CarouselItem>
                         ))}
-                    </div>
-                </div>
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                </Carousel>
             </div>
         </section>
     );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ import PromptCard from "@/components/PromptCard";
 import PromptDetailModal from "@/components/PromptDetailModal";
 import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
+import SkeletonCard from "@/components/SkeletonCard";
 
 const ViralPrompts = () => {
   const [prompts, setPrompts] = useState<PromptWithCreator[]>([]);
@@ -28,11 +29,7 @@ const ViralPrompts = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  useEffect(() => {
-    fetchViralPrompts();
-  }, []);
-
-  const fetchViralPrompts = async () => {
+  const fetchViralPrompts = useCallback(async () => {
     setLoading(true);
 
     const { data, error } = await fetchViralPromptsWithCreator(100);
@@ -48,7 +45,11 @@ const ViralPrompts = () => {
     }
 
     setLoading(false);
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchViralPrompts();
+  }, [fetchViralPrompts]);
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     navigator.clipboard.writeText(fullPrompt);
@@ -98,7 +99,7 @@ const ViralPrompts = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-96 bg-card animate-pulse rounded-xl" />
+              <SkeletonCard key={i} />
             ))}
           </div>
         ) : prompts.length === 0 ? (
