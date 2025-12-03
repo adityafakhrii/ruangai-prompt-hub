@@ -227,33 +227,24 @@ const Index = () => {
             />
           )}
 
-          {/* Latest Prompts Grid */}
-          <section className="w-full py-8">
-            <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Terbaru</h2>
-              {loadingLatest ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
+          {/* Latest Prompts Slider */}
+          {loadingLatest ? (
+            <section className="w-full py-8">
+              <div className="container mx-auto px-4">
+                <h2 className="text-2xl font-bold text-foreground mb-6">Terbaru</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {latestPrompts.map((prompt) => (
-                    <PromptCard
-                      key={prompt.id}
-                      id={parseInt(prompt.id)}
-                      title={prompt.title}
-                      category={prompt.category}
-                      prompt={prompt.prompt_text}
-                      fullPrompt={prompt.full_prompt}
-                      imageUrl={prompt.image_url}
-                      onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
-                      onClick={() => handleCardClick(prompt)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
+              </div>
+            </section>
+          ) : latestPrompts.length > 0 && (
+            <PromptSlider
+              title="Terbaru"
+              prompts={latestPrompts}
+              onCopy={handleCopy}
+              onCardClick={handleCardClick}
+            />
+          )}
         </>
       )}
 
@@ -274,7 +265,7 @@ const Index = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {filterPrompts(allPrompts).map((prompt) => (
                   <PromptCard
                     key={prompt.id}
@@ -292,8 +283,8 @@ const Index = () => {
 
               {/* Loading More Indicator */}
               {loadingMore && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                  {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-6">
+                  {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
                 </div>
               )}
 
