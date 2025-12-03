@@ -37,26 +37,26 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
       className="group relative bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all hover:border-primary hover:shadow-[var(--shadow-card-hover)] flex flex-col h-full"
       onClick={onClick}
     >
-      {/* Preview Image */}
-      {imageUrl ? (
-        <div className="relative aspect-video w-full overflow-hidden bg-muted">
-          <img
-            src={imageUrl}
-            alt={title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <Badge className="absolute top-3 left-3 bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border-none">
-            {category}
-          </Badge>
-        </div>
-      ) : (
-        <div className="px-4 pt-4">
-          <Badge variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/80">
-            {category}
-          </Badge>
-        </div>
-      )}
+      {/* Preview Image - Fixed height for uniform cards */}
+      <div className="relative h-40 w-full overflow-hidden bg-muted">
+        {imageUrl ? (
+          <>
+            <img
+              src={imageUrl}
+              alt={title}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+            <span className="text-4xl opacity-30">📝</span>
+          </div>
+        )}
+        <Badge className="absolute top-3 left-3 bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border-none">
+          {category}
+        </Badge>
+      </div>
 
       {/* Content */}
       <div className="p-4 space-y-3 flex-1 flex flex-col">

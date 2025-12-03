@@ -40,14 +40,16 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
               {prompt.category}
             </Badge>
 
-            {/* Preview Image */}
-            <div className="rounded-xl overflow-hidden">
-              <img
-                src={prompt.imageUrl}
-                alt={prompt.title}
-                className="w-full aspect-video object-cover"
-              />
-            </div>
+            {/* Preview Image - Full image without cropping */}
+            {prompt.imageUrl && (
+              <div className="rounded-xl overflow-hidden bg-muted">
+                <img
+                  src={prompt.imageUrl}
+                  alt={prompt.title}
+                  className="w-full h-auto object-contain max-h-[400px]"
+                />
+              </div>
+            )}
 
             {/* Full Prompt */}
             <div className="space-y-2">

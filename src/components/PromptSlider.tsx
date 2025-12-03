@@ -55,9 +55,9 @@ const PromptSlider = ({
                 </div>
 
                 <div className="overflow-hidden" ref={emblaRef}>
-                    <div className="flex gap-6">
+                    <div className="flex gap-4">
                         {prompts.map((prompt) => (
-                            <div key={prompt.id} className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] xl:flex-[0_0_25%]">
+                            <div key={prompt.id} className="flex-[0_0_calc(100%-16px)] min-w-0 sm:flex-[0_0_calc(50%-8px)] lg:flex-[0_0_calc(33.333%-11px)]">
                                 <PromptCard
                                     id={parseInt(prompt.id)}
                                     title={prompt.title}
