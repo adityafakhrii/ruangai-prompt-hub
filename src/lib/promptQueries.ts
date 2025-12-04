@@ -12,6 +12,7 @@ export interface PromptWithCreator {
     is_viral: boolean;
     created_at: string;
     updated_at: string;
+    additional_info?: string | null;
     creator_name?: string;
 }
 

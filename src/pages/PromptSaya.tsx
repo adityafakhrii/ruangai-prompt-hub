@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { promptSchema } from "@/lib/validationSchemas";
 import SEO from "@/components/SEO";
+import ImageUpload from "@/components/ImageUpload";
 
 const categories = [
     "Image", "Video", "Persona", "Vibe Coding"
@@ -58,6 +59,7 @@ const PromptSaya = () => {
     const [imageUrl, setImageUrl] = useState("");
     const [imageMode, setImageMode] = useState<'url' | 'upload'>('url');
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
@@ -97,6 +99,7 @@ const PromptSaya = () => {
         setImageUrl("");
         setImageMode('url');
         setImageFile(null);
+        setImagePreview(null);
         setAdditionalInfo("");
         setEditingId(null);
         setErrors({});
@@ -384,48 +387,27 @@ const PromptSaya = () => {
 
                                 <div className="space-y-2">
                                     <Label>Gambar (opsional)</Label>
-                                    <div className="flex gap-2 mb-2">
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            variant={imageMode === 'url' ? 'default' : 'outline'}
-                                            onClick={() => { setImageMode('url'); setImageFile(null); }}
-                                        >
-                                            URL
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            variant={imageMode === 'upload' ? 'default' : 'outline'}
-                                            onClick={() => { setImageMode('upload'); setImageUrl(''); }}
-                                        >
-                                            Upload
-                                        </Button>
-                                    </div>
-
-                                    {imageMode === 'url' ? (
-                                        <>
-                                            <Input
-                                                id="image-url"
-                                                type="url"
-                                                value={imageUrl}
-                                                onChange={(e) => setImageUrl(e.target.value)}
-                                                placeholder="https://example.com/image.jpg"
-                                                className="bg-input border-border"
-                                            />
-                                            {errors.imageUrl && (
-                                                <p className="text-sm text-destructive">{errors.imageUrl}</p>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <Input
-                                            id="image-file"
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                                            className="bg-input border-border"
-                                        />
-                                    )}
+                                    <ImageUpload
+                                        imageMode={imageMode}
+                                        imageUrl={imageUrl}
+                                        imageFile={imageFile}
+                                        imagePreview={imagePreview}
+                                        onModeChange={(mode) => {
+                                            setImageMode(mode);
+                                            if (mode === 'url') {
+                                                setImageFile(null);
+                                                setImagePreview(null);
+                                            } else {
+                                                setImageUrl('');
+                                            }
+                                        }}
+                                        onUrlChange={setImageUrl}
+                                        onFileChange={(file, preview) => {
+                                            setImageFile(file);
+                                            setImagePreview(preview);
+                                        }}
+                                        error={errors.imageUrl}
+                                    />
                                 </div>
 
                                 <div className="flex gap-4 pt-4">

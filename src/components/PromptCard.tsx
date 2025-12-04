@@ -12,12 +12,13 @@ interface PromptCardProps {
   fullPrompt: string;
   imageUrl: string;
   creatorName?: string;
+  additionalInfo?: string;
   onCopy: () => void;
   onClick: () => void;
-  priority?: boolean; // Added prop for eager loading
+  priority?: boolean;
 }
 
-const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName, onCopy, onClick, priority = false }: PromptCardProps) => {
+const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName, additionalInfo, onCopy, onClick, priority = false }: PromptCardProps) => {
   const { toast } = useToast();
 
   const handleOpenAI = (e: React.MouseEvent, url: string, name: string) => {
@@ -74,6 +75,13 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
                 </p>
               )}
             </div>
+
+            {/* Additional Info */}
+            {additionalInfo && (
+              <p className="text-xs text-muted-foreground italic line-clamp-1">
+                {additionalInfo}
+              </p>
+            )}
 
             {/* Prompt Preview */}
             <p className="text-sm line-clamp-3 leading-relaxed flex-1 break-words">
@@ -139,6 +147,13 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
               </p>
             )}
           </div>
+
+          {/* Additional Info */}
+          {additionalInfo && (
+            <p className="text-xs text-muted-foreground italic line-clamp-1">
+              {additionalInfo}
+            </p>
+          )}
 
           {/* Prompt Preview - More lines when no image */}
           <p className="text-sm line-clamp-5 leading-relaxed flex-1">
