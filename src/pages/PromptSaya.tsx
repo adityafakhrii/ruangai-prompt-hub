@@ -168,17 +168,26 @@ const PromptSaya = () => {
                 ? fullPrompt.substring(0, 200) + '...'
                 : fullPrompt;
 
-            // Handle image upload
+            // Handle image upload to storage
             let finalImageUrl = imageUrl;
             if (imageMode === 'upload' && imageFile) {
-                // Convert image to base64
-                const base64 = await new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result as string);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(imageFile);
-                });
-                finalImageUrl = base64;
+                const fileExt = imageFile.name.split('.').pop();
+                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('prompt-images')
+                    .upload(fileName, imageFile, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+                
+                if (uploadError) throw uploadError;
+                
+                const { data: urlData } = supabase.storage
+                    .from('prompt-images')
+                    .getPublicUrl(fileName);
+                
+                finalImageUrl = urlData.publicUrl;
             }
 
             const promptData = {
@@ -188,6 +197,7 @@ const PromptSaya = () => {
                 prompt_text: promptText,
                 full_prompt: fullPrompt,
                 image_url: finalImageUrl || null,
+                additional_info: additionalInfo || null,
             };
 
             if (view === 'edit' && editingId) {
@@ -347,9 +357,9 @@ const PromptSaya = () => {
                                         id="additional-info"
                                         value={additionalInfo}
                                         onChange={(e) => setAdditionalInfo(e.target.value)}
-                                        placeholder="Info tambahan..."
-                                        disabled
+                                        placeholder="Deskripsi singkat atau catatan tambahan..."
                                         className="bg-input border-border"
+                                        maxLength={500}
                                     />
                                 </div>
 
