@@ -40,6 +40,7 @@ const Index = () => {
     imageUrl: string;
     creatorName: string;
     additionalInfo?: string;
+    copyCount?: number;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
@@ -55,12 +56,12 @@ const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const observerTarget = useRef<HTMLDivElement>(null);
-  
-  const { 
-    showLoginModal, 
-    setShowLoginModal, 
+
+  const {
+    showLoginModal,
+    setShowLoginModal,
     incrementCopyCount,
-    remainingCopies 
+    remainingCopies
   } = useCopyLimit(!!user);
 
   useEffect(() => {
@@ -70,14 +71,14 @@ const Index = () => {
         fetchViralPrompts(),
         fetchMostCopiedPrompts()
       ]);
-      
+
       // Load below-the-fold content after critical content
       setTimeout(() => {
         fetchLatestPrompts();
         fetchAllPrompts(0);
       }, 100);
     };
-    
+
     loadCritical();
   }, []);
 
@@ -140,7 +141,7 @@ const Index = () => {
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     // Check if user can copy (respects 3-copy limit for non-logged users)
     const canProceed = incrementCopyCount();
-    
+
     if (!canProceed) {
       toast({
         title: "Batas copy tercapai",
@@ -177,6 +178,7 @@ const Index = () => {
       imageUrl: prompt.image_url || '',
       creatorName: prompt.creator_name || '',
       additionalInfo: prompt.additional_info || undefined,
+      copyCount: prompt.copy_count,
     });
     setIsDetailModalOpen(true);
   };
@@ -318,6 +320,7 @@ const Index = () => {
                     imageUrl={prompt.image_url || ''}
                     creatorName={prompt.creator_name}
                     additionalInfo={prompt.additional_info || undefined}
+                    copyCount={prompt.copy_count}
                     onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                     onClick={() => handleCardClick(prompt)}
                   />

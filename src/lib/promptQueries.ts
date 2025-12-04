@@ -25,6 +25,7 @@ export const fetchPromptsWithCreator = async (options?: {
     ascending?: boolean;
     limit?: number;
     offset?: number;
+    minCopyCount?: number;
 }) => {
     const {
         isViral,
@@ -32,6 +33,7 @@ export const fetchPromptsWithCreator = async (options?: {
         ascending = false,
         limit,
         offset,
+        minCopyCount,
     } = options || {};
 
     let query = supabase
@@ -41,6 +43,10 @@ export const fetchPromptsWithCreator = async (options?: {
 
     if (isViral !== undefined) {
         query = query.eq('is_viral', isViral);
+    }
+
+    if (minCopyCount !== undefined) {
+        query = query.gt('copy_count', minCopyCount);
     }
 
     if (limit) {
@@ -61,7 +67,7 @@ export const fetchPromptsWithCreator = async (options?: {
     // Fetch creator names using the secure function for each unique user_id
     const userIds = [...new Set(data?.map(p => p.user_id) || [])];
     const creatorNames: Record<string, string> = {};
-    
+
     // Batch fetch creator names using the secure RPC function
     for (const userId of userIds) {
         const { data: nameData } = await supabase.rpc('get_creator_name', { creator_id: userId });
@@ -97,6 +103,7 @@ export const fetchMostCopiedPromptsWithCreator = async (limit = 5) => {
         orderBy: 'copy_count',
         ascending: false,
         limit,
+        minCopyCount: 0,
     });
 };
 
@@ -104,11 +111,11 @@ export const fetchMostCopiedPromptsWithCreator = async (limit = 5) => {
  * Fetch latest prompts with creator information
  */
 export const fetchLatestPromptsWithCreator = async (limit = 5) => {
-  return fetchPromptsWithCreator({
-    orderBy: 'created_at',
-    ascending: false,
-    limit,
-  });
+    return fetchPromptsWithCreator({
+        orderBy: 'created_at',
+        ascending: false,
+        limit,
+    });
 };
 
 /**

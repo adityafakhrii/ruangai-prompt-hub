@@ -13,12 +13,13 @@ interface PromptCardProps {
   imageUrl: string;
   creatorName?: string;
   additionalInfo?: string;
+  copyCount?: number;
   onCopy: () => void;
   onClick: () => void;
   priority?: boolean;
 }
 
-const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName, additionalInfo, onCopy, onClick, priority = false }: PromptCardProps) => {
+const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName, additionalInfo, copyCount = 0, onCopy, onClick, priority = false }: PromptCardProps) => {
   const { toast } = useToast();
 
   const handleOpenAI = (e: React.MouseEvent, url: string, name: string) => {
@@ -61,9 +62,16 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
           {/* Content with image */}
           <div className="p-4 space-y-3 flex-1 flex flex-col">
             <div>
-              <h3 className="font-semibold text-lg text-heading line-clamp-1" title={title}>
-                {title}
-              </h3>
+              <div className="flex justify-between items-start gap-2">
+                <h3 className="font-semibold text-lg text-heading line-clamp-1" title={title}>
+                  {title}
+                </h3>
+                {copyCount !== undefined && (
+                  <Badge variant="default" className="shrink-0 text-[10px] px-1.5 h-5">
+                    {copyCount} copied
+                  </Badge>
+                )}
+              </div>
               {creatorName && creatorName !== 'Unknown' && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Oleh: {creatorName}
@@ -128,10 +136,17 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
       ) : (
         /* No Image Layout - Show category, title, creator, prompt directly */
         <div className="p-4 space-y-3 flex-1 flex flex-col">
-          <Badge className="w-fit bg-primary/10 hover:bg-primary/20 text-primary border-none">
-            {category}
-          </Badge>
-          
+          <div className="flex justify-between items-center">
+            <Badge className="w-fit bg-primary/10 hover:bg-primary/20 text-primary border-none">
+              {category}
+            </Badge>
+            {copyCount !== undefined && (
+              <Badge variant="default" className="text-[10px] px-1.5 h-5">
+                {copyCount} copied
+              </Badge>
+            )}
+          </div>
+
           <div>
             <h3 className="font-semibold text-lg text-heading line-clamp-2" title={title}>
               {title}
@@ -202,3 +217,4 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
 };
 
 export default PromptCard;
+

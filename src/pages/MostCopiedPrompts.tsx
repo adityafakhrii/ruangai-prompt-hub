@@ -22,6 +22,7 @@ const MostCopiedPrompts = () => {
     fullPrompt: string;
     imageUrl: string;
     creatorName: string;
+    copyCount?: number;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -80,6 +81,7 @@ const MostCopiedPrompts = () => {
       fullPrompt: prompt.full_prompt,
       imageUrl: prompt.image_url,
       creatorName: prompt.creator_name,
+      copyCount: prompt.copy_count,
     });
     setIsDetailModalOpen(true);
   };
@@ -122,6 +124,7 @@ const MostCopiedPrompts = () => {
                 fullPrompt={prompt.full_prompt}
                 imageUrl={prompt.image_url}
                 creatorName={prompt.creator_name}
+                copyCount={prompt.copy_count}
                 onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                 onClick={() => handleCardClick(prompt)}
               />
