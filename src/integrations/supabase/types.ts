@@ -76,6 +76,7 @@ export type Database = {
       }
       prompts: {
         Row: {
+          additional_info: string | null
           category: string
           copy_count: number | null
           created_at: string | null
@@ -89,6 +90,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          additional_info?: string | null
           category: string
           copy_count?: number | null
           created_at?: string | null
@@ -102,6 +104,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          additional_info?: string | null
           category?: string
           copy_count?: number | null
           created_at?: string | null
