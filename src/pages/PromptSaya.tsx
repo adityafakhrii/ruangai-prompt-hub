@@ -27,7 +27,7 @@ import SEO from "@/components/SEO";
 import ImageUpload from "@/components/ImageUpload";
 
 const categories = [
-    "Image", "Video", "Persona", "Vibe Coding"
+    "Image", "Video", "Persona", "Vibe Coding", "Produktivitas"
 ];
 
 interface Prompt {
@@ -176,20 +176,20 @@ const PromptSaya = () => {
             if (imageMode === 'upload' && imageFile) {
                 const fileExt = imageFile.name.split('.').pop();
                 const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-                
+
                 const { data: uploadData, error: uploadError } = await supabase.storage
                     .from('prompt-images')
                     .upload(fileName, imageFile, {
                         cacheControl: '3600',
                         upsert: false
                     });
-                
+
                 if (uploadError) throw uploadError;
-                
+
                 const { data: urlData } = supabase.storage
                     .from('prompt-images')
                     .getPublicUrl(fileName);
-                
+
                 finalImageUrl = urlData.publicUrl;
             }
 

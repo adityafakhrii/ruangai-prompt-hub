@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Image, Video, User, Code } from "lucide-react";
+import { Image, Video, User, Code, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
 
 const mainCategories = [
@@ -7,6 +7,7 @@ const mainCategories = [
   { name: "Video", icon: Video, isNew: false },
   { name: "Persona", icon: User, isNew: false },
   { name: "Vibe Coding", icon: Code, isNew: false },
+  { name: "Produktivitas", icon: Briefcase, isNew: true },
 ];
 
 interface CategoryFilterProps {
@@ -31,8 +32,8 @@ const CategoryFilter = ({ selectedCategory, onSelectCategory }: CategoryFilterPr
               whileHover={{ y: -2 }}
               onClick={() => onSelectCategory(selectedCategory === category.name ? "" : category.name)}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium hover:shadow-lg transition-all ${selectedCategory === category.name
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-primary-light text-heading"
+                ? "bg-primary text-primary-foreground"
+                : "bg-primary-light text-heading"
                 }`}
             >
               <category.icon className="h-4 w-4" />
