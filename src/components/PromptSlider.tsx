@@ -12,6 +12,7 @@ interface Prompt {
     image_url: string | null;
     creator_name?: string;
     additional_info?: string | null;
+    copy_count?: number;
 }
 
 interface PromptSliderProps {
@@ -53,23 +54,24 @@ const PromptSlider = ({
                         <CarouselPrevious className="hidden sm:flex left-2 z-10" />
                         <CarouselNext className="hidden sm:flex right-2 z-10" />
                         <CarouselContent>
-                        {prompts.map((prompt, index) => (
-                            <CarouselItem key={prompt.id} className="sm:basis-1/2 lg:basis-1/3">
-                                <PromptCard
-                                    id={parseInt(prompt.id)}
-                                    title={prompt.title}
-                                    category={prompt.category}
-                                    prompt={prompt.prompt_text}
-                                    fullPrompt={prompt.full_prompt}
-                                    imageUrl={prompt.image_url || ''}
-                                    creatorName={prompt.creator_name}
-                                    additionalInfo={prompt.additional_info || undefined}
-                                    onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
-                                    onClick={() => onCardClick(prompt)}
-                                    priority={index < 3}
-                                />
-                            </CarouselItem>
-                        ))}
+                            {prompts.map((prompt, index) => (
+                                <CarouselItem key={prompt.id} className="sm:basis-1/2 lg:basis-1/3">
+                                    <PromptCard
+                                        id={parseInt(prompt.id)}
+                                        title={prompt.title}
+                                        category={prompt.category}
+                                        prompt={prompt.prompt_text}
+                                        fullPrompt={prompt.full_prompt}
+                                        imageUrl={prompt.image_url || ''}
+                                        creatorName={prompt.creator_name}
+                                        additionalInfo={prompt.additional_info || undefined}
+                                        copyCount={prompt.copy_count}
+                                        onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
+                                        onClick={() => onCardClick(prompt)}
+                                        priority={index < 3}
+                                    />
+                                </CarouselItem>
+                            ))}
                         </CarouselContent>
                     </div>
                 </Carousel>

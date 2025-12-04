@@ -3,7 +3,7 @@ import { Image, Video, User, Code, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
 
 const mainCategories = [
-  { name: "Image", icon: Image, isNew: true },
+  { name: "Image", icon: Image, isNew: false },
   { name: "Video", icon: Video, isNew: false },
   { name: "Persona", icon: User, isNew: false },
   { name: "Vibe Coding", icon: Code, isNew: false },
