@@ -17,6 +17,7 @@ interface PromptDetailModalProps {
     imageUrl: string;
     fullPrompt: string;
     creatorName?: string;
+    additionalInfo?: string;
   } | null;
   onCopy: () => void;
 }
@@ -79,6 +80,16 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                   className="w-full h-auto object-contain max-h-[400px]"
                   loading="lazy"
                 />
+              </div>
+            )}
+
+            {/* Additional Info */}
+            {prompt.additionalInfo && (
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-heading">Keterangan Tambahan</h3>
+                <p className="text-sm text-muted-foreground italic">
+                  {prompt.additionalInfo}
+                </p>
               </div>
             )}
 

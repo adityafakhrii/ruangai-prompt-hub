@@ -39,6 +39,7 @@ const Index = () => {
     fullPrompt: string;
     imageUrl: string;
     creatorName: string;
+    additionalInfo?: string;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
@@ -173,8 +174,9 @@ const Index = () => {
       category: prompt.category,
       prompt: prompt.prompt_text,
       fullPrompt: prompt.full_prompt,
-      imageUrl: prompt.image_url,
-      creatorName: prompt.creator_name,
+      imageUrl: prompt.image_url || '',
+      creatorName: prompt.creator_name || '',
+      additionalInfo: prompt.additional_info || undefined,
     });
     setIsDetailModalOpen(true);
   };
@@ -313,7 +315,9 @@ const Index = () => {
                     category={prompt.category}
                     prompt={prompt.prompt_text}
                     fullPrompt={prompt.full_prompt}
-                    imageUrl={prompt.image_url}
+                    imageUrl={prompt.image_url || ''}
+                    creatorName={prompt.creator_name}
+                    additionalInfo={prompt.additional_info || undefined}
                     onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                     onClick={() => handleCardClick(prompt)}
                   />

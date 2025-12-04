@@ -11,6 +11,7 @@ interface Prompt {
     full_prompt: string;
     image_url: string | null;
     creator_name?: string;
+    additional_info?: string | null;
 }
 
 interface PromptSliderProps {
@@ -60,8 +61,9 @@ const PromptSlider = ({
                                     category={prompt.category}
                                     prompt={prompt.prompt_text}
                                     fullPrompt={prompt.full_prompt}
-                                    imageUrl={prompt.image_url}
+                                    imageUrl={prompt.image_url || ''}
                                     creatorName={prompt.creator_name}
+                                    additionalInfo={prompt.additional_info || undefined}
                                     onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
                                     onClick={() => onCardClick(prompt)}
                                     priority={index < 3}
