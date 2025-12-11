@@ -9,6 +9,7 @@ import {
   fetchMostCopiedPromptsWithCreator,
   fetchLatestPromptsWithCreator,
   fetchAllPromptsWithCreator,
+  fetchPopularKeywords,
   PromptWithCreator
 } from "@/lib/promptQueries";
 import Navbar from "@/components/Navbar";
@@ -31,6 +32,7 @@ const Index = () => {
   const [allPrompts, setAllPrompts] = useState<PromptWithCreator[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  const [popularKeywords, setPopularKeywords] = useState<string[]>([]);
 
   const [selectedPrompt, setSelectedPrompt] = useState<{
     title: string;
@@ -76,11 +78,17 @@ const Index = () => {
       setTimeout(() => {
         fetchLatestPrompts();
         fetchAllPrompts(0);
+        loadKeywords();
       }, 100);
     };
 
     loadCritical();
   }, []);
+
+  const loadKeywords = async () => {
+    const keywords = await fetchPopularKeywords(8);
+    setPopularKeywords(keywords);
+  };
 
   // Lazy loading observer
   useEffect(() => {
@@ -220,6 +228,7 @@ const Index = () => {
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        keywords={popularKeywords}
       />
       <InfoBar />
 
