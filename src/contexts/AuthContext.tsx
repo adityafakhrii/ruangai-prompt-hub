@@ -1,13 +1,12 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import * as jose from 'jose';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
 }
@@ -19,68 +18,119 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const initializeAuth = async () => {
+      try {
+        // 1. Check for token in URL (prioritize heroic_token, then token, then session)
+        const urlToken = searchParams.get('heroic_token') || searchParams.get('token') || searchParams.get('session');
+
+        // 2. Check for token in localStorage
+        const localToken = localStorage.getItem('heroic_token');
+
+        const tokenToVerify = urlToken || localToken;
+        // Debugging logs
+        console.log("Token to verify:", tokenToVerify ? "Found" : "Missing");
+
+        // Make sure secret is available. If env is missing, this will throw the empty key error.
+        const jwtSecret = import.meta.env.VITE_JWT_SECRET;
+        if (!jwtSecret) {
+          console.error("VITE_JWT_SECRET is missing in .env!");
+          setLoading(false);
+          return;
+        }
+
+        if (tokenToVerify) {
+          const secret = new TextEncoder().encode(jwtSecret);
+
+          try {
+            const { payload } = await jose.jwtVerify(tokenToVerify, secret);
+
+            console.log("JWT Payload:", payload);
+
+            // Construct User object from specific claims
+            const mockUser: User = {
+              id: (payload.user_id as string) || (payload.sub as string) || 'unknown',
+              email: payload.email as string,
+              app_metadata: {},
+              user_metadata: {
+                ...payload,
+                whatsapp_number: payload.whatsapp_number,
+                isValidEmail: payload.isValidEmail,
+                full_name: (payload.user_metadata as any)?.full_name || payload.name || payload.email // Try to find a name for navbar
+              },
+              aud: 'authenticated',
+              created_at: new Date().toISOString(),
+              role: 'authenticated'
+            } as User;
+
+            const mockSession: Session = {
+              access_token: tokenToVerify,
+              token_type: 'bearer',
+              user: mockUser,
+              expires_in: (payload.exp ? payload.exp - Math.floor(Date.now() / 1000) : 3600),
+              refresh_token: '',
+              expires_at: payload.exp || Math.floor(Date.now() / 1000) + 3600,
+            };
+
+            setUser(mockUser);
+            setSession(mockSession);
+
+            // Persist valid token
+            localStorage.setItem('heroic_token', tokenToVerify);
+
+            // Set Supabase session
+            supabase.auth.setSession({
+              access_token: tokenToVerify,
+              refresh_token: '',
+            });
+
+            // Clean URL if token was there. IMPORTANT: Do this AFTER setting state
+            if (urlToken) {
+              // Use setSearchParams to clear params without page reload or losing state context
+              const newParams = new URLSearchParams(searchParams);
+              newParams.delete('heroic_token');
+              newParams.delete('token');
+              newParams.delete('session');
+              setSearchParams(newParams, { replace: true });
+            }
+
+          } catch (error) {
+            console.error('Invalid token verification:', error);
+            // Only clear if we were trying to use a stored token that is now invalid
+            // If it was a bad URL token, we just don't log them in
+            if (localToken && !urlToken) {
+              localStorage.removeItem('heroic_token');
+            }
+            setUser(null);
+            setSession(null);
+          }
+        } else {
+          setUser(null);
+          setSession(null);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
         setLoading(false);
       }
-    );
+    };
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-        }
-      }
-    });
-    
-    if (!error) {
-      setTimeout(() => navigate('/'), 100);
-    }
-    
-    return { error };
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (!error) {
-      setTimeout(() => navigate('/'), 100);
-    }
-    
-    return { error };
-  };
+    initializeAuth();
+  }, [searchParams, setSearchParams]);
 
   const signOut = async () => {
+    localStorage.removeItem('heroic_token');
+    localStorage.removeItem('ruangai_session'); // Clean up old key if exists
     await supabase.auth.signOut();
-    navigate('/auth');
+    setUser(null);
+    setSession(null);
+    window.location.href = 'https://ruangai.codepolitan.com/logout';
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, signUp, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ user, session, signOut, loading }}>
       {children}
     </AuthContext.Provider>
   );

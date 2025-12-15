@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut, Menu, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, NavLink } from "react-router-dom";
 import {
@@ -16,10 +16,10 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  const getLinkClass = ({ isActive }: { isActive: boolean }) => 
+  const getLinkClass = ({ isActive }: { isActive: boolean }) =>
     `text-sm transition-colors ${isActive ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'}`;
 
-  const getMobileLinkClass = ({ isActive }: { isActive: boolean }) => 
+  const getMobileLinkClass = ({ isActive }: { isActive: boolean }) =>
     `text-base py-2 transition-colors ${isActive ? 'text-foreground font-bold' : 'text-muted-foreground hover:text-foreground'}`;
 
   const closeSheet = () => setIsOpen(false);
@@ -57,14 +57,16 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
-                <NavLink 
-                  to="/profile"
-                  className={({ isActive }) => 
-                    `text-sm transition-colors mr-2 font-medium ${isActive ? 'text-primary font-bold' : 'text-foreground hover:text-primary'}`
-                  }
+                <a
+                  href="https://ruangai.codepolitan.com/"
+                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mr-4 transition-colors"
                 >
+                  <ArrowLeft className="h-4 w-4" />
+                  Dashboard
+                </a>
+                <span className="text-sm font-medium text-foreground mr-2">
                   {user.user_metadata?.full_name || user.email}
-                </NavLink>
+                </span>
                 <Button
                   size="sm"
                   variant="outline"
@@ -126,13 +128,16 @@ const Navbar = () => {
                   <div className="flex flex-col gap-4">
                     {user ? (
                       <>
-                        <NavLink 
-                          to="/profile"
-                          className="text-sm font-medium text-foreground"
-                          onClick={closeSheet}
+                        <a
+                          href="https://ruangai.codepolitan.com/"
+                          className="flex items-center gap-2 text-base font-medium text-muted-foreground hover:text-foreground py-2 transition-colors"
                         >
+                          <ArrowLeft className="h-4 w-4" />
+                          Dashboard
+                        </a>
+                        <span className="text-sm font-medium text-foreground py-2">
                           {user.user_metadata?.full_name || user.email}
-                        </NavLink>
+                        </span>
                         <Button
                           variant="outline"
                           className="w-full justify-start"
