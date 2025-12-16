@@ -54,7 +54,7 @@ const Auth = () => {
             </div>
 
             <p className="text-center text-sm text-muted-foreground mt-4">
-              Setelah login, klik menu "Prompt" di RuangAI untuk kembali ke sini.
+              Setelah login, klik menu "Prompt" untuk kembali ke sini.
             </p>
           </CardContent>
         </Card>
