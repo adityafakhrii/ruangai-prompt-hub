@@ -40,14 +40,14 @@ const Auth = () => {
               <Button
                 variant="outline"
                 className="w-full gap-2 border-primary text-primary hover:bg-primary/10"
-                onClick={() => window.open('https://www.ruangai.id/signin', '_blank', 'noopener noreferrer')}
+                onClick={() => window.open('https://ruangai.codepolitan.com/masuk/prompt', '_blank', 'noopener noreferrer')}
               >
                 Login di RuangAI <ExternalLink className="h-4 w-4" />
               </Button>
 
               <Button
                 className="w-full bg-primary hover:bg-primary/90 gap-2"
-                onClick={() => window.open('https://ruangai.id/cmref/Mentor-Adit', '_blank', 'noopener noreferrer')}
+                onClick={() => window.open('https://ruangai.codepolitan.com/registrasi', '_blank', 'noopener noreferrer')}
               >
                 Daftar Akun Baru <ExternalLink className="h-4 w-4" />
               </Button>
