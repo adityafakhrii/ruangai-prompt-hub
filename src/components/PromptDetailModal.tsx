@@ -102,7 +102,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
             {/* Full Prompt */}
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-heading">Full Prompt</h3>
-              <div className="bg-muted p-4 rounded-lg">
+              <div className="bg-muted p-4 rounded-lg select-none cursor-default">
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">
                   {prompt.fullPrompt}
                 </p>
@@ -122,7 +122,10 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
               <Button
                 variant="outline"
                 className="flex-1 border-border hover:border-primary hover:text-primary"
-                onClick={() => window.open('https://chat.openai.com', '_blank')}
+                onClick={() => {
+                  onCopy(); // Copy the prompt first
+                  window.open('https://chat.openai.com', '_blank'); // Then open link
+                }}
               >
                 <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-4 w-4 mr-2" loading="lazy" />
                 Buka di ChatGPT
@@ -130,7 +133,10 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
               <Button
                 variant="outline"
                 className="flex-1 border-border hover:border-primary hover:text-primary"
-                onClick={() => window.open('https://gemini.google.com', '_blank')}
+                onClick={() => {
+                  onCopy(); // Copy the prompt first
+                  window.open('https://gemini.google.com', '_blank'); // Then open link
+                }}
               >
                 <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-4 w-4 mr-2" loading="lazy" />
                 Buka di Gemini
