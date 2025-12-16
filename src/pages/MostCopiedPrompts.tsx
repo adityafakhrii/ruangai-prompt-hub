@@ -91,6 +91,12 @@ const MostCopiedPrompts = () => {
       <SEO
         title="Paling Banyak Copy"
         description="Daftar prompt AI yang paling banyak disalin dan digunakan oleh komunitas RuangAI."
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Prompt Paling Banyak Dicopy - RuangAI Prompt Hub",
+          "description": "Daftar prompt AI yang paling banyak disalin dan digunakan oleh komunitas RuangAI."
+        }}
       />
       <Navbar />
 

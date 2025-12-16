@@ -92,6 +92,12 @@ const ViralPrompts = () => {
       <SEO
         title="Prompt Viral"
         description="Koleksi prompt AI yang sedang viral dan trending saat ini. Dapatkan inspirasi dari prompt populer."
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Prompt Viral - RuangAI Prompt Hub",
+          "description": "Koleksi prompt AI yang sedang viral dan trending saat ini."
+        }}
       />
       <Navbar />
 

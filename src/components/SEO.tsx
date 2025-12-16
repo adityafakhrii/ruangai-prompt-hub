@@ -6,13 +6,14 @@ interface SEOProps {
   canonical?: string;
   ogImage?: string;
   ogType?: string;
+  keywords?: string[];
+  jsonLd?: Record<string, any>;
 }
 
-const SEO = ({ title, description, canonical, ogImage, ogType = "website" }: SEOProps) => {
+const SEO = ({ title, description, canonical, ogImage, ogType = "website", keywords, jsonLd }: SEOProps) => {
   const siteName = "RuangAI Prompt Hub";
   const fullTitle = `${title} | ${siteName}`;
-  // Fallback to window.location.origin if not available (in SSR scenarios this might need adjustment, but this is SPA)
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://ruangai-prompt-hub.vercel.app';
+  const baseUrl = "https://raiprompt.adityafakhri.com"; // Hardcoded production domain
   const image = ogImage || `${baseUrl}/iconbiru.png`;
   const url = canonical || (typeof window !== 'undefined' ? window.location.href : baseUrl);
 
@@ -21,6 +22,9 @@ const SEO = ({ title, description, canonical, ogImage, ogType = "website" }: SEO
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={url} />
+      {keywords && keywords.length > 0 && (
+        <meta name="keywords" content={keywords.join(", ")} />
+      )}
 
       {/* Open Graph */}
       <meta property="og:site_name" content={siteName} />
@@ -35,6 +39,13 @@ const SEO = ({ title, description, canonical, ogImage, ogType = "website" }: SEO
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+
+      {/* Structured Data (JSON-LD) */}
+      {jsonLd && (
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLd)}
+        </script>
+      )}
     </Helmet>
   );
 };

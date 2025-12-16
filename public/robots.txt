@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://rai-prompt.vercel.app/sitemap.xml
+Sitemap: https://raiprompt.adityafakhri.com/sitemap.xml

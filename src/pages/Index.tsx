@@ -219,6 +219,19 @@ const Index = () => {
       <SEO
         title="Home"
         description="Temukan prompt AI terbaik untuk ChatGPT, Midjourney, dan lainnya. Koleksi prompt viral dan paling banyak dicopy."
+        keywords={["prompt AI", "ChatGPT prompts", "Gemini prompts", "Midjourney prompts", "katalog prompt", "prompt gratis", "prompt coding", "prompt marketing"]}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "RuangAI Prompt Hub",
+          "url": "https://raiprompt.adityafakhri.com",
+          "description": "Katalog prompt AI terlengkap untuk ChatGPT, Gemini, dan lainnya.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://raiprompt.adityafakhri.com/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }}
       />
       <Navbar />
       <CategoryFilter
