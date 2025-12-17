@@ -71,23 +71,23 @@ const PromptSaya = () => {
         }
     }, [user, authLoading, navigate]);
 
+    const getHeroicToken = () => localStorage.getItem('heroic_token');
+
     const fetchPrompts = async () => {
         try {
-            // Fetch by creator_email from JWT
-            const userEmail = user?.email;
-            if (!userEmail) {
+            const token = getHeroicToken();
+            if (!token) {
                 setLoading(false);
                 return;
             }
 
-            const { data, error } = await supabase
-                .from("prompts")
-                .select("*")
-                .eq("creator_email", userEmail)
-                .order("created_at", { ascending: false });
+            const response = await supabase.functions.invoke('manage-prompts', {
+                body: { action: 'list' },
+                headers: { Authorization: `Bearer ${token}` }
+            });
 
-            if (error) throw error;
-            setPrompts(data || []);
+            if (response.error) throw response.error;
+            setPrompts(response.data?.prompts || []);
         } catch (error: any) {
             toast({
                 title: "Error fetching prompts",
@@ -126,19 +126,23 @@ const PromptSaya = () => {
 
     const handleDelete = async (id: string) => {
         try {
-            const { error } = await supabase
-                .from("prompts")
-                .delete()
-                .eq("id", id);
+            const token = getHeroicToken();
+            if (!token) throw new Error('Not authenticated');
 
-            if (error) throw error;
+            const response = await supabase.functions.invoke('manage-prompts', {
+                body: { action: 'delete', promptId: id },
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.error) throw response.error;
+            if (response.data?.error) throw new Error(response.data.error);
 
             setPrompts(prompts.filter(p => p.id !== id));
             toast({
                 title: "Berhasil dihapus",
                 description: "Prompt telah dihapus.",
             });
-        } catch (error) {
+        } catch (error: any) {
             toast({
                 title: "Gagal menghapus",
                 description: error.message,
@@ -173,6 +177,9 @@ const PromptSaya = () => {
         setSubmitting(true);
 
         try {
+            const token = getHeroicToken();
+            if (!token) throw new Error('Not authenticated');
+
             // Auto-generate prompt_text from full_prompt (first 200 characters)
             const promptText = fullPrompt.length > 200
                 ? fullPrompt.substring(0, 200) + '...'
@@ -182,7 +189,7 @@ const PromptSaya = () => {
             let finalImageUrl = imageUrl;
             if (imageMode === 'upload' && imageFile) {
                 const fileExt = imageFile.name.split('.').pop();
-                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                const fileName = `${user.id || 'user'}/${Date.now()}.${fileExt}`;
 
                 const { data: uploadData, error: uploadError } = await supabase.storage
                     .from('prompt-images')
@@ -201,7 +208,6 @@ const PromptSaya = () => {
             }
 
             const promptData = {
-                creator_email: user.email,
                 title,
                 category,
                 prompt_text: promptText,
@@ -211,24 +217,27 @@ const PromptSaya = () => {
             };
 
             if (view === 'edit' && editingId) {
-                const { error } = await supabase
-                    .from("prompts")
-                    .update(promptData)
-                    .eq("id", editingId);
-                if (error) throw error;
+                const response = await supabase.functions.invoke('manage-prompts', {
+                    body: { action: 'update', promptId: editingId, data: promptData },
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (response.error) throw response.error;
+                if (response.data?.error) throw new Error(response.data.error);
                 toast({ title: "Berhasil diperbarui", description: "Prompt Anda telah diperbarui." });
             } else {
-                const { error } = await supabase
-                    .from("prompts")
-                    .insert(promptData);
-                if (error) throw error;
+                const response = await supabase.functions.invoke('manage-prompts', {
+                    body: { action: 'create', data: promptData },
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (response.error) throw response.error;
+                if (response.data?.error) throw new Error(response.data.error);
                 toast({ title: "Berhasil ditambahkan", description: "Prompt baru telah dibuat." });
             }
 
             await fetchPrompts();
             setView('list');
             resetForm();
-        } catch (error) {
+        } catch (error: any) {
             toast({
                 title: "Gagal menyimpan",
                 description: error.message,
