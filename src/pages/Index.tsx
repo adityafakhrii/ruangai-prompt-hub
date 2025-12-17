@@ -247,26 +247,6 @@ const Index = () => {
 
       {showSections && (
         <>
-          {/* Viral Prompts Slider */}
-          {loadingViral ? (
-            <section className="w-full py-8">
-              <div className="container mx-auto px-4">
-                <h2 className="text-2xl font-bold text-foreground mb-6">Prompt Viral</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
-                </div>
-              </div>
-            </section>
-          ) : viralPrompts.length > 0 && (
-            <PromptSlider
-              title="Prompt Viral"
-              prompts={viralPrompts}
-              onCopy={handleCopy}
-              onCardClick={handleCardClick}
-              onViewAll={() => navigate('/viral')}
-            />
-          )}
-
           {/* Most Copied Slider */}
           {loadingMostCopied ? (
             <section className="w-full py-8">
