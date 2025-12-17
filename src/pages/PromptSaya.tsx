@@ -34,10 +34,8 @@ interface Prompt {
     id: string;
     title: string;
     category: string;
-    prompt_text: string;
     full_prompt: string;
     image_url: string | null;
-    is_viral: boolean;
     created_at: string;
 }
 
@@ -82,16 +80,18 @@ const PromptSaya = () => {
             }
 
             const response = await supabase.functions.invoke('manage-prompts', {
-                body: { action: 'list' },
-                headers: { Authorization: `Bearer ${token}` }
+                body: { action: 'list', token },
+                headers: {
+                    Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                }
             });
 
             if (response.error) throw response.error;
             setPrompts(response.data?.prompts || []);
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast({
                 title: "Error fetching prompts",
-                description: error.message,
+                description: error instanceof Error ? error.message : String(error),
                 variant: "destructive",
             });
         } finally {
@@ -130,8 +130,10 @@ const PromptSaya = () => {
             if (!token) throw new Error('Not authenticated');
 
             const response = await supabase.functions.invoke('manage-prompts', {
-                body: { action: 'delete', promptId: id },
-                headers: { Authorization: `Bearer ${token}` }
+                body: { action: 'delete', promptId: id, token },
+                headers: {
+                    Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                }
             });
 
             if (response.error) throw response.error;
@@ -142,10 +144,10 @@ const PromptSaya = () => {
                 title: "Berhasil dihapus",
                 description: "Prompt telah dihapus.",
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast({
                 title: "Gagal menghapus",
-                description: error.message,
+                description: error instanceof Error ? error.message : String(error),
                 variant: "destructive",
             });
         }
@@ -180,10 +182,10 @@ const PromptSaya = () => {
             const token = getHeroicToken();
             if (!token) throw new Error('Not authenticated');
 
-            // Auto-generate prompt_text from full_prompt (first 200 characters)
-            const promptText = fullPrompt.length > 200
-                ? fullPrompt.substring(0, 200) + '...'
-                : fullPrompt;
+            // Auto-generate prompt_text from full_prompt (first 200 characters) - REMOVED logic
+            // const promptText = fullPrompt.length > 200
+            //     ? fullPrompt.substring(0, 200) + '...'
+            //     : fullPrompt;
 
             // Handle image upload to storage
             let finalImageUrl = imageUrl;
@@ -210,7 +212,7 @@ const PromptSaya = () => {
             const promptData = {
                 title,
                 category,
-                prompt_text: promptText,
+                // prompt_text: promptText, // Removed
                 full_prompt: fullPrompt,
                 image_url: finalImageUrl || null,
                 additional_info: additionalInfo || null,
@@ -218,16 +220,20 @@ const PromptSaya = () => {
 
             if (view === 'edit' && editingId) {
                 const response = await supabase.functions.invoke('manage-prompts', {
-                    body: { action: 'update', promptId: editingId, data: promptData },
-                    headers: { Authorization: `Bearer ${token}` }
+                    body: { action: 'update', promptId: editingId, data: promptData, token },
+                    headers: {
+                        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                    }
                 });
                 if (response.error) throw response.error;
                 if (response.data?.error) throw new Error(response.data.error);
                 toast({ title: "Berhasil diperbarui", description: "Prompt Anda telah diperbarui." });
             } else {
                 const response = await supabase.functions.invoke('manage-prompts', {
-                    body: { action: 'create', data: promptData },
-                    headers: { Authorization: `Bearer ${token}` }
+                    body: { action: 'create', data: promptData, token },
+                    headers: {
+                        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                    }
                 });
                 if (response.error) throw response.error;
                 if (response.data?.error) throw new Error(response.data.error);
@@ -237,10 +243,10 @@ const PromptSaya = () => {
             await fetchPrompts();
             setView('list');
             resetForm();
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast({
                 title: "Gagal menyimpan",
-                description: error.message,
+                description: error instanceof Error ? error.message : String(error),
                 variant: "destructive",
             });
         } finally {
@@ -301,7 +307,9 @@ const PromptSaya = () => {
                                             <span className="inline-block px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-2">
                                                 {prompt.category}
                                             </span>
-                                            <p className="text-muted-foreground text-sm line-clamp-2">{prompt.prompt_text}</p>
+                                            <p className="text-muted-foreground text-sm line-clamp-2">
+                                                {prompt.full_prompt.substring(0, 150) + (prompt.full_prompt.length > 150 ? "..." : "")}
+                                            </p>
                                         </div>
                                         <div className="flex gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => handleEdit(prompt)}>

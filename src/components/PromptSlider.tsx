@@ -7,7 +7,6 @@ interface Prompt {
     id: string;
     title: string;
     category: string;
-    prompt_text: string;
     full_prompt: string;
     image_url: string | null;
     creator_name?: string;
@@ -60,7 +59,6 @@ const PromptSlider = ({
                                         id={parseInt(prompt.id)}
                                         title={prompt.title}
                                         category={prompt.category}
-                                        prompt={prompt.prompt_text}
                                         fullPrompt={prompt.full_prompt}
                                         imageUrl={prompt.image_url || ''}
                                         creatorName={prompt.creator_name}

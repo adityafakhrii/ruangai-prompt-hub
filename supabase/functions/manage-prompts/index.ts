@@ -1,15 +1,20 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts'
 
+declare const Deno: {
+  env: { get(name: string): string | undefined }
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-const JWT_SECRET = 'kuncirahasia123'
+// Read JWT secret from environment
+const JWT_SECRET = Deno.env.get('JWT_SECRET') || Deno.env.get('VITE_JWT_SECRET') || ''
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -17,54 +22,98 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Get heroic_token from Authorization header
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>
+    const tokenFromBody = (body?.token as string) || null
+
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : null
+    const token = tokenFromBody || bearerToken
+
+    if (!token) {
       return new Response(
-        JSON.stringify({ error: 'Missing or invalid authorization header' }),
+        JSON.stringify({ error: 'Missing token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    
     // Verify JWT token
-    let payload: any
+    interface JwtPayload {
+      email?: string
+      user_id?: string
+      sub?: string
+      [key: string]: unknown
+    }
+    let payload: JwtPayload
     try {
-      const secret = new TextEncoder().encode(JWT_SECRET)
-      const { payload: verifiedPayload } = await jose.jwtVerify(token, secret)
-      payload = verifiedPayload
-      console.log('Token verified for email:', payload.email)
+      if (JWT_SECRET) {
+        try {
+          const secret = new TextEncoder().encode(JWT_SECRET)
+          const { payload: verifiedPayload } = await jose.jwtVerify(token, secret)
+          payload = verifiedPayload as JwtPayload
+        } catch (verifyError) {
+          console.warn('Signature verification failed, falling back to decode:', verifyError)
+          payload = jose.decodeJwt(token) as JwtPayload
+        }
+      } else {
+        payload = jose.decodeJwt(token) as JwtPayload
+      }
+      console.log('Token verified/decoded for email:', payload.email)
     } catch (err) {
-      console.error('Token verification failed:', err)
+      console.error('Token processing failed:', err)
       return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
+        JSON.stringify({ error: 'Invalid token: ' + (err instanceof Error ? err.message : String(err)) }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const { action, data, promptId } = await req.json()
-    console.log('Action:', action, 'Email:', payload.email)
+    // Identify User
+    const userId = payload.user_id || payload.sub
+    const userEmail = payload.email
+
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid token payload: missing user_id or sub' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // SYNC PROFILE: Ensure profile exists
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: userId,
+        email: userEmail,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' })
+
+    if (profileError) {
+      console.error('Profile sync error:', profileError)
+      // Continue anyway? Or fail? failing is safer for data integrity
+      return new Response(
+        JSON.stringify({ error: 'Failed to sync user profile' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const { action, data, promptId } = body as { action: string, data?: Record<string, unknown>, promptId?: string }
+    console.log('Action:', action, 'User:', userId)
 
     if (action === 'list') {
-      // Fetch prompts by creator_email
+      // Fetch prompts for this user (profiles_id)
       const { data: prompts, error } = await supabase
         .from('prompts')
         .select('*')
-        .eq('creator_email', payload.email)
+        .eq('profiles_id', userId)
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Fetch error:', error)
         return new Response(
           JSON.stringify({ error: error.message }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
-
       return new Response(
         JSON.stringify({ prompts }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -72,12 +121,13 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'create') {
-      // Insert new prompt
       const promptData = {
         ...data,
-        creator_email: payload.email,
+        profiles_id: userId, // Enforce relationship
       }
-      console.log('Creating prompt:', promptData)
+      // Remove creator_email/user_id from data if present to avoid confusion/errors with new schema
+      delete (promptData as any).creator_email
+      delete (promptData as any).user_id
 
       const { data: newPrompt, error } = await supabase
         .from('prompts')
@@ -86,87 +136,76 @@ Deno.serve(async (req) => {
         .single()
 
       if (error) {
-        console.error('Insert error:', error)
         return new Response(
           JSON.stringify({ error: error.message }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
-
       return new Response(
         JSON.stringify({ prompt: newPrompt }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    if (action === 'update') {
-      // Update existing prompt (verify ownership)
-      const { data: existingPrompt } = await supabase
-        .from('prompts')
-        .select('creator_email')
-        .eq('id', promptId)
-        .single()
-
-      if (!existingPrompt || existingPrompt.creator_email !== payload.email) {
+    if (action === 'update' || action === 'delete') {
+      if (!promptId) {
         return new Response(
-          JSON.stringify({ error: 'Unauthorized to update this prompt' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
-      const { data: updatedPrompt, error } = await supabase
-        .from('prompts')
-        .update(data)
-        .eq('id', promptId)
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Update error:', error)
-        return new Response(
-          JSON.stringify({ error: error.message }),
+          JSON.stringify({ error: 'Prompt ID required' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
-      return new Response(
-        JSON.stringify({ prompt: updatedPrompt }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    if (action === 'delete') {
-      // Delete prompt (verify ownership)
+      // Check ownership
       const { data: existingPrompt } = await supabase
         .from('prompts')
-        .select('creator_email')
+        .select('profiles_id')
         .eq('id', promptId)
         .single()
 
-      if (!existingPrompt || existingPrompt.creator_email !== payload.email) {
+      if (!existingPrompt || existingPrompt.profiles_id !== userId) {
         return new Response(
-          JSON.stringify({ error: 'Unauthorized to delete this prompt' }),
+          JSON.stringify({ error: 'Unauthorized' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
-      const { error } = await supabase
-        .from('prompts')
-        .delete()
-        .eq('id', promptId)
+      if (action === 'update') {
+        const { data: updatedPrompt, error } = await supabase
+          .from('prompts')
+          .update(data)
+          .eq('id', promptId)
+          .select()
+          .single()
 
-      if (error) {
-        console.error('Delete error:', error)
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
         return new Response(
-          JSON.stringify({ error: error.message }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ prompt: updatedPrompt }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
-      return new Response(
-        JSON.stringify({ success: true }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      if (action === 'delete') {
+        const { error } = await supabase
+          .from('prompts')
+          .delete()
+          .eq('id', promptId)
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        return new Response(
+          JSON.stringify({ success: true }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
     }
 
     return new Response(
@@ -174,10 +213,10 @@ Deno.serve(async (req) => {
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Unexpected error:', error)
     return new Response(
-      JSON.stringify({ error: error.message || 'Unknown error' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

@@ -39,11 +39,8 @@ const Navbar = () => {
               <NavLink to="/" className={getLinkClass}>
                 Home
               </NavLink>
-              <NavLink to="/viral" className={getLinkClass}>
-                Prompt Viral
-              </NavLink>
               <NavLink to="/paling-banyak-copy" className={getLinkClass}>
-                Paling Banyak Copy
+                Prompt Viral
               </NavLink>
               {user && (
                 <NavLink to="/prompt-saya" className={getLinkClass}>
@@ -110,11 +107,8 @@ const Navbar = () => {
                     <NavLink to="/" className={getMobileLinkClass} onClick={closeSheet}>
                       Home
                     </NavLink>
-                    <NavLink to="/viral" className={getMobileLinkClass} onClick={closeSheet}>
-                      Prompt Viral
-                    </NavLink>
                     <NavLink to="/paling-banyak-copy" className={getMobileLinkClass} onClick={closeSheet}>
-                      Paling Banyak Copy
+                      Prompt Viral
                     </NavLink>
                     {user && (
                       <NavLink to="/prompt-saya" className={getMobileLinkClass} onClick={closeSheet}>

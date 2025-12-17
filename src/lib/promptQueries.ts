@@ -2,14 +2,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface PromptWithCreator {
     id: string;
-    user_id: string;
+    profiles_id: string;
     title: string;
     category: string;
-    prompt_text: string;
     full_prompt: string;
     image_url: string | null;
     copy_count: number;
-    is_viral: boolean;
     created_at: string;
     updated_at: string;
     additional_info?: string | null;
@@ -28,7 +26,6 @@ export const fetchPromptsWithCreator = async (options?: {
     minCopyCount?: number;
 }) => {
     const {
-        isViral,
         orderBy = 'created_at',
         ascending = false,
         limit,
@@ -40,10 +37,6 @@ export const fetchPromptsWithCreator = async (options?: {
         .from('prompts')
         .select('*')
         .order(orderBy, { ascending });
-
-    if (isViral !== undefined) {
-        query = query.eq('is_viral', isViral);
-    }
 
     if (minCopyCount !== undefined) {
         query = query.gt('copy_count', minCopyCount);
@@ -64,32 +57,17 @@ export const fetchPromptsWithCreator = async (options?: {
         return { data: null, error };
     }
 
-    // Fetch creator names using the secure function for each unique user_id
-    const userIds = [...new Set(data?.map(p => p.user_id) || [])];
-    const creatorNames: Record<string, string> = {};
-
-    // Batch fetch creator names using the secure RPC function
-    for (const userId of userIds) {
-        const { data: nameData } = await supabase.rpc('get_creator_name', { creator_id: userId });
-        creatorNames[userId] = nameData || 'Anonymous';
-    }
-
-    // Transform data to include creator name (no email exposed)
-    const transformedData = data?.map((prompt) => ({
-        ...prompt,
-        creator_name: creatorNames[prompt.user_id] || 'Anonymous',
-    }));
-
-    return { data: transformedData as PromptWithCreator[], error: null };
+    return { data: data as PromptWithCreator[], error: null };
 };
 
 /**
  * Fetch viral prompts with creator information
  */
 export const fetchViralPromptsWithCreator = async (limit = 5) => {
+    // Fallback: Just fetch by copy counts as a proxy for "viral" or just latest
     return fetchPromptsWithCreator({
-        isViral: true,
-        orderBy: 'created_at',
+        // isViral: true, // Removed
+        orderBy: 'copy_count',
         ascending: false,
         limit,
     });
@@ -136,7 +114,7 @@ export const fetchAllPromptsWithCreator = async (page = 0, pageSize = 12) => {
 export const fetchPopularKeywords = async (limit = 10): Promise<string[]> => {
     const { data, error } = await supabase
         .from('prompts')
-        .select('title, prompt_text, full_prompt');
+        .select('title, full_prompt');
 
     if (error || !data) {
         console.error('Error fetching keywords:', error);
@@ -168,7 +146,7 @@ export const fetchPopularKeywords = async (limit = 10): Promise<string[]> => {
     const wordCount: Record<string, number> = {};
 
     data.forEach(prompt => {
-        const text = `${prompt.title} ${prompt.prompt_text} ${prompt.full_prompt}`.toLowerCase();
+        const text = `${prompt.title} ${prompt.full_prompt}`.toLowerCase();
         const words = text.match(/[a-zA-Z\u00C0-\u024F]+/g) || [];
 
         words.forEach(word => {

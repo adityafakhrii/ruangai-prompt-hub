@@ -21,7 +21,6 @@ const ViralPrompts = () => {
     prompt: string;
     fullPrompt: string;
     imageUrl: string;
-    creatorName: string;
     copyCount?: number;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -78,10 +77,9 @@ const ViralPrompts = () => {
     setSelectedPrompt({
       title: prompt.title,
       category: prompt.category,
-      prompt: prompt.prompt_text,
+      prompt: prompt.full_prompt,
       fullPrompt: prompt.full_prompt,
       imageUrl: prompt.image_url,
-      creatorName: prompt.creator_name,
       copyCount: prompt.copy_count,
     });
     setIsDetailModalOpen(true);
@@ -127,10 +125,9 @@ const ViralPrompts = () => {
                 id={parseInt(prompt.id)}
                 title={prompt.title}
                 category={prompt.category}
-                prompt={prompt.prompt_text}
+
                 fullPrompt={prompt.full_prompt}
                 imageUrl={prompt.image_url}
-                creatorName={prompt.creator_name}
                 copyCount={prompt.copy_count}
                 onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                 onClick={() => handleCardClick(prompt)}

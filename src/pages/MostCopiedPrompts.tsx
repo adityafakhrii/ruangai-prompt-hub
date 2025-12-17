@@ -21,7 +21,6 @@ const MostCopiedPrompts = () => {
     prompt: string;
     fullPrompt: string;
     imageUrl: string;
-    creatorName: string;
     copyCount?: number;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -77,10 +76,9 @@ const MostCopiedPrompts = () => {
     setSelectedPrompt({
       title: prompt.title,
       category: prompt.category,
-      prompt: prompt.prompt_text,
+      prompt: prompt.full_prompt,
       fullPrompt: prompt.full_prompt,
       imageUrl: prompt.image_url,
-      creatorName: prompt.creator_name,
       copyCount: prompt.copy_count,
     });
     setIsDetailModalOpen(true);
@@ -89,12 +87,12 @@ const MostCopiedPrompts = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Paling Banyak Copy"
+        title="Prompt Viral"
         description="Daftar prompt AI yang paling banyak disalin dan digunakan oleh komunitas RuangAI."
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          "name": "Prompt Paling Banyak Dicopy - RuangAI Prompt Hub",
+          "name": "Prompt Viral - RuangAI Prompt Hub",
           "description": "Daftar prompt AI yang paling banyak disalin dan digunakan oleh komunitas RuangAI."
         }}
       />
@@ -102,7 +100,7 @@ const MostCopiedPrompts = () => {
 
       <div className="container mx-auto px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Paling Banyak Copy</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Prompt Viral Paling Banyak Copy</h1>
           <p className="text-lightText text-lg">
             Prompt dengan jumlah copy tertinggi dari komunitas
           </p>
@@ -126,10 +124,8 @@ const MostCopiedPrompts = () => {
                 id={parseInt(prompt.id)}
                 title={prompt.title}
                 category={prompt.category}
-                prompt={prompt.prompt_text}
                 fullPrompt={prompt.full_prompt}
                 imageUrl={prompt.image_url}
-                creatorName={prompt.creator_name}
                 copyCount={prompt.copy_count}
                 onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                 onClick={() => handleCardClick(prompt)}

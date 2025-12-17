@@ -8,7 +8,6 @@ interface PromptCardProps {
   id: number;
   title: string;
   category: string;
-  prompt: string;
   fullPrompt: string;
   imageUrl: string;
   creatorName?: string;
@@ -19,7 +18,7 @@ interface PromptCardProps {
   priority?: boolean;
 }
 
-const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName, additionalInfo, copyCount = 0, onCopy, onClick, priority = false }: PromptCardProps) => {
+const PromptCard = ({ title, category, fullPrompt, imageUrl, creatorName, additionalInfo, copyCount = 0, onCopy, onClick, priority = false }: PromptCardProps) => {
   const { toast } = useToast();
 
   const handleOpenAI = (e: React.MouseEvent, url: string, name: string) => {
@@ -72,16 +71,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
                   </Badge>
                 )}
               </div>
-              {creatorName && creatorName !== 'Unknown' && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Oleh: {creatorName}
-                </p>
-              )}
-              {(creatorName === 'Unknown' || !creatorName) && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Oleh: Pengguna RuangAI
-                </p>
-              )}
+              
             </div>
 
             {/* Additional Info */}
@@ -93,7 +83,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
 
             {/* Prompt Preview */}
             <p className="text-sm line-clamp-3 leading-relaxed flex-1 break-words">
-              {prompt}
+              {fullPrompt}
             </p>
 
             {/* Actions */}
@@ -151,16 +141,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
             <h3 className="font-semibold text-lg text-heading line-clamp-2" title={title}>
               {title}
             </h3>
-            {creatorName && creatorName !== 'Unknown' && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Oleh: {creatorName}
-              </p>
-            )}
-            {(creatorName === 'Unknown' || !creatorName) && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Oleh: Pengguna RuangAI
-              </p>
-            )}
+            
           </div>
 
           {/* Additional Info */}
@@ -172,7 +153,7 @@ const PromptCard = ({ title, category, prompt, fullPrompt, imageUrl, creatorName
 
           {/* Prompt Preview - More lines when no image */}
           <p className="text-sm line-clamp-5 leading-relaxed flex-1">
-            {prompt}
+            {fullPrompt}
           </p>
 
           {/* Actions */}

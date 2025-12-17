@@ -58,9 +58,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
               <DialogTitle className="text-2xl font-bold text-heading">
                 {prompt.title}
               </DialogTitle>
-              {prompt.creatorName && (
-                <p className="text-sm text-muted-foreground mt-1">Oleh: {prompt.creatorName}</p>
-              )}
+              {/* Creator name removed by request */}
             </div>
             {prompt.copyCount !== undefined && (
               <Badge variant="default" className="shrink-0">

@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 ...payload,
                 whatsapp_number: payload.whatsapp_number,
                 isValidEmail: payload.isValidEmail,
-                full_name: (payload.user_metadata as any)?.full_name || payload.name || payload.email // Try to find a name for navbar
+                full_name: (payload.user_metadata as { full_name?: string })?.full_name || payload.name || payload.email // Try to find a name for navbar
               },
               aud: 'authenticated',
               created_at: new Date().toISOString(),

@@ -40,7 +40,6 @@ const Index = () => {
     prompt: string;
     fullPrompt: string;
     imageUrl: string;
-    creatorName: string;
     additionalInfo?: string;
     copyCount?: number;
   } | null>(null);
@@ -181,10 +180,9 @@ const Index = () => {
     setSelectedPrompt({
       title: prompt.title,
       category: prompt.category,
-      prompt: prompt.prompt_text,
+      prompt: prompt.full_prompt, // Derived from full_prompt
       fullPrompt: prompt.full_prompt,
       imageUrl: prompt.image_url || '',
-      creatorName: prompt.creator_name || '',
       additionalInfo: prompt.additional_info || undefined,
       copyCount: prompt.copy_count,
     });
@@ -200,7 +198,7 @@ const Index = () => {
       filtered = filtered.filter(
         (p) =>
           p.title.toLowerCase().includes(query) ||
-          p.prompt_text.toLowerCase().includes(query) ||
+          p.full_prompt.toLowerCase().includes(query) ||
           p.category.toLowerCase().includes(query)
       );
     }
@@ -271,7 +269,7 @@ const Index = () => {
           {loadingMostCopied ? (
             <section className="w-full py-8">
               <div className="container mx-auto px-4">
-                <h2 className="text-2xl font-bold text-foreground mb-6">Paling Banyak Copy</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-6">Prompt Viral Paling Banyak Copy</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
                 </div>
@@ -279,7 +277,7 @@ const Index = () => {
             </section>
           ) : mostCopiedPrompts.length > 0 && (
             <PromptSlider
-              title="Paling Banyak Copy"
+              title="Prompt Viral Paling Banyak Copy"
               prompts={mostCopiedPrompts}
               onCopy={handleCopy}
               onCardClick={handleCardClick}
@@ -337,10 +335,8 @@ const Index = () => {
                     id={parseInt(prompt.id)}
                     title={prompt.title}
                     category={prompt.category}
-                    prompt={prompt.prompt_text}
                     fullPrompt={prompt.full_prompt}
                     imageUrl={prompt.image_url || ''}
-                    creatorName={prompt.creator_name}
                     additionalInfo={prompt.additional_info || undefined}
                     copyCount={prompt.copy_count}
                     onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
