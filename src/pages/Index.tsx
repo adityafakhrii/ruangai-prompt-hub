@@ -35,6 +35,7 @@ const Index = () => {
   const [popularKeywords, setPopularKeywords] = useState<string[]>([]);
 
   const [selectedPrompt, setSelectedPrompt] = useState<{
+    id: string;
     title: string;
     category: string;
     prompt: string;
@@ -178,6 +179,7 @@ const Index = () => {
 
   const handleCardClick = (prompt: PromptWithCreator) => {
     setSelectedPrompt({
+      id: prompt.id,
       title: prompt.title,
       category: prompt.category,
       prompt: prompt.full_prompt, // Derived from full_prompt
@@ -367,7 +369,7 @@ const Index = () => {
         open={isDetailModalOpen}
         onOpenChange={setIsDetailModalOpen}
         prompt={selectedPrompt}
-        onCopy={() => selectedPrompt && handleCopy("0", selectedPrompt.fullPrompt)}
+        onCopy={() => selectedPrompt && handleCopy(selectedPrompt.id, selectedPrompt.fullPrompt)}
       />
       <LoginModal
         open={showLoginModal}

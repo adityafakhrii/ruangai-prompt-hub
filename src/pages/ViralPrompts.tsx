@@ -16,6 +16,7 @@ const ViralPrompts = () => {
   const [prompts, setPrompts] = useState<PromptWithCreator[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPrompt, setSelectedPrompt] = useState<{
+    id: string;
     title: string;
     category: string;
     prompt: string;
@@ -75,6 +76,7 @@ const ViralPrompts = () => {
 
   const handleCardClick = (prompt: PromptWithCreator) => {
     setSelectedPrompt({
+      id: prompt.id,
       title: prompt.title,
       category: prompt.category,
       prompt: prompt.full_prompt,
@@ -144,14 +146,7 @@ const ViralPrompts = () => {
         open={isDetailModalOpen}
         onOpenChange={setIsDetailModalOpen}
         prompt={selectedPrompt}
-        onCopy={() => {
-          if (selectedPrompt) {
-            const originalPrompt = prompts.find(p => p.full_prompt === selectedPrompt.fullPrompt);
-            if (originalPrompt) {
-              handleCopy(originalPrompt.id, selectedPrompt.fullPrompt);
-            }
-          }
-        }}
+        onCopy={() => selectedPrompt && handleCopy(selectedPrompt.id, selectedPrompt.fullPrompt)}
       />
       <LoginModal
         open={isLoginModalOpen}

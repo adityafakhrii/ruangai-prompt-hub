@@ -15,7 +15,6 @@ interface PromptDetailModalProps {
     prompt: string;
     imageUrl: string;
     fullPrompt: string;
-    creatorName?: string;
     additionalInfo?: string;
     copyCount?: number;
   } | null;

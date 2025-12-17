@@ -10,7 +10,6 @@ interface PromptCardProps {
   category: string;
   fullPrompt: string;
   imageUrl: string;
-  creatorName?: string;
   additionalInfo?: string;
   copyCount?: number;
   onCopy: () => void;
@@ -18,7 +17,7 @@ interface PromptCardProps {
   priority?: boolean;
 }
 
-const PromptCard = ({ title, category, fullPrompt, imageUrl, creatorName, additionalInfo, copyCount = 0, onCopy, onClick, priority = false }: PromptCardProps) => {
+const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, copyCount = 0, onCopy, onClick, priority = false }: PromptCardProps) => {
   const { toast } = useToast();
 
   const handleOpenAI = (e: React.MouseEvent, url: string, name: string) => {
@@ -71,7 +70,7 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, creatorName, additi
                   </Badge>
                 )}
               </div>
-              
+
             </div>
 
             {/* Additional Info */}
@@ -141,7 +140,7 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, creatorName, additi
             <h3 className="font-semibold text-lg text-heading line-clamp-2" title={title}>
               {title}
             </h3>
-            
+
           </div>
 
           {/* Additional Info */}

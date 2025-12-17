@@ -61,7 +61,6 @@ const PromptSlider = ({
                                         category={prompt.category}
                                         fullPrompt={prompt.full_prompt}
                                         imageUrl={prompt.image_url || ''}
-                                        creatorName={prompt.creator_name}
                                         additionalInfo={prompt.additional_info || undefined}
                                         copyCount={prompt.copy_count}
                                         onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
