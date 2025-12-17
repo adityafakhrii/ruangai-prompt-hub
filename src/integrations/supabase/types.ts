@@ -80,6 +80,7 @@ export type Database = {
           category: string
           copy_count: number | null
           created_at: string | null
+          creator_email: string | null
           full_prompt: string
           id: string
           image_url: string | null
@@ -87,13 +88,14 @@ export type Database = {
           prompt_text: string
           title: string
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           additional_info?: string | null
           category: string
           copy_count?: number | null
           created_at?: string | null
+          creator_email?: string | null
           full_prompt: string
           id?: string
           image_url?: string | null
@@ -101,13 +103,14 @@ export type Database = {
           prompt_text: string
           title: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           additional_info?: string | null
           category?: string
           copy_count?: number | null
           created_at?: string | null
+          creator_email?: string | null
           full_prompt?: string
           id?: string
           image_url?: string | null
@@ -115,7 +118,7 @@ export type Database = {
           prompt_text?: string
           title?: string
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

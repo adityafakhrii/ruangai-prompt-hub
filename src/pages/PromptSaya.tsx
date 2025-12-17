@@ -73,15 +73,22 @@ const PromptSaya = () => {
 
     const fetchPrompts = async () => {
         try {
+            // Fetch by creator_email from JWT
+            const userEmail = user?.email;
+            if (!userEmail) {
+                setLoading(false);
+                return;
+            }
+
             const { data, error } = await supabase
                 .from("prompts")
                 .select("*")
-                .eq("user_id", user?.id)
+                .eq("creator_email", userEmail)
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
             setPrompts(data || []);
-        } catch (error) {
+        } catch (error: any) {
             toast({
                 title: "Error fetching prompts",
                 description: error.message,
@@ -194,7 +201,7 @@ const PromptSaya = () => {
             }
 
             const promptData = {
-                user_id: user.id,
+                creator_email: user.email,
                 title,
                 category,
                 prompt_text: promptText,
