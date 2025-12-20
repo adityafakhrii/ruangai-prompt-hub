@@ -208,6 +208,38 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (action === 'upload-url') {
+      const { fileName } = data as { fileName?: string };
+      if (!fileName) {
+        return new Response(
+          JSON.stringify({ error: 'File name is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const filePath = `${userId}/${Date.now()}_${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+
+      const { data: signedData, error } = await supabase.storage
+        .from('prompt-images')
+        .createSignedUploadUrl(filePath);
+
+      if (error) {
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          path: signedData.path,
+          token: signedData.token,
+          signedUrl: signedData.signedUrl
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: 'Invalid action' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

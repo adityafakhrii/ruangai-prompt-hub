@@ -190,21 +190,38 @@ const PromptSaya = () => {
             // Handle image upload to storage
             let finalImageUrl = imageUrl;
             if (imageMode === 'upload' && imageFile) {
-                const fileExt = imageFile.name.split('.').pop();
-                const fileName = `${user.id || 'user'}/${Date.now()}.${fileExt}`;
+                // 1. Request Signed Upload URL from Edge Function
+                const uploadUrlResponse = await supabase.functions.invoke('manage-prompts', {
+                    body: {
+                        action: 'upload-url',
+                        token,
+                        data: { fileName: imageFile.name }
+                    },
+                    headers: {
+                        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                    }
+                });
 
-                const { data: uploadData, error: uploadError } = await supabase.storage
+                if (uploadUrlResponse.error) throw uploadUrlResponse.error;
+                if (uploadUrlResponse.data?.error) throw new Error(uploadUrlResponse.data.error);
+
+                const { path, token: uploadToken, signedUrl } = uploadUrlResponse.data;
+
+                // 2. Upload to Signed URL
+                const { error: uploadError } = await supabase.storage
                     .from('prompt-images')
-                    .upload(fileName, imageFile, {
+                    .uploadToSignedUrl(path, uploadToken, imageFile, {
                         cacheControl: '3600',
                         upsert: false
                     });
 
                 if (uploadError) throw uploadError;
 
+                // 3. Get Public URL (The signed URL is for upload, we need a public one for viewing if the bucket is public)
+                // Since the bucket is public, we can just use getPublicUrl on the path
                 const { data: urlData } = supabase.storage
                     .from('prompt-images')
-                    .getPublicUrl(fileName);
+                    .getPublicUrl(path);
 
                 finalImageUrl = urlData.publicUrl;
             }
