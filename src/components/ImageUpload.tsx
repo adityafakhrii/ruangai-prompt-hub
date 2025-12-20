@@ -29,7 +29,7 @@ const ImageUpload = ({
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return;
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       onFileChange(file, e.target?.result as string);
@@ -50,7 +50,7 @@ const ImageUpload = ({
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
   }, [handleFile]);
@@ -120,8 +120,8 @@ const ImageUpload = ({
               onClick={() => fileInputRef.current?.click()}
               className={`
                 border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
-                ${isDragging 
-                  ? 'border-primary bg-primary/10' 
+                ${isDragging
+                  ? 'border-primary bg-primary/10'
                   : 'border-border hover:border-primary/50 hover:bg-muted/50'
                 }
               `}
@@ -130,7 +130,7 @@ const ImageUpload = ({
               <p className="text-sm text-muted-foreground mb-1">
                 Drag & drop gambar di sini, atau <span className="text-primary font-medium">klik untuk pilih</span>
               </p>
-              <p className="text-xs text-muted-foreground">PNG, JPG, GIF hingga 5MB</p>
+              <p className="text-xs text-muted-foreground">PNG, JPG, GIF hingga 2MB</p>
             </div>
           )}
 

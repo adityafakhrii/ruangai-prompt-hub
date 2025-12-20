@@ -190,6 +190,17 @@ const PromptSaya = () => {
             // Handle image upload to storage
             let finalImageUrl = imageUrl;
             if (imageMode === 'upload' && imageFile) {
+                // Check current file size
+                if (imageFile.size > 2 * 1024 * 1024) { // 2MB
+                    toast({
+                        title: "File terlalu besar",
+                        description: "Maksimal 2MB, silakan compress dulu.",
+                        variant: "destructive",
+                    });
+                    setSubmitting(false);
+                    return;
+                }
+
                 // 1. Request Signed Upload URL from Edge Function
                 const uploadUrlResponse = await supabase.functions.invoke('manage-prompts', {
                     body: {
