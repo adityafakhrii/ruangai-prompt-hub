@@ -55,7 +55,7 @@ const PromptSaya = () => {
     const [category, setCategory] = useState("");
     const [fullPrompt, setFullPrompt] = useState("");
     const [imageUrl, setImageUrl] = useState("");
-    const [imageMode, setImageMode] = useState<'url' | 'upload'>('url');
+    // imageMode removed
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [additionalInfo, setAdditionalInfo] = useState("");
@@ -104,7 +104,7 @@ const PromptSaya = () => {
         setCategory("");
         setFullPrompt("");
         setImageUrl("");
-        setImageMode('url');
+        // imageMode removed
         setImageFile(null);
         setImagePreview(null);
         setAdditionalInfo("");
@@ -117,7 +117,7 @@ const PromptSaya = () => {
         setCategory(prompt.category);
         setFullPrompt(prompt.full_prompt);
         setImageUrl(prompt.image_url || "");
-        setImageMode('url');
+        // imageMode removed
         setImageFile(null);
         setEditingId(prompt.id);
         setErrors({});
@@ -164,7 +164,7 @@ const PromptSaya = () => {
             title,
             category,
             fullPrompt,
-            imageUrl: imageMode === 'url' ? imageUrl : '',
+            imageUrl,
         });
 
         if (!result.success) {
@@ -189,7 +189,7 @@ const PromptSaya = () => {
 
             // Handle image upload to storage
             let finalImageUrl = imageUrl;
-            if (imageMode === 'upload' && imageFile) {
+            if (imageFile) {
                 // Check current file size
                 if (imageFile.size > 2 * 1024 * 1024) { // 2MB
                     toast({
@@ -440,20 +440,9 @@ const PromptSaya = () => {
                                 <div className="space-y-2">
                                     <Label>Gambar (opsional)</Label>
                                     <ImageUpload
-                                        imageMode={imageMode}
                                         imageUrl={imageUrl}
                                         imageFile={imageFile}
                                         imagePreview={imagePreview}
-                                        onModeChange={(mode) => {
-                                            setImageMode(mode);
-                                            if (mode === 'url') {
-                                                setImageFile(null);
-                                                setImagePreview(null);
-                                            } else {
-                                                setImageUrl('');
-                                            }
-                                        }}
-                                        onUrlChange={setImageUrl}
                                         onFileChange={(file, preview) => {
                                             setImageFile(file);
                                             setImagePreview(preview);
