@@ -23,6 +23,7 @@ const ViralPrompts = () => {
     fullPrompt: string;
     imageUrl: string;
     copyCount?: number;
+    creatorEmail?: string | null;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -83,6 +84,7 @@ const ViralPrompts = () => {
       fullPrompt: prompt.full_prompt,
       imageUrl: prompt.image_url,
       copyCount: prompt.copy_count,
+      creatorEmail: prompt.profiles?.email || null,
     });
     setIsDetailModalOpen(true);
   };
@@ -127,10 +129,10 @@ const ViralPrompts = () => {
                 id={parseInt(prompt.id)}
                 title={prompt.title}
                 category={prompt.category}
-
                 fullPrompt={prompt.full_prompt}
                 imageUrl={prompt.image_url}
                 copyCount={prompt.copy_count}
+                creatorEmail={prompt.profiles?.email || null}
                 onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                 onClick={() => handleCardClick(prompt)}
               />

@@ -12,13 +12,17 @@ interface PromptCardProps {
   imageUrl: string;
   additionalInfo?: string;
   copyCount?: number;
+  creatorEmail?: string | null;
   onCopy: () => void;
   onClick: () => void;
   priority?: boolean;
 }
 
-const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, copyCount = 0, onCopy, onClick, priority = false }: PromptCardProps) => {
+const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, copyCount = 0, creatorEmail, onCopy, onClick, priority = false }: PromptCardProps) => {
   const { toast } = useToast();
+
+  // Compute creator display name: use email if available, otherwise "Teman RAI"
+  const creatorDisplayName = creatorEmail ? creatorEmail : "Teman RAI";
 
   const handleOpenAI = (e: React.MouseEvent, url: string, name: string) => {
     e.stopPropagation();
@@ -70,7 +74,7 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
                   </Badge>
                 )}
               </div>
-
+              <p className="text-xs text-muted-foreground mt-1">Creator: {creatorDisplayName}</p>
             </div>
 
             {/* Additional Info */}
@@ -140,7 +144,7 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
             <h3 className="font-semibold text-lg text-heading line-clamp-2" title={title}>
               {title}
             </h3>
-
+            <p className="text-xs text-muted-foreground mt-1">Creator: {creatorDisplayName}</p>
           </div>
 
           {/* Additional Info */}

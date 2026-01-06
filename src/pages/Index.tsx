@@ -43,6 +43,7 @@ const Index = () => {
     imageUrl: string;
     additionalInfo?: string;
     copyCount?: number;
+    creatorEmail?: string | null;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
@@ -187,6 +188,7 @@ const Index = () => {
       imageUrl: prompt.image_url || '',
       additionalInfo: prompt.additional_info || undefined,
       copyCount: prompt.copy_count,
+      creatorEmail: prompt.profiles?.email || null,
     });
     setIsDetailModalOpen(true);
   };
@@ -321,6 +323,7 @@ const Index = () => {
                     imageUrl={prompt.image_url || ''}
                     additionalInfo={prompt.additional_info || undefined}
                     copyCount={prompt.copy_count}
+                    creatorEmail={prompt.profiles?.email || null}
                     onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                     onClick={() => handleCardClick(prompt)}
                   />

@@ -12,6 +12,7 @@ interface Prompt {
     creator_name?: string;
     additional_info?: string | null;
     copy_count?: number;
+    profiles?: { email: string | null } | null;
 }
 
 interface PromptSliderProps {
@@ -63,6 +64,7 @@ const PromptSlider = ({
                                         imageUrl={prompt.image_url || ''}
                                         additionalInfo={prompt.additional_info || undefined}
                                         copyCount={prompt.copy_count}
+                                        creatorEmail={prompt.profiles?.email || null}
                                         onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
                                         onClick={() => onCardClick(prompt)}
                                         priority={index < 3}

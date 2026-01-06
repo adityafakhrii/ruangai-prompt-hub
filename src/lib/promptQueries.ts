@@ -12,10 +12,12 @@ export interface PromptWithCreator {
     updated_at: string;
     additional_info?: string | null;
     creator_name?: string;
+    creator_email?: string | null;
+    profiles?: { email: string | null } | null;
 }
 
 /**
- * Fetch prompts with creator information (name only - email is not exposed for privacy)
+ * Fetch prompts with creator information including email from profiles table
  */
 export const fetchPromptsWithCreator = async (options?: {
     isViral?: boolean;
@@ -35,7 +37,7 @@ export const fetchPromptsWithCreator = async (options?: {
 
     let query = supabase
         .from('prompts')
-        .select('*')
+        .select('*, profiles:profiles_id(email)')
         .order(orderBy, { ascending });
 
     if (minCopyCount !== undefined) {
