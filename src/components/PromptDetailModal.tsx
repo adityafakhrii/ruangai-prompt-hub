@@ -22,10 +22,38 @@ interface PromptDetailModalProps {
   onCopy: () => void;
 }
 
+// Utility function to mask email for privacy
+// e.g., adityafakhri@gmail.com → adi******@g****.com
+const maskEmail = (email: string): string => {
+  const atIndex = email.indexOf('@');
+  if (atIndex === -1) return email;
+
+  const [localPart, domain] = email.split('@');
+  const dotIndex = domain.lastIndexOf('.');
+
+  if (dotIndex === -1) return email;
+
+  const domainName = domain.substring(0, dotIndex);
+  const domainExt = domain.substring(dotIndex);
+
+  // Show first 3 chars of local part (or less if shorter)
+  const visibleLocal = localPart.substring(0, 3);
+  const maskedLocal = visibleLocal + '*'.repeat(Math.max(0, localPart.length - 3));
+
+  // Show first 1 char of domain name
+  const visibleDomain = domainName.substring(0, 1);
+  const maskedDomain = visibleDomain + '*'.repeat(Math.max(0, domainName.length - 1));
+
+  return `${maskedLocal}@${maskedDomain}${domainExt}`;
+};
+
 const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailModalProps) => {
   const { toast } = useToast();
 
   if (!prompt) return null;
+
+  // Compute masked creator display name
+  const creatorDisplayName = prompt.creatorEmail ? maskEmail(prompt.creatorEmail) : "Teman RAI";
 
   const handleShare = async () => {
     const shareText = `${prompt.fullPrompt}\n\nPrompt diambil dari https://raiprompt.adityafakhri.com/`;
@@ -59,7 +87,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                 {prompt.title}
               </DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Creator: {prompt.creatorEmail ? prompt.creatorEmail : "Teman RAI"}
+                Creator: {creatorDisplayName}
               </p>
             </div>
             {prompt.copyCount !== undefined && (
