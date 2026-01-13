@@ -222,7 +222,7 @@ const PromptSaya = () => {
                 const { error: uploadError } = await supabase.storage
                     .from('prompt-images')
                     .uploadToSignedUrl(path, uploadToken, imageFile, {
-                        cacheControl: '3600',
+                        cacheControl: '31536000', // 1 year cache for better browser caching
                         upsert: false
                     });
 
