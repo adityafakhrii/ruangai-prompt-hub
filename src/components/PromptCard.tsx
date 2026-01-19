@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy } from "lucide-react";
+import { Copy, Check, Clock, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,6 +13,7 @@ interface PromptCardProps {
   additionalInfo?: string;
   copyCount?: number;
   creatorEmail?: string | null;
+  status?: 'pending' | 'verified' | 'rejected';
   onCopy: () => void;
   onClick: () => void;
   priority?: boolean;
@@ -43,7 +44,7 @@ const maskEmail = (email: string): string => {
   return `${maskedLocal}@${maskedDomain}${domainExt}`;
 };
 
-const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, copyCount = 0, creatorEmail, onCopy, onClick, priority = false }: PromptCardProps) => {
+const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, copyCount = 0, creatorEmail, status, onCopy, onClick, priority = false }: PromptCardProps) => {
   const { toast } = useToast();
 
   // Compute creator display name: use masked email if available, otherwise "Teman RAI"
@@ -60,6 +61,36 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
   };
 
   const hasImage = imageUrl && imageUrl.trim() !== '';
+
+  const StatusBadge = () => {
+    if (!status) return null;
+    
+    if (status === 'verified') {
+      return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 gap-1 border-blue-200">
+          <Check className="w-3 h-3" />
+          <span className="text-[10px] font-bold uppercase">Verified</span>
+        </Badge>
+      );
+    }
+    if (status === 'pending') {
+      return (
+        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 gap-1">
+          <Clock className="w-3 h-3" />
+          <span className="text-[10px] font-bold uppercase">Pending</span>
+        </Badge>
+      );
+    }
+    if (status === 'rejected') {
+      return (
+        <Badge variant="destructive" className="gap-1">
+          <XCircle className="w-3 h-3" />
+          <span className="text-[10px] font-bold uppercase">Rejected</span>
+        </Badge>
+      );
+    }
+    return null;
+  };
 
   return (
     <motion.div
@@ -81,24 +112,29 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Badge className="absolute top-3 left-3 bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border-none">
-              {category}
-            </Badge>
+            <div className="absolute top-3 left-3 flex gap-2">
+                <Badge className="bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border-none">
+                {category}
+                </Badge>
+            </div>
           </div>
 
           {/* Content with image */}
           <div className="p-4 space-y-3 flex-1 flex flex-col">
             <div>
-              <div className="flex justify-between items-start gap-2">
-                <h3 className="font-semibold text-lg text-heading line-clamp-1" title={title}>
-                  {title}
-                </h3>
-                {copyCount !== undefined && (
+              <div className="flex justify-between items-start gap-2 mb-1">
+                 <div className="flex flex-wrap gap-2">
+                    <StatusBadge />
+                 </div>
+                 {copyCount !== undefined && (
                   <Badge variant="default" className="shrink-0 text-[10px] px-1.5 h-5">
                     {copyCount} copied
                   </Badge>
                 )}
               </div>
+              <h3 className="font-semibold text-lg text-heading line-clamp-1" title={title}>
+                {title}
+              </h3>
               <p className="text-xs text-muted-foreground mt-1">Creator: {creatorDisplayName}</p>
             </div>
 
@@ -155,9 +191,12 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
         /* No Image Layout - Show category, title, creator, prompt directly */
         <div className="p-4 space-y-3 flex-1 flex flex-col">
           <div className="flex justify-between items-center">
-            <Badge className="w-fit bg-primary/10 hover:bg-primary/20 text-primary border-none">
-              {category}
-            </Badge>
+            <div className="flex gap-2 items-center">
+                <Badge className="w-fit bg-primary/10 hover:bg-primary/20 text-primary border-none">
+                {category}
+                </Badge>
+                <StatusBadge />
+            </div>
             {copyCount !== undefined && (
               <Badge variant="default" className="text-[10px] px-1.5 h-5">
                 {copyCount} copied
@@ -197,27 +236,27 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
               <Copy className="h-4 w-4 mr-2" />
               Copy
             </Button>
-
+            {/* Same buttons as above */}
             <div className="flex gap-1">
-              <Button
-                size="icon"
-                variant="outline"
-                className="rounded-lg border-border hover:border-primary hover:text-primary w-9 h-9"
-                onClick={(e) => handleOpenAI(e, 'https://chatgpt.com/', 'ChatGPT')}
-                title="Copy & Open ChatGPT"
-              >
-                <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-5 w-5" loading="lazy" />
-              </Button>
-              <Button
-                size="icon"
-                variant="outline"
-                className="rounded-lg border-border hover:border-primary hover:text-primary w-9 h-9"
-                onClick={(e) => handleOpenAI(e, 'https://gemini.google.com/app', 'Gemini')}
-                title="Copy & Open Gemini"
-              >
-                <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-5 w-5" loading="lazy" />
-              </Button>
-            </div>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="rounded-lg border-border hover:border-primary hover:text-primary w-9 h-9"
+                  onClick={(e) => handleOpenAI(e, 'https://chatgpt.com/', 'ChatGPT')}
+                  title="Copy & Open ChatGPT"
+                >
+                  <img src="https://cdn.oaistatic.com/assets/favicon-180x180-od45eci6.webp" alt="ChatGPT" className="h-5 w-5" loading="lazy" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="rounded-lg border-border hover:border-primary hover:text-primary w-9 h-9"
+                  onClick={(e) => handleOpenAI(e, 'https://gemini.google.com/app', 'Gemini')}
+                  title="Copy & Open Gemini"
+                >
+                  <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-5 w-5" loading="lazy" />
+                </Button>
+              </div>
           </div>
         </div>
       )}
@@ -226,4 +265,3 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
 };
 
 export default PromptCard;
-

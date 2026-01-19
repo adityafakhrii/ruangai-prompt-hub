@@ -9,6 +9,8 @@ interface AuthContextType {
   session: Session | null;
   signOut: () => Promise<void>;
   loading: boolean;
+  role: 'admin' | 'teman_rai' | null;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,6 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [role, setRole] = useState<'admin' | 'teman_rai' | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -50,8 +53,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log("JWT Payload:", payload);
 
             // Construct User object from specific claims
+            const userId = (payload.user_id as string) || (payload.sub as string) || 'unknown';
             const mockUser: User = {
-              id: (payload.user_id as string) || (payload.sub as string) || 'unknown',
+              id: userId,
               email: payload.email as string,
               app_metadata: {},
               user_metadata: {
@@ -85,6 +89,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               access_token: tokenToVerify,
               refresh_token: '',
             });
+
+            // Fetch user role from profiles
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', userId)
+              .single();
+
+            if (profileData) {
+              setRole(profileData.role as 'admin' | 'teman_rai');
+            } else if (profileError) {
+               console.warn("Could not fetch profile role:", profileError);
+               // Default to teman_rai if profile not found/error, or handle creation?
+               // For now, assume teman_rai
+               setRole('teman_rai');
+            }
 
             // Clean URL if token was there. IMPORTANT: Do this AFTER setting state
             if (urlToken) {
@@ -126,11 +146,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
+    setRole(null);
     window.location.href = 'https://ruangai.codepolitan.com/logout';
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, signOut, loading }}>
+    <AuthContext.Provider value={{ user, session, signOut, loading, role, isAdmin: role === 'admin' }}>
       {children}
     </AuthContext.Provider>
   );

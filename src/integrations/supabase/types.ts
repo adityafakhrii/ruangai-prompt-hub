@@ -57,6 +57,7 @@ export type Database = {
           full_name: string | null
           id: string
           updated_at: string | null
+          role: "teman_rai" | "admin"
         }
         Insert: {
           created_at?: string | null
@@ -64,6 +65,7 @@ export type Database = {
           full_name?: string | null
           id: string
           updated_at?: string | null
+          role?: "teman_rai" | "admin"
         }
         Update: {
           created_at?: string | null
@@ -71,6 +73,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string | null
+          role?: "teman_rai" | "admin"
         }
         Relationships: []
       }
@@ -84,12 +87,13 @@ export type Database = {
           full_prompt: string
           id: string
           image_url: string | null
-          // is_viral: boolean | null
-          // prompt_text: string
           title: string
           updated_at: string | null
-          // user_id: string | null
           profiles_id: string
+          status: "pending" | "verified" | "rejected"
+          verified_at: string | null
+          verifier_id: string | null
+          rejection_reason: string | null
         }
         Insert: {
           additional_info?: string | null
@@ -100,12 +104,13 @@ export type Database = {
           full_prompt: string
           id?: string
           image_url?: string | null
-          // is_viral?: boolean | null
-          // prompt_text: string
           title: string
           updated_at?: string | null
-          // user_id?: string | null
           profiles_id: string
+          status?: "pending" | "verified" | "rejected"
+          verified_at?: string | null
+          verifier_id?: string | null
+          rejection_reason?: string | null
         }
         Update: {
           additional_info?: string | null
@@ -116,12 +121,13 @@ export type Database = {
           full_prompt?: string
           id?: string
           image_url?: string | null
-          // is_viral?: boolean | null
-          // prompt_text?: string
           title?: string
           updated_at?: string | null
-          // user_id?: string | null
           profiles_id?: string
+          status?: "pending" | "verified" | "rejected"
+          verified_at?: string | null
+          verifier_id?: string | null
+          rejection_reason?: string | null
         }
         Relationships: [
           {

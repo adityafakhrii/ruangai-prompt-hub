@@ -12,7 +12,7 @@ import {
 import { useState } from "react";
 
 const Navbar = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -45,6 +45,11 @@ const Navbar = () => {
               {user && (
                 <NavLink to="/prompt-saya" className={getLinkClass}>
                   Prompt Saya
+                </NavLink>
+              )}
+              {isAdmin && (
+                <NavLink to="/admin/verification" className={getLinkClass}>
+                  Verifikasi Prompt
                 </NavLink>
               )}
             </div>
@@ -113,6 +118,11 @@ const Navbar = () => {
                     {user && (
                       <NavLink to="/prompt-saya" className={getMobileLinkClass} onClick={closeSheet}>
                         Prompt Saya
+                      </NavLink>
+                    )}
+                    {isAdmin && (
+                      <NavLink to="/admin/verification" className={getMobileLinkClass} onClick={closeSheet}>
+                        Verifikasi Prompt
                       </NavLink>
                     )}
                   </div>

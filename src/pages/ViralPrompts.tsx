@@ -133,6 +133,7 @@ const ViralPrompts = () => {
                 imageUrl={prompt.image_url}
                 copyCount={prompt.copy_count}
                 creatorEmail={prompt.profiles?.email || null}
+                status={prompt.status}
                 onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                 onClick={() => handleCardClick(prompt)}
               />

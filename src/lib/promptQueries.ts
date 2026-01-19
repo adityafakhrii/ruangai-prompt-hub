@@ -14,6 +14,7 @@ export interface PromptWithCreator {
     creator_name?: string;
     creator_email?: string | null;
     profiles?: { email: string | null } | null;
+    status: 'pending' | 'verified' | 'rejected';
 }
 
 /**
@@ -26,6 +27,7 @@ export const fetchPromptsWithCreator = async (options?: {
     limit?: number;
     offset?: number;
     minCopyCount?: number;
+    status?: 'pending' | 'verified' | 'rejected' | 'all';
 }) => {
     const {
         orderBy = 'created_at',
@@ -33,12 +35,17 @@ export const fetchPromptsWithCreator = async (options?: {
         limit,
         offset,
         minCopyCount,
+        status = 'verified', // Default to verified only for public queries
     } = options || {};
 
     let query = supabase
         .from('prompts')
         .select('*, profiles:profiles_id(email)')
         .order(orderBy, { ascending });
+
+    if (status !== 'all') {
+        query = query.eq('status', status);
+    }
 
     if (minCopyCount !== undefined) {
         query = query.gt('copy_count', minCopyCount);

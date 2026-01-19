@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
         .eq('id', promptId)
         .single()
 
-      if (!existingPrompt || existingPrompt.profiles_id !== userId) {
+      if (!existingPrompt || (existingPrompt.profiles_id !== userId && !isAdmin)) {
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

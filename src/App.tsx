@@ -22,6 +22,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQ = lazy(() => import("./pages/FAQ"));
+const AdminVerification = lazy(() => import("./pages/AdminVerification"));
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const AnimatedRoutes = () => {
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/admin/verification" element={<AdminVerification />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

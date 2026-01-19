@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Loader2, Plus, Pencil, Trash2, X } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, X, Check, Clock, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -37,6 +38,8 @@ interface Prompt {
     full_prompt: string;
     image_url: string | null;
     created_at: string;
+    status: 'pending' | 'verified' | 'rejected';
+    rejection_reason?: string;
 }
 
 const PromptSaya = () => {
@@ -244,6 +247,7 @@ const PromptSaya = () => {
                 full_prompt: fullPrompt,
                 image_url: finalImageUrl || null,
                 additional_info: additionalInfo || null,
+                status: 'pending', // Reset status to pending on update or create
             };
 
             if (view === 'edit' && editingId) {
@@ -332,9 +336,34 @@ const PromptSaya = () => {
                                     <div key={prompt.id} className="bg-card p-6 rounded-lg border border-border shadow-sm flex justify-between items-start hover:shadow-md transition-shadow">
                                         <div>
                                             <h3 className="font-semibold text-lg text-heading mb-1">{prompt.title}</h3>
-                                            <span className="inline-block px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-2">
-                                                {prompt.category}
-                                            </span>
+                                            <div className="flex flex-wrap gap-2 mb-2 items-center">
+                                                <span className="inline-block px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                                                    {prompt.category}
+                                                </span>
+                                                {prompt.status === 'verified' && (
+                                                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 gap-1 border-blue-200">
+                                                        <Check className="w-3 h-3" />
+                                                        <span className="text-[10px] font-bold uppercase">Verified</span>
+                                                    </Badge>
+                                                )}
+                                                {prompt.status === 'pending' && (
+                                                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 gap-1">
+                                                        <Clock className="w-3 h-3" />
+                                                        <span className="text-[10px] font-bold uppercase">Pending</span>
+                                                    </Badge>
+                                                )}
+                                                {prompt.status === 'rejected' && (
+                                                    <Badge variant="destructive" className="gap-1">
+                                                        <XCircle className="w-3 h-3" />
+                                                        <span className="text-[10px] font-bold uppercase">Rejected</span>
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            {prompt.status === 'rejected' && prompt.rejection_reason && (
+                                                <p className="text-destructive text-xs mb-2 bg-destructive/10 p-2 rounded">
+                                                    <span className="font-semibold">Alasan Penolakan:</span> {prompt.rejection_reason}
+                                                </p>
+                                            )}
                                             <p className="text-muted-foreground text-sm line-clamp-2">
                                                 {prompt.full_prompt.substring(0, 150) + (prompt.full_prompt.length > 150 ? "..." : "")}
                                             </p>

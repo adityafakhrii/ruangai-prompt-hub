@@ -13,6 +13,7 @@ interface Prompt {
     additional_info?: string | null;
     copy_count?: number;
     profiles?: { email: string | null } | null;
+    status?: 'pending' | 'verified' | 'rejected';
 }
 
 interface PromptSliderProps {
@@ -65,6 +66,7 @@ const PromptSlider = ({
                                         additionalInfo={prompt.additional_info || undefined}
                                         copyCount={prompt.copy_count}
                                         creatorEmail={prompt.profiles?.email || null}
+                                        status={prompt.status}
                                         onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
                                         onClick={() => onCardClick(prompt)}
                                         priority={index < 3}

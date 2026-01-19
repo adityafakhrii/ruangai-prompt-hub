@@ -324,6 +324,7 @@ const Index = () => {
                     additionalInfo={prompt.additional_info || undefined}
                     copyCount={prompt.copy_count}
                     creatorEmail={prompt.profiles?.email || null}
+                    status={prompt.status}
                     onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                     onClick={() => handleCardClick(prompt)}
                   />
