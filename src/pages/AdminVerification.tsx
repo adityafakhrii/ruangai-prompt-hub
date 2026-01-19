@@ -74,19 +74,15 @@ const AdminVerification = () => {
     const fetchPendingPrompts = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from('prompts')
-                .select(`
-                    *,
-                    profiles:profiles_id (
-                        email
-                    )
-                `)
-                .eq('status', 'pending')
-                .order('created_at', { ascending: false });
+            const token = localStorage.getItem('heroic_token');
+            const { data, error } = await supabase.functions.invoke('manage-prompts', {
+                body: { action: 'list_pending', token }
+            });
 
             if (error) throw error;
-            setPrompts(data as unknown as PromptWithProfile[]);
+            if (data?.error) throw new Error(data.error);
+            
+            setPrompts(data.prompts as PromptWithProfile[]);
         } catch (error: unknown) {
             toast({
                 title: "Error fetching prompts",
@@ -101,16 +97,22 @@ const AdminVerification = () => {
     const handleVerify = async (promptId: string) => {
         setActionLoading(true);
         try {
-            const { error } = await supabase
-                .from('prompts')
-                .update({
-                    status: 'verified',
-                    verified_at: new Date().toISOString(),
-                    verifier_id: user?.id
-                })
-                .eq('id', promptId);
+            const token = localStorage.getItem('heroic_token');
+            const { data, error } = await supabase.functions.invoke('manage-prompts', {
+                body: {
+                    action: 'update',
+                    token,
+                    promptId,
+                    data: {
+                        status: 'verified',
+                        verified_at: new Date().toISOString(),
+                        verifier_id: user?.id
+                    }
+                }
+            });
 
             if (error) throw error;
+            if (data?.error) throw new Error(data.error);
 
             toast({
                 title: "Prompt Verified",
@@ -142,17 +144,23 @@ const AdminVerification = () => {
 
         setActionLoading(true);
         try {
-            const { error } = await supabase
-                .from('prompts')
-                .update({
-                    status: 'rejected',
-                    verified_at: new Date().toISOString(),
-                    verifier_id: user?.id,
-                    rejection_reason: rejectionReason
-                })
-                .eq('id', selectedPrompt.id);
+            const token = localStorage.getItem('heroic_token');
+            const { data, error } = await supabase.functions.invoke('manage-prompts', {
+                body: {
+                    action: 'update',
+                    token,
+                    promptId: selectedPrompt.id,
+                    data: {
+                        status: 'rejected',
+                        verified_at: new Date().toISOString(),
+                        verifier_id: user?.id,
+                        rejection_reason: rejectionReason
+                    }
+                }
+            });
 
             if (error) throw error;
+            if (data?.error) throw new Error(data.error);
 
             toast({
                 title: "Prompt Rejected",

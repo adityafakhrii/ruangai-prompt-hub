@@ -129,6 +129,38 @@ Deno.serve(async (req) => {
       )
     }
 
+    if (action === 'list_pending') {
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const { data: prompts, error } = await supabase
+        .from('prompts')
+        .select(`
+            *,
+            profiles:profiles_id (
+                email
+            )
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      return new Response(
+        JSON.stringify({ prompts }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     if (action === 'create') {
       const promptData = {
         ...data,
