@@ -100,11 +100,20 @@ const AdminVerification = () => {
     const filteredPrompts = prompts.filter(p => filterStatus === 'all' || p.status === filterStatus);
 
     const handleSort = (key: string) => {
-        let direction: 'asc' | 'desc' = 'asc';
-        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
+        let direction: 'asc' | 'desc' | null = 'asc';
+        if (sortConfig && sortConfig.key === key) {
+            if (sortConfig.direction === 'asc') {
+                direction = 'desc';
+            } else {
+                direction = null;
+            }
         }
-        setSortConfig({ key, direction });
+        
+        if (direction === null) {
+            setSortConfig(null);
+        } else {
+            setSortConfig({ key, direction });
+        }
     };
 
     const sortedPrompts = [...filteredPrompts].sort((a, b) => {
@@ -385,24 +394,26 @@ const AdminVerification = () => {
                                                         <Eye className="h-4 w-4 mr-1" />
                                                         Lihat
                                                     </Button>
-                                                    {prompt.status === 'pending' && (
-                                                        <>
-                                                            <Button 
-                                                                variant="default" 
-                                                                size="sm" 
-                                                                className="bg-green-600 hover:bg-green-700"
-                                                                onClick={() => handleVerify(prompt.id)}
-                                                            >
-                                                                <Check className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button 
-                                                                variant="destructive" 
-                                                                size="sm"
-                                                                onClick={() => openRejectDialog(prompt)}
-                                                            >
-                                                                <X className="h-4 w-4" />
-                                                            </Button>
-                                                        </>
+                                                    {prompt.status !== 'verified' && (
+                                                        <Button 
+                                                            variant="default" 
+                                                            size="sm" 
+                                                            className="bg-green-600 hover:bg-green-700"
+                                                            onClick={() => handleVerify(prompt.id)}
+                                                            title="Verifikasi"
+                                                        >
+                                                            <Check className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    {prompt.status !== 'rejected' && (
+                                                        <Button 
+                                                            variant="destructive" 
+                                                            size="sm"
+                                                            onClick={() => openRejectDialog(prompt)}
+                                                            title="Tolak"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
                                                     )}
                                                 </div>
                                             </TableCell>
