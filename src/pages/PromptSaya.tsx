@@ -10,8 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Loader2, Plus, Pencil, Trash2, X, Check, Clock, XCircle } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, X, Check, Clock, XCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -400,6 +401,19 @@ const PromptSaya = () => {
                         )
                     ) : (
                         <div className="bg-card p-8 rounded-lg border border-border shadow-sm">
+                            <Alert className="mb-6 bg-blue-50 border-blue-200 text-blue-800">
+                                <Info className="h-4 w-4 text-blue-800" />
+                                <AlertTitle className="mb-2 font-semibold">Penting: Panduan & Proses Verifikasi</AlertTitle>
+                                <AlertDescription className="text-sm leading-relaxed">
+                                    <p className="mb-2">
+                                        Pastikan prompt yang Anda buat positif, bermanfaat, dan <strong>tidak mengandung unsur SARA atau konten negatif</strong>.
+                                    </p>
+                                    <p>
+                                        Demi menjaga kualitas komunitas, setiap prompt baru akan melalui proses <strong>verifikasi oleh Admin</strong> terlebih dahulu. Prompt Anda akan berstatus <em>Pending</em> hingga disetujui. Mohon kesabarannya menunggu verifikasi admin sebelum prompt terpublish.
+                                    </p>
+                                </AlertDescription>
+                            </Alert>
+
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="title">Judul Prompt</Label>

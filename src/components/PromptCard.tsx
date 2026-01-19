@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Clock, XCircle, BadgeCheck } from "lucide-react";
+import { Copy, Clock, XCircle, BadgeCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
@@ -111,18 +111,16 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="absolute top-3 left-3 flex gap-2">
-                <Badge className="bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border-none">
-                {category}
-                </Badge>
-            </div>
           </div>
 
           {/* Content with image */}
           <div className="p-4 space-y-3 flex-1 flex flex-col">
             <div>
               <div className="flex justify-between items-start gap-2 mb-1">
-                 <div className="flex flex-wrap gap-2">
+                 <div className="flex flex-wrap gap-2 items-center">
+                    <Badge className="w-fit bg-primary/10 hover:bg-primary/20 text-primary border-none">
+                        {category}
+                    </Badge>
                     <StatusBadge />
                  </div>
                  {copyCount !== undefined && (
