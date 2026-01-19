@@ -56,27 +56,29 @@ const AdminVerification = () => {
     const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
 
+    const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'verified' | 'rejected'>('pending');
+
     useEffect(() => {
         if (!authLoading) {
             if (!user || !isAdmin) {
                 navigate('/');
                 toast({
-                    title: "Access Denied",
-                    description: "You do not have permission to view this page.",
+                    title: "Akses Ditolak",
+                    description: "Anda tidak memiliki izin untuk melihat halaman ini.",
                     variant: "destructive",
                 });
             } else {
-                fetchPendingPrompts();
+                fetchPrompts();
             }
         }
     }, [user, isAdmin, authLoading, navigate]);
 
-    const fetchPendingPrompts = async () => {
+    const fetchPrompts = async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('heroic_token');
             const { data, error } = await supabase.functions.invoke('manage-prompts', {
-                body: { action: 'list_pending', token }
+                body: { action: 'admin_list', token }
             });
 
             if (error) throw error;
@@ -85,13 +87,22 @@ const AdminVerification = () => {
             setPrompts(data.prompts as PromptWithProfile[]);
         } catch (error: unknown) {
             toast({
-                title: "Error fetching prompts",
-                description: error instanceof Error ? error.message : 'An unknown error occurred',
+                title: "Gagal mengambil data prompt",
+                description: error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diketahui',
                 variant: "destructive",
             });
         } finally {
             setLoading(false);
         }
+    };
+
+    const filteredPrompts = prompts.filter(p => filterStatus === 'all' || p.status === filterStatus);
+    
+    const counts = {
+        all: prompts.length,
+        pending: prompts.filter(p => p.status === 'pending').length,
+        verified: prompts.filter(p => p.status === 'verified').length,
+        rejected: prompts.filter(p => p.status === 'rejected').length
     };
 
     const handleVerify = async (promptId: string) => {
@@ -115,15 +126,15 @@ const AdminVerification = () => {
             if (data?.error) throw new Error(data.error);
 
             toast({
-                title: "Prompt Verified",
-                description: "The prompt is now public.",
+                title: "Prompt Terverifikasi",
+                description: "Prompt sekarang sudah publik.",
             });
-            fetchPendingPrompts();
+            fetchPrompts();
             setIsPreviewDialogOpen(false);
         } catch (error: unknown) {
             toast({
-                title: "Error verifying prompt",
-                description: error instanceof Error ? error.message : 'An unknown error occurred',
+                title: "Gagal memverifikasi prompt",
+                description: error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diketahui',
                 variant: "destructive",
             });
         } finally {
@@ -135,8 +146,8 @@ const AdminVerification = () => {
         if (!selectedPrompt) return;
         if (!rejectionReason.trim()) {
             toast({
-                title: "Reason required",
-                description: "Please provide a reason for rejection.",
+                title: "Alasan diperlukan",
+                description: "Mohon berikan alasan penolakan.",
                 variant: "destructive",
             });
             return;
@@ -163,17 +174,17 @@ const AdminVerification = () => {
             if (data?.error) throw new Error(data.error);
 
             toast({
-                title: "Prompt Rejected",
-                description: "The prompt has been returned to the user.",
+                title: "Prompt Ditolak",
+                description: "Prompt telah dikembalikan ke pengguna.",
             });
             setIsRejectDialogOpen(false);
             setRejectionReason("");
-            fetchPendingPrompts();
+            fetchPrompts();
             setIsPreviewDialogOpen(false);
         } catch (error: unknown) {
             toast({
-                title: "Error rejecting prompt",
-                description: error instanceof Error ? error.message : 'An unknown error occurred',
+                title: "Gagal menolak prompt",
+                description: error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diketahui',
                 variant: "destructive",
             });
         } finally {
@@ -204,34 +215,77 @@ const AdminVerification = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Navbar />
             <main className="flex-grow container mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold mb-6">Admin Verification Dashboard</h1>
+                <h1 className="text-3xl font-bold mb-6">Dashboard Verifikasi Admin</h1>
                 
                 <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-semibold">Pending Prompts ({prompts.length})</h2>
-                        <Button onClick={fetchPendingPrompts} variant="outline" size="sm">
-                            Refresh
+                    <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+                        <div className="flex bg-gray-100 p-1 rounded-lg">
+                            <button
+                                onClick={() => setFilterStatus('all')}
+                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    filterStatus === 'all' 
+                                        ? 'bg-white text-gray-900 shadow-sm' 
+                                        : 'text-gray-500 hover:text-gray-900'
+                                }`}
+                            >
+                                Semua ({counts.all})
+                            </button>
+                            <button
+                                onClick={() => setFilterStatus('pending')}
+                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    filterStatus === 'pending' 
+                                        ? 'bg-white text-yellow-700 shadow-sm' 
+                                        : 'text-gray-500 hover:text-gray-900'
+                                }`}
+                            >
+                                Pending ({counts.pending})
+                            </button>
+                            <button
+                                onClick={() => setFilterStatus('verified')}
+                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    filterStatus === 'verified' 
+                                        ? 'bg-white text-green-700 shadow-sm' 
+                                        : 'text-gray-500 hover:text-gray-900'
+                                }`}
+                            >
+                                Verified ({counts.verified})
+                            </button>
+                            <button
+                                onClick={() => setFilterStatus('rejected')}
+                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    filterStatus === 'rejected' 
+                                        ? 'bg-white text-red-700 shadow-sm' 
+                                        : 'text-gray-500 hover:text-gray-900'
+                                }`}
+                            >
+                                Rejected ({counts.rejected})
+                            </button>
+                        </div>
+
+                        <Button onClick={fetchPrompts} variant="outline" size="sm">
+                            Refresh Data
                         </Button>
                     </div>
 
-                    {prompts.length === 0 ? (
+                    {filteredPrompts.length === 0 ? (
                         <div className="text-center py-10 text-gray-500">
-                            No pending prompts to verify.
+                            Tidak ada prompt dengan status ini.
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Title</TableHead>
-                                        <TableHead>Category</TableHead>
-                                        <TableHead>Author</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
+                                        <TableHead>Tanggal</TableHead>
+                                        <TableHead>Judul</TableHead>
+                                        <TableHead>Kategori</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Penulis</TableHead>
+                                        <TableHead className="text-right">Aksi</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {prompts.map((prompt) => (
+                                    {filteredPrompts.map((prompt) => (
                                         <TableRow key={prompt.id}>
                                             <TableCell className="whitespace-nowrap">
                                                 {format(new Date(prompt.created_at), 'dd MMM yyyy')}
@@ -243,9 +297,26 @@ const AdminVerification = () => {
                                                 <Badge variant="secondary">{prompt.category}</Badge>
                                             </TableCell>
                                             <TableCell>
+                                                {prompt.status === 'verified' && (
+                                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                                        Verified
+                                                    </Badge>
+                                                )}
+                                                {prompt.status === 'pending' && (
+                                                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                                        Pending
+                                                    </Badge>
+                                                )}
+                                                {prompt.status === 'rejected' && (
+                                                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                                        Rejected
+                                                    </Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
                                                 <div className="flex flex-col">
                                                     <span className="text-sm font-medium">
-                                                        {prompt.profiles?.email || 'Unknown User'}
+                                                        {prompt.profiles?.email || 'Pengguna Tidak Dikenal'}
                                                     </span>
                                                 </div>
                                             </TableCell>
@@ -253,23 +324,27 @@ const AdminVerification = () => {
                                                 <div className="flex justify-end gap-2">
                                                     <Button variant="outline" size="sm" onClick={() => openPreview(prompt)}>
                                                         <Eye className="h-4 w-4 mr-1" />
-                                                        View
+                                                        Lihat
                                                     </Button>
-                                                    <Button 
-                                                        variant="default" 
-                                                        size="sm" 
-                                                        className="bg-green-600 hover:bg-green-700"
-                                                        onClick={() => handleVerify(prompt.id)}
-                                                    >
-                                                        <Check className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button 
-                                                        variant="destructive" 
-                                                        size="sm"
-                                                        onClick={() => openRejectDialog(prompt)}
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
+                                                    {prompt.status === 'pending' && (
+                                                        <>
+                                                            <Button 
+                                                                variant="default" 
+                                                                size="sm" 
+                                                                className="bg-green-600 hover:bg-green-700"
+                                                                onClick={() => handleVerify(prompt.id)}
+                                                            >
+                                                                <Check className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button 
+                                                                variant="destructive" 
+                                                                size="sm"
+                                                                onClick={() => openRejectDialog(prompt)}
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -285,7 +360,7 @@ const AdminVerification = () => {
             <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
                 <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Review Prompt</DialogTitle>
+                        <DialogTitle>Tinjau Prompt</DialogTitle>
                     </DialogHeader>
                     
                     {selectedPrompt && (
@@ -328,25 +403,29 @@ const AdminVerification = () => {
 
                             <div className="flex justify-end gap-3 pt-4 border-t">
                                 <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
-                                    Cancel
+                                    Batal
                                 </Button>
-                                <Button 
-                                    variant="destructive" 
-                                    onClick={() => {
-                                        setIsPreviewDialogOpen(false);
-                                        openRejectDialog(selectedPrompt);
-                                    }}
-                                >
-                                    Reject
-                                </Button>
-                                <Button 
-                                    className="bg-green-600 hover:bg-green-700"
-                                    onClick={() => handleVerify(selectedPrompt.id)}
-                                    disabled={actionLoading}
-                                >
-                                    {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Approve & Verify
-                                </Button>
+                                {selectedPrompt.status === 'pending' && (
+                                    <>
+                                        <Button 
+                                            variant="destructive" 
+                                            onClick={() => {
+                                                setIsPreviewDialogOpen(false);
+                                                openRejectDialog(selectedPrompt);
+                                            }}
+                                        >
+                                            Tolak
+                                        </Button>
+                                        <Button 
+                                            className="bg-green-600 hover:bg-green-700"
+                                            onClick={() => handleVerify(selectedPrompt.id)}
+                                            disabled={actionLoading}
+                                        >
+                                            {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            Setujui & Verifikasi
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     )}
@@ -357,28 +436,28 @@ const AdminVerification = () => {
             <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Reject Prompt</DialogTitle>
+                        <DialogTitle>Tolak Prompt</DialogTitle>
                         <DialogDescription>
-                            Please provide a reason for rejecting this prompt. This will be sent to the user.
+                            Mohon berikan alasan penolakan prompt ini. Alasan akan dikirimkan ke pengguna.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                         <Textarea 
-                            placeholder="Reason for rejection..." 
+                            placeholder="Alasan penolakan..." 
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
                             rows={4}
                         />
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>Batal</Button>
                         <Button 
                             variant="destructive" 
                             onClick={handleReject}
                             disabled={actionLoading || !rejectionReason.trim()}
                         >
                             {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Reject Prompt
+                            Tolak Prompt
                         </Button>
                     </DialogFooter>
                 </DialogContent>

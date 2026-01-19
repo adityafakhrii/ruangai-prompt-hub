@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    if (action === 'list_pending') {
+    if (action === 'admin_list') {
       if (!isAdmin) {
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
@@ -145,7 +145,6 @@ Deno.serve(async (req) => {
                 email
             )
         `)
-        .eq('status', 'pending')
         .order('created_at', { ascending: false })
 
       if (error) {
