@@ -15,7 +15,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, Eye } from "lucide-react";
+import { Loader2, Check, X, Eye, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -57,6 +57,7 @@ const AdminVerification = () => {
     const [actionLoading, setActionLoading] = useState(false);
 
     const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'verified' | 'rejected'>('pending');
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
     useEffect(() => {
         if (!authLoading) {
@@ -97,6 +98,29 @@ const AdminVerification = () => {
     };
 
     const filteredPrompts = prompts.filter(p => filterStatus === 'all' || p.status === filterStatus);
+
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedPrompts = [...filteredPrompts].sort((a, b) => {
+        if (!sortConfig) return 0;
+        const { key, direction } = sortConfig;
+        
+        let aValue: any = key === 'profiles.email' ? (a.profiles?.email || '') : a[key as keyof PromptWithProfile];
+        let bValue: any = key === 'profiles.email' ? (b.profiles?.email || '') : b[key as keyof PromptWithProfile];
+
+        if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+        if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+
+        if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
     
     const counts = {
         all: prompts.length,
@@ -276,16 +300,51 @@ const AdminVerification = () => {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Tanggal</TableHead>
-                                        <TableHead>Judul</TableHead>
-                                        <TableHead>Kategori</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Penulis</TableHead>
+                                        <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('created_at')}>
+                                            <div className="flex items-center gap-2">
+                                                Tanggal
+                                                {sortConfig?.key === 'created_at' ? (
+                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('title')}>
+                                            <div className="flex items-center gap-2">
+                                                Judul
+                                                {sortConfig?.key === 'title' ? (
+                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('category')}>
+                                            <div className="flex items-center gap-2">
+                                                Kategori
+                                                {sortConfig?.key === 'category' ? (
+                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('status')}>
+                                            <div className="flex items-center gap-2">
+                                                Status
+                                                {sortConfig?.key === 'status' ? (
+                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('profiles.email')}>
+                                            <div className="flex items-center gap-2">
+                                                Penulis
+                                                {sortConfig?.key === 'profiles.email' ? (
+                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                            </div>
+                                        </TableHead>
                                         <TableHead className="text-right">Aksi</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredPrompts.map((prompt) => (
+                                    {sortedPrompts.map((prompt) => (
                                         <TableRow key={prompt.id}>
                                             <TableCell className="whitespace-nowrap">
                                                 {format(new Date(prompt.created_at), 'dd MMM yyyy')}
@@ -367,17 +426,21 @@ const AdminVerification = () => {
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Title</h3>
+                                    <h3 className="text-sm font-medium text-gray-500">Judul</h3>
                                     <p className="text-lg font-semibold">{selectedPrompt.title}</p>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Category</h3>
+                                    <h3 className="text-sm font-medium text-gray-500">Kategori</h3>
                                     <Badge>{selectedPrompt.category}</Badge>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Penulis</h3>
+                                    <p className="text-sm font-medium">{selectedPrompt.profiles?.email || 'Pengguna Tidak Dikenal'}</p>
                                 </div>
                             </div>
 
                             <div>
-                                <h3 className="text-sm font-medium text-gray-500 mb-2">Full Prompt</h3>
+                                <h3 className="text-sm font-medium text-gray-500 mb-2">Prompt Lengkap</h3>
                                 <div className="bg-gray-100 p-4 rounded-md whitespace-pre-wrap text-sm">
                                     {selectedPrompt.full_prompt}
                                 </div>
@@ -385,17 +448,17 @@ const AdminVerification = () => {
 
                             {selectedPrompt.additional_info && (
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500 mb-2">Additional Info</h3>
+                                    <h3 className="text-sm font-medium text-gray-500 mb-2">Info Tambahan</h3>
                                     <p className="text-sm">{selectedPrompt.additional_info}</p>
                                 </div>
                             )}
 
                             {selectedPrompt.image_url && (
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500 mb-2">Image</h3>
+                                    <h3 className="text-sm font-medium text-gray-500 mb-2">Gambar</h3>
                                     <img 
                                         src={selectedPrompt.image_url} 
-                                        alt="Prompt Preview" 
+                                        alt="Pratinjau Prompt" 
                                         className="rounded-lg max-h-[300px] object-cover"
                                     />
                                 </div>
