@@ -143,6 +143,9 @@ Deno.serve(async (req) => {
             *,
             profiles:profiles_id (
                 email
+            ),
+            verifier:verifier_id (
+                email
             )
         `)
         .order('created_at', { ascending: false })

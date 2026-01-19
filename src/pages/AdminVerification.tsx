@@ -41,6 +41,9 @@ interface PromptWithProfile {
     profiles: {
         email: string | null;
     } | null;
+    verifier?: {
+        email: string | null;
+    } | null;
 }
 
 const AdminVerification = () => {
@@ -120,8 +123,12 @@ const AdminVerification = () => {
         if (!sortConfig) return 0;
         const { key, direction } = sortConfig;
         
-        let aValue: any = key === 'profiles.email' ? (a.profiles?.email || '') : a[key as keyof PromptWithProfile];
-        let bValue: any = key === 'profiles.email' ? (b.profiles?.email || '') : b[key as keyof PromptWithProfile];
+        let aValue: any = key === 'profiles.email' ? (a.profiles?.email || '') : 
+                          key === 'verifier.email' ? (a.verifier?.email || '') :
+                          a[key as keyof PromptWithProfile];
+        let bValue: any = key === 'profiles.email' ? (b.profiles?.email || '') : 
+                          key === 'verifier.email' ? (b.verifier?.email || '') :
+                          b[key as keyof PromptWithProfile];
 
         if (typeof aValue === 'string') aValue = aValue.toLowerCase();
         if (typeof bValue === 'string') bValue = bValue.toLowerCase();
@@ -349,6 +356,14 @@ const AdminVerification = () => {
                                                 ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
                                             </div>
                                         </TableHead>
+                                        <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('verifier.email')}>
+                                            <div className="flex items-center gap-2">
+                                                Verifier
+                                                {sortConfig?.key === 'verifier.email' ? (
+                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                            </div>
+                                        </TableHead>
                                         <TableHead className="text-right">Aksi</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -387,6 +402,11 @@ const AdminVerification = () => {
                                                         {prompt.profiles?.email || 'Pengguna Tidak Dikenal'}
                                                     </span>
                                                 </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="text-sm text-gray-500">
+                                                    {prompt.verifier?.email || '-'}
+                                                </span>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">

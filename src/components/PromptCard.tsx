@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Clock, XCircle } from "lucide-react";
+import { Copy, Check, Clock, XCircle, BadgeCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
@@ -67,10 +67,9 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
     
     if (status === 'verified') {
       return (
-        <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 gap-1 border-blue-200">
-          <Check className="w-3 h-3" />
-          <span className="text-[10px] font-bold uppercase">Verified</span>
-        </Badge>
+        <div title="Verified">
+            <BadgeCheck className="w-5 h-5 text-white fill-blue-500" />
+        </div>
       );
     }
     if (status === 'pending') {
