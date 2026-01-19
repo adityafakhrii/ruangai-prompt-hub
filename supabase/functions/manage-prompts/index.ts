@@ -97,6 +97,15 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Check if user is admin
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single()
+    
+    const isAdmin = profileData?.role === 'admin'
+
     const { action, data, promptId } = body as { action: string, data?: Record<string, unknown>, promptId?: string }
     console.log('Action:', action, 'User:', userId)
 

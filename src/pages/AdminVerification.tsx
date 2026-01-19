@@ -40,7 +40,6 @@ interface PromptWithProfile {
     status: 'pending' | 'verified' | 'rejected';
     profiles: {
         email: string | null;
-        full_name: string | null;
     } | null;
 }
 
@@ -80,8 +79,7 @@ const AdminVerification = () => {
                 .select(`
                     *,
                     profiles:profiles_id (
-                        email,
-                        full_name
+                        email
                     )
                 `)
                 .eq('status', 'pending')
@@ -239,10 +237,7 @@ const AdminVerification = () => {
                                             <TableCell>
                                                 <div className="flex flex-col">
                                                     <span className="text-sm font-medium">
-                                                        {prompt.profiles?.full_name || 'Unknown'}
-                                                    </span>
-                                                    <span className="text-xs text-gray-500">
-                                                        {prompt.profiles?.email}
+                                                        {prompt.profiles?.email || 'Unknown User'}
                                                     </span>
                                                 </div>
                                             </TableCell>
