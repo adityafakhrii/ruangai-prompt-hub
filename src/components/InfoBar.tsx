@@ -29,7 +29,7 @@ const InfoBar = () => {
           {/* Close button */}
           <button
             onClick={() => setIsVisible(false)}
-            className="absolute right-0 p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="absolute right-0 p-1 rounded-full hover:text-white hover:bg-slate-800 transition-colors"
             aria-label="Tutup info"
           >
             <X className="h-4 w-4" />
