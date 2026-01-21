@@ -16,6 +16,7 @@ import Navbar from "@/components/Navbar";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
 import InfoBar from "@/components/InfoBar";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 import PromptCard from "@/components/PromptCard";
 import PromptSlider from "@/components/PromptSlider";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -235,17 +236,18 @@ const Index = () => {
           }
         }}
       />
+      <InfoBar />
       <Navbar />
       <CategoryFilter
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />
+      <AnnouncementBanner />
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         keywords={popularKeywords}
       />
-      <InfoBar />
 
       {showSections && (
         <>
