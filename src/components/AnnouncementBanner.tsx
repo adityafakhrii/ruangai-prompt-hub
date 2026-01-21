@@ -36,7 +36,7 @@ const AnnouncementBanner = () => {
                                 >
                                     @ruangai.id
                                 </a> <br />
-                                Mulai berkontribusi sekarang dan tingkatkan kreativitas prompt kamu bersama Ruang AI!
+                                Mulai berkontribusi sekarang dan tingkatkan kreativitas prompt kamu bersama RuangAI!
                             </p>
                         </div>
 
