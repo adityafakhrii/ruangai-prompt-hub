@@ -252,20 +252,20 @@ const AdminVerification = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col transition-colors duration-200">
             <Navbar />
             <main className="flex-grow container mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold mb-6">Dashboard Verifikasi Admin</h1>
+                <h1 className="text-3xl font-bold mb-6 text-foreground">Dashboard Verifikasi Admin</h1>
                 
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="bg-white dark:bg-card rounded-lg shadow p-6 border dark:border-border">
                     <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-                        <div className="flex bg-gray-100 p-1 rounded-lg">
+                        <div className="flex bg-gray-100 dark:bg-muted p-1 rounded-lg">
                             <button
                                 onClick={() => setFilterStatus('all')}
                                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                                     filterStatus === 'all' 
-                                        ? 'bg-white text-gray-900 shadow-sm' 
-                                        : 'text-gray-500 hover:text-gray-900'
+                                        ? 'bg-white dark:bg-background text-gray-900 dark:text-foreground shadow-sm' 
+                                        : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
                                 }`}
                             >
                                 Semua ({counts.all})
@@ -274,8 +274,8 @@ const AdminVerification = () => {
                                 onClick={() => setFilterStatus('pending')}
                                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                                     filterStatus === 'pending' 
-                                        ? 'bg-white text-yellow-700 shadow-sm' 
-                                        : 'text-gray-500 hover:text-gray-900'
+                                        ? 'bg-white dark:bg-background text-yellow-700 dark:text-yellow-500 shadow-sm' 
+                                        : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
                                 }`}
                             >
                                 Pending ({counts.pending})
@@ -284,8 +284,8 @@ const AdminVerification = () => {
                                 onClick={() => setFilterStatus('verified')}
                                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                                     filterStatus === 'verified' 
-                                        ? 'bg-white text-green-700 shadow-sm' 
-                                        : 'text-gray-500 hover:text-gray-900'
+                                        ? 'bg-white dark:bg-background text-green-700 dark:text-green-500 shadow-sm' 
+                                        : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
                                 }`}
                             >
                                 Verified ({counts.verified})
@@ -294,8 +294,8 @@ const AdminVerification = () => {
                                 onClick={() => setFilterStatus('rejected')}
                                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                                     filterStatus === 'rejected' 
-                                        ? 'bg-white text-red-700 shadow-sm' 
-                                        : 'text-gray-500 hover:text-gray-900'
+                                        ? 'bg-white dark:bg-background text-red-700 dark:text-red-500 shadow-sm' 
+                                        : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
                                 }`}
                             >
                                 Rejected ({counts.rejected})
@@ -457,22 +457,22 @@ const AdminVerification = () => {
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Judul</h3>
+                                    <h3 className="text-sm font-medium text-muted-foreground">Judul</h3>
                                     <p className="text-lg font-semibold">{selectedPrompt.title}</p>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Kategori</h3>
+                                    <h3 className="text-sm font-medium text-muted-foreground">Kategori</h3>
                                     <Badge>{selectedPrompt.category}</Badge>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Penulis</h3>
+                                    <h3 className="text-sm font-medium text-muted-foreground">Penulis</h3>
                                     <p className="text-sm font-medium">{selectedPrompt.profiles?.email || 'Pengguna Tidak Dikenal'}</p>
                                 </div>
                             </div>
 
                             <div>
-                                <h3 className="text-sm font-medium text-gray-500 mb-2">Prompt Lengkap</h3>
-                                <div className="bg-gray-100 p-4 rounded-md whitespace-pre-wrap text-sm">
+                                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Prompt Lengkap</h3>
+                                <div className="bg-gray-100 dark:bg-muted p-4 rounded-md whitespace-pre-wrap text-sm text-foreground">
                                     {selectedPrompt.full_prompt}
                                 </div>
                             </div>

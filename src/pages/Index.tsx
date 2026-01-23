@@ -1,9 +1,18 @@
+import { ArrowUpDown, Star, Clock, Copy as CopyIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useCopyLimit } from "@/hooks/useCopyLimit";
+import { useBookmarks } from "@/hooks/useBookmarks";
 import {
   fetchViralPromptsWithCreator,
   fetchMostCopiedPromptsWithCreator,
@@ -34,6 +43,7 @@ const Index = () => {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [popularKeywords, setPopularKeywords] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'created_at' | 'copy_count' | 'average_rating'>('created_at');
 
   const [selectedPrompt, setSelectedPrompt] = useState<{
     id: string;
@@ -45,6 +55,8 @@ const Index = () => {
     additionalInfo?: string;
     copyCount?: number;
     creatorEmail?: string | null;
+    averageRating?: number;
+    reviewCount?: number;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
@@ -67,6 +79,8 @@ const Index = () => {
     incrementCopyCount,
     remainingCopies
   } = useCopyLimit(!!user);
+
+  const { bookmarkedIds, toggleBookmark } = useBookmarks();
 
   useEffect(() => {
     // Prioritize above-the-fold content
@@ -108,7 +122,15 @@ const Index = () => {
     }
 
     return () => observer.disconnect();
-  }, [hasMore, loadingMore, page]);
+  }, [hasMore, loadingMore, page, sortBy]); // Added sortBy to dependency
+
+  // Fetch prompts when filters change
+  useEffect(() => {
+    setPage(0);
+    setHasMore(true);
+    // Fetch initial page
+    fetchAllPrompts(0);
+  }, [searchQuery, selectedCategory, sortBy]);
 
   const fetchViralPrompts = async () => {
     setLoadingViral(true);
@@ -138,7 +160,7 @@ const Index = () => {
 
     setLoadingMore(true);
     const pageSize = 12;
-    const { data, error } = await fetchAllPromptsWithCreator(pageNum, pageSize);
+    const { data, error } = await fetchAllPromptsWithCreator(pageNum, pageSize, sortBy);
 
     if (!error && data) {
       setAllPrompts(prev => pageNum === 0 ? data : [...prev, ...data]);
@@ -190,6 +212,8 @@ const Index = () => {
       additionalInfo: prompt.additional_info || undefined,
       copyCount: prompt.copy_count,
       creatorEmail: prompt.profiles?.email || null,
+      averageRating: prompt.average_rating,
+      reviewCount: prompt.review_count,
     });
     setIsDetailModalOpen(true);
   };
@@ -268,6 +292,8 @@ const Index = () => {
               onCopy={handleCopy}
               onCardClick={handleCardClick}
               onViewAll={() => navigate('/paling-banyak-copy')}
+              bookmarkedIds={bookmarkedIds}
+              onToggleBookmark={toggleBookmark}
             />
           )}
 
@@ -292,6 +318,8 @@ const Index = () => {
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
               viewAllLabel="Lihat semua"
+              bookmarkedIds={bookmarkedIds}
+              onToggleBookmark={toggleBookmark}
             />
           )}
         </>
@@ -300,9 +328,33 @@ const Index = () => {
       {/* All Prompts Section with Lazy Loading */}
       <section id="semua-prompt" className="w-full py-8">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-foreground mb-6">
-            {showSections ? "Semua Prompt" : "Hasil Pencarian"}
-          </h2>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <h2 className="text-2xl font-bold text-foreground">
+              {showSections ? "Semua Prompt" : "Hasil Pencarian"}
+            </h2>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <ArrowUpDown className="w-4 h-4" />
+                  Urutkan: {sortBy === 'created_at' ? 'Terbaru' : sortBy === 'copy_count' ? 'Terpopuler' : 'Rating Tertinggi'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setSortBy('created_at')}>
+                  <Clock className="w-4 h-4 mr-2" />
+                  Terbaru
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('copy_count')}>
+                  <CopyIcon className="w-4 h-4 mr-2" />
+                  Terpopuler
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('average_rating')}>
+                  <Star className="w-4 h-4 mr-2" />
+                  Rating Tertinggi
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           {allPrompts.length === 0 && !loadingMore ? (
             <div className="text-center py-20">
@@ -318,7 +370,7 @@ const Index = () => {
                 {filteredPrompts.map((prompt) => (
                   <PromptCard
                     key={prompt.id}
-                    id={parseInt(prompt.id)}
+                    id={prompt.id}
                     title={prompt.title}
                     category={prompt.category}
                     fullPrompt={prompt.full_prompt}
@@ -329,6 +381,10 @@ const Index = () => {
                     status={prompt.status}
                     onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                     onClick={() => handleCardClick(prompt)}
+                    isBookmarked={bookmarkedIds.has(prompt.id)}
+                    onToggleBookmark={(e) => toggleBookmark(prompt.id)}
+                    averageRating={prompt.average_rating}
+                    reviewCount={prompt.review_count}
                   />
                 ))}
               </div>

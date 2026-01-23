@@ -15,6 +15,8 @@ export interface PromptWithCreator {
     creator_email?: string | null;
     profiles?: { email: string | null } | null;
     status: 'pending' | 'verified' | 'rejected';
+    average_rating?: number;
+    review_count?: number;
 }
 
 /**
@@ -22,7 +24,7 @@ export interface PromptWithCreator {
  */
 export const fetchPromptsWithCreator = async (options?: {
     isViral?: boolean;
-    orderBy?: 'created_at' | 'copy_count';
+    orderBy?: 'created_at' | 'copy_count' | 'average_rating';
     ascending?: boolean;
     limit?: number;
     offset?: number;
@@ -70,6 +72,21 @@ export const fetchPromptsWithCreator = async (options?: {
 };
 
 /**
+ * Fetch leaderboard data
+ */
+export const fetchLeaderboard = async (limit = 50) => {
+    const { data, error } = await supabase
+        .rpc('get_leaderboard', { limit_count: limit });
+
+    if (error) {
+        console.error('Error fetching leaderboard:', error);
+        return { data: null, error };
+    }
+
+    return { data, error: null };
+};
+
+/**
  * Fetch viral prompts with creator information
  */
 export const fetchViralPromptsWithCreator = async (limit = 5) => {
@@ -108,9 +125,9 @@ export const fetchLatestPromptsWithCreator = async (limit = 5) => {
 /**
  * Fetch all prompts with pagination and creator information
  */
-export const fetchAllPromptsWithCreator = async (page = 0, pageSize = 12) => {
+export const fetchAllPromptsWithCreator = async (page = 0, pageSize = 12, orderBy: 'created_at' | 'copy_count' | 'average_rating' = 'created_at') => {
     return fetchPromptsWithCreator({
-        orderBy: 'created_at',
+        orderBy: orderBy,
         ascending: false,
         limit: pageSize,
         offset: page * pageSize,
@@ -118,56 +135,53 @@ export const fetchAllPromptsWithCreator = async (page = 0, pageSize = 12) => {
 };
 
 /**
- * Extract popular keywords from all prompts
+ * Fetch popular keywords (categories)
  */
-export const fetchPopularKeywords = async (limit = 10): Promise<string[]> => {
+export const fetchPopularKeywords = async (limit = 10) => {
+    // This is a simplified implementation. Ideally we would aggregate tags or categories.
+    // For now, let's just return distinct categories from the prompts table
     const { data, error } = await supabase
         .from('prompts')
-        .select('title, full_prompt');
+        .select('category')
+        .limit(50); // Fetch a sample
 
-    if (error || !data) {
+    if (error) {
         console.error('Error fetching keywords:', error);
         return [];
     }
 
-    // Common stop words to filter out
-    const stopWords = new Set([
-        'yang', 'dan', 'di', 'ke', 'dari', 'untuk', 'dengan', 'pada', 'ini', 'itu',
-        'adalah', 'akan', 'atau', 'juga', 'sudah', 'bisa', 'ada', 'tidak', 'saya',
-        'anda', 'kamu', 'dia', 'mereka', 'kita', 'kami', 'nya', 'kan', 'ya', 'lah',
-        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-        'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should',
-        'may', 'might', 'must', 'shall', 'can', 'need', 'dare', 'ought', 'used',
-        'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as', 'into',
-        'through', 'during', 'before', 'after', 'above', 'below', 'between',
-        'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when',
-        'where', 'why', 'how', 'all', 'each', 'few', 'more', 'most', 'other',
-        'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than',
-        'too', 'very', 'just', 'but', 'and', 'or', 'if', 'because', 'as', 'until',
-        'while', 'although', 'even', 'though', 'after', 'before', 'since', 'unless',
-        'your', 'you', 'this', 'that', 'these', 'those', 'what', 'which', 'who',
-        'whom', 'whose', 'it', 'its', 'i', 'me', 'my', 'myself', 'we', 'our',
-        'seperti', 'tentang', 'dalam', 'lebih', 'buat', 'sebuah', 'membuat', 'cara',
-        'harus', 'tanpa', 'secara', 'sangat', 'jadi', 'saat', 'lalu', 'maka',
-    ]);
-
-    // Extract and count words
-    const wordCount: Record<string, number> = {};
-
-    data.forEach(prompt => {
-        const text = `${prompt.title} ${prompt.full_prompt}`.toLowerCase();
-        const words = text.match(/[a-zA-Z\u00C0-\u024F]+/g) || [];
-
-        words.forEach(word => {
-            if (word.length >= 4 && !stopWords.has(word)) {
-                wordCount[word] = (wordCount[word] || 0) + 1;
-            }
-        });
+    // Count occurrences
+    const counts: Record<string, number> = {};
+    data.forEach((p) => {
+        if (p.category) {
+            counts[p.category] = (counts[p.category] || 0) + 1;
+        }
     });
 
-    // Sort by frequency and return top keywords
-    return Object.entries(wordCount)
+    // Sort by count
+    return Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, limit)
-        .map(([word]) => word.charAt(0).toUpperCase() + word.slice(1));
+        .map(([keyword]) => keyword);
+};
+
+/**
+ * Fetch bookmarked prompts for a specific user
+ */
+export const fetchBookmarkedPromptsWithCreator = async (userId: string) => {
+    const { data, error } = await supabase
+        .rpc('get_bookmarked_prompts', { p_user_id: userId });
+
+    if (error) {
+        console.error('Error fetching bookmarked prompts:', error);
+        return { data: null, error };
+    }
+
+    // Transform data to match PromptWithCreator interface
+    const formattedData: PromptWithCreator[] = (data || []).map((p: any) => ({
+        ...p,
+        profiles: { email: p.creator_email }
+    }));
+
+    return { data: formattedData, error: null };
 };

@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu, ArrowLeft } from "lucide-react";
+import { LogOut, Menu, ArrowLeft, Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, NavLink } from "react-router-dom";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Sheet,
   SheetContent,
@@ -42,10 +43,18 @@ const Navbar = () => {
               <NavLink to="/paling-banyak-copy" className={getLinkClass}>
                 Prompt Viral
               </NavLink>
+              <NavLink to="/leaderboard" className={getLinkClass}>
+                Leaderboard
+              </NavLink>
               {user && (
-                <NavLink to="/prompt-saya" className={getLinkClass}>
-                  Prompt Saya
-                </NavLink>
+                <>
+                  <NavLink to="/prompt-saya" className={getLinkClass}>
+                    Prompt Saya
+                  </NavLink>
+                  <NavLink to="/prompt-tersimpan" className={getLinkClass}>
+                    Tersimpan
+                  </NavLink>
+                </>
               )}
               {isAdmin && (
                 <NavLink to="/admin/verification" className={getLinkClass}>
@@ -57,6 +66,7 @@ const Navbar = () => {
 
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center gap-2">
+            <ThemeToggle />
             {user ? (
               <>
                 <a
@@ -66,6 +76,14 @@ const Navbar = () => {
                   <ArrowLeft className="h-4 w-4" />
                   Dashboard
                 </a>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="mr-2 text-muted-foreground hover:text-foreground"
+                  onClick={() => navigate('/notifikasi')}
+                >
+                  <Bell className="h-5 w-5" />
+                </Button>
                 <span className="text-sm font-medium text-foreground mr-2">
                   {user.user_metadata?.full_name || user.email}
                 </span>
@@ -102,9 +120,12 @@ const Navbar = () => {
               </SheetTrigger>
               <SheetContent side="right">
                 <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2">
-                    <img src="/iconbiru.png" alt="RuangAI Logo" className="h-8 w-8" />
-                    RuangAI Prompt
+                  <SheetTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <img src="/iconbiru.png" alt="RuangAI Logo" className="h-8 w-8" />
+                      RuangAI Prompt
+                    </div>
+                    <ThemeToggle />
                   </SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-col gap-6 mt-8">
@@ -115,10 +136,21 @@ const Navbar = () => {
                     <NavLink to="/paling-banyak-copy" className={getMobileLinkClass} onClick={closeSheet}>
                       Prompt Viral
                     </NavLink>
+                    <NavLink to="/leaderboard" className={getMobileLinkClass} onClick={closeSheet}>
+                      Leaderboard
+                    </NavLink>
                     {user && (
-                      <NavLink to="/prompt-saya" className={getMobileLinkClass} onClick={closeSheet}>
-                        Prompt Saya
-                      </NavLink>
+                      <>
+                        <NavLink to="/prompt-saya" className={getMobileLinkClass} onClick={closeSheet}>
+                          Prompt Saya
+                        </NavLink>
+                        <NavLink to="/prompt-tersimpan" className={getMobileLinkClass} onClick={closeSheet}>
+                          Tersimpan
+                        </NavLink>
+                        <NavLink to="/notifikasi" className={getMobileLinkClass} onClick={closeSheet}>
+                          Notifikasi
+                        </NavLink>
+                      </>
                     )}
                     {isAdmin && (
                       <NavLink to="/admin/verification" className={getMobileLinkClass} onClick={closeSheet}>

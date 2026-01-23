@@ -65,6 +65,8 @@ const PromptSaya = () => {
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
+    const verifiedCount = prompts.filter(p => p.status === 'verified').length;
+
     useEffect(() => {
         if (!authLoading && !user) {
             navigate('/auth');
@@ -320,6 +322,26 @@ const PromptSaya = () => {
                             </Button>
                         )}
                     </div>
+
+                    {view === 'list' && verifiedCount >= 10 && (
+                        <div className="mb-6">
+                             <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+                                <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                <AlertTitle className="text-green-800 dark:text-green-300 font-semibold">Selamat! Anda memiliki {verifiedCount} prompt terverifikasi</AlertTitle>
+                                <AlertDescription className="text-green-700 dark:text-green-400 mt-1">
+                                    Anda berhak mendapatkan hadiah spesial. Silakan klaim dengan mengirimkan DM ke Instagram <a href="https://instagram.com/ruangi.id" target="_blank" rel="noopener noreferrer" className="font-bold underline hover:text-green-900 dark:hover:text-green-200">@ruangi.id</a>
+                                </AlertDescription>
+                            </Alert>
+                        </div>
+                    )}
+                    
+                    {view === 'list' && verifiedCount > 0 && verifiedCount < 10 && (
+                        <div className="mb-6">
+                            <p className="text-sm text-muted-foreground">
+                                Anda memiliki <span className="font-semibold text-primary">{verifiedCount}</span> prompt terverifikasi. Kumpulkan 10 prompt terverifikasi untuk mendapatkan hadiah!
+                            </p>
+                        </div>
+                    )}
 
                     {view === 'list' ? (
                         loading ? (

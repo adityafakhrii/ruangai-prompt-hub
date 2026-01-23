@@ -1,11 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Clock, XCircle, BadgeCheck } from "lucide-react";
+import { Copy, Clock, XCircle, BadgeCheck, Heart, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
 interface PromptCardProps {
-  id: number;
+  id: string;
   title: string;
   category: string;
   fullPrompt: string;
@@ -17,6 +17,10 @@ interface PromptCardProps {
   onCopy: () => void;
   onClick: () => void;
   priority?: boolean;
+  isBookmarked?: boolean;
+  onToggleBookmark?: (e: React.MouseEvent) => void;
+  averageRating?: number;
+  reviewCount?: number;
 }
 
 // Utility function to mask email for privacy
@@ -44,7 +48,7 @@ const maskEmail = (email: string): string => {
   return `${maskedLocal}@${maskedDomain}${domainExt}`;
 };
 
-const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, copyCount = 0, creatorEmail, status, onCopy, onClick, priority = false }: PromptCardProps) => {
+const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, copyCount = 0, creatorEmail, status, onCopy, onClick, priority = false, isBookmarked = false, onToggleBookmark, averageRating, reviewCount }: PromptCardProps) => {
   const { toast } = useToast();
 
   // Compute creator display name: use masked email if available, otherwise "Teman RAI"
@@ -91,6 +95,25 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
     return null;
   };
 
+  const RatingDisplay = () => {
+    // Show rating if it exists, or if reviewCount > 0 (even if rating is 0)
+    // But usually if reviewCount > 0, rating should be >= 1 unless 0 stars is possible.
+    // If no reviews, we might want to hide it, or show "0.0 (0)" if desired.
+    // The user said "seluruhnya di semua card prompt", which implies they want to see it always?
+    // Let's assume they want to see it even if it's 0 if they said "all cards".
+    // But usually empty states are hidden. Let's stick to hiding if null/undefined.
+    // However, checking if averageRating is 0:
+    if (averageRating === undefined || averageRating === null) return null;
+    
+    return (
+        <div className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400 font-medium bg-yellow-50 dark:bg-yellow-900/20 px-1.5 py-0.5 rounded-md border border-yellow-200 dark:border-yellow-800/50">
+            <Star className="w-3 h-3 fill-yellow-500 dark:fill-yellow-400 text-yellow-500 dark:text-yellow-400" />
+            <span>{Number(averageRating).toFixed(1)}</span>
+            <span className="text-muted-foreground dark:text-gray-400 ml-0.5">({reviewCount || 0})</span>
+        </div>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -111,6 +134,23 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            {/* Bookmark Button Overlay */}
+            {onToggleBookmark && (
+                <div className="absolute top-2 right-2 z-10">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8 backdrop-blur-sm"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleBookmark(e);
+                        }}
+                    >
+                        <Heart className={`w-5 h-5 ${isBookmarked ? "fill-red-500 text-red-500" : "text-white"}`} />
+                    </Button>
+                </div>
+            )}
           </div>
 
           {/* Content with image */}
@@ -123,15 +163,20 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
                     </Badge>
                     <StatusBadge />
                  </div>
-                 {copyCount !== undefined && (
-                  <Badge variant="default" className="shrink-0 text-[10px] px-1.5 h-5">
-                    {copyCount} copied
-                  </Badge>
-                )}
+                 <div className="flex items-center gap-2">
+                    <RatingDisplay />
+                    {copyCount !== undefined && (
+                      <Badge variant="default" className="shrink-0 text-[10px] px-1.5 h-5">
+                        {copyCount} copied
+                      </Badge>
+                    )}
+                 </div>
               </div>
-              <h3 className="font-semibold text-lg text-heading line-clamp-1" title={title}>
-                {title}
-              </h3>
+              <div className="flex justify-between items-start gap-2">
+                <h3 className="font-semibold text-lg text-heading line-clamp-1 flex-1" title={title}>
+                    {title}
+                </h3>
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Creator: {creatorDisplayName}</p>
             </div>
 
@@ -194,17 +239,35 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
                 </Badge>
                 <StatusBadge />
             </div>
-            {copyCount !== undefined && (
-              <Badge variant="default" className="text-[10px] px-1.5 h-5">
-                {copyCount} copied
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+                <RatingDisplay />
+                {copyCount !== undefined && (
+                <Badge variant="default" className="text-[10px] px-1.5 h-5">
+                    {copyCount} copied
+                </Badge>
+                )}
+                {onToggleBookmark && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleBookmark(e);
+                        }}
+                    >
+                        <Heart className={`w-4 h-4 ${isBookmarked ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+                    </Button>
+                )}
+            </div>
           </div>
 
           <div>
-            <h3 className="font-semibold text-lg text-heading line-clamp-2" title={title}>
-              {title}
-            </h3>
+            <div className="flex justify-between items-start gap-2">
+                <h3 className="font-semibold text-lg text-heading line-clamp-2 flex-1" title={title}>
+                    {title}
+                </h3>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Creator: {creatorDisplayName}</p>
           </div>
 
@@ -253,7 +316,7 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
                 >
                   <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg" alt="Gemini" className="h-5 w-5" loading="lazy" />
                 </Button>
-              </div>
+            </div>
           </div>
         </div>
       )}

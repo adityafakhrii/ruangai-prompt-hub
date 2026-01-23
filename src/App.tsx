@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { HelmetProvider } from "react-helmet-async";
 import { Suspense, lazy } from "react";
 
@@ -14,6 +15,8 @@ const Auth = lazy(() => import("./pages/Auth"));
 const PromptSaya = lazy(() => import("./pages/PromptSaya"));
 const ViralPrompts = lazy(() => import("./pages/ViralPrompts"));
 const Profile = lazy(() => import("./pages/Profile"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const SavedPrompts = lazy(() => import("./pages/SavedPrompts"));
 const MostCopiedPrompts = lazy(() => import("./pages/MostCopiedPrompts"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/About"));
@@ -23,6 +26,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const AdminVerification = lazy(() => import("./pages/AdminVerification"));
+const Notifications = lazy(() => import("./pages/Notifications"));
 
 const queryClient = new QueryClient();
 
@@ -45,7 +49,10 @@ const AnimatedRoutes = () => {
           <Route path="/prompt-saya" element={<PromptSaya />} />
           <Route path="/viral" element={<ViralPrompts />} />
           <Route path="/paling-banyak-copy" element={<MostCopiedPrompts />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/prompt-tersimpan" element={<SavedPrompts />} />
+          <Route path="/notifikasi" element={<Notifications />} />
           <Route path="/about" element={<About />} />
           <Route path="/cara-kerja" element={<CaraKerja />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -63,17 +70,19 @@ const AnimatedRoutes = () => {
 
 const App = () => (
   <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <AnimatedRoutes />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <AnimatedRoutes />
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   </HelmetProvider>
 );
 

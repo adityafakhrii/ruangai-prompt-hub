@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBookmarks } from "@/hooks/useBookmarks";
 import { fetchMostCopiedPromptsWithCreator, PromptWithCreator } from "@/lib/promptQueries";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -24,6 +25,8 @@ const MostCopiedPrompts = () => {
     imageUrl: string;
     copyCount?: number;
     creatorEmail?: string | null;
+    averageRating?: number;
+    reviewCount?: number;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -31,6 +34,7 @@ const MostCopiedPrompts = () => {
 
   const { toast } = useToast();
   const { user } = useAuth();
+  const { bookmarkedIds, toggleBookmark } = useBookmarks();
 
   const fetchPrompts = useCallback(async () => {
     setLoading(true);
@@ -84,6 +88,8 @@ const MostCopiedPrompts = () => {
       imageUrl: prompt.image_url,
       copyCount: prompt.copy_count,
       creatorEmail: prompt.profiles?.email || null,
+      averageRating: prompt.average_rating,
+      reviewCount: prompt.review_count,
     });
     setIsDetailModalOpen(true);
   };
@@ -125,7 +131,7 @@ const MostCopiedPrompts = () => {
             {prompts.map((prompt) => (
               <PromptCard
                 key={prompt.id}
-                id={parseInt(prompt.id)}
+                id={prompt.id}
                 title={prompt.title}
                 category={prompt.category}
                 fullPrompt={prompt.full_prompt}
@@ -135,6 +141,10 @@ const MostCopiedPrompts = () => {
                 status={prompt.status}
                 onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                 onClick={() => handleCardClick(prompt)}
+                isBookmarked={bookmarkedIds.has(prompt.id)}
+                onToggleBookmark={(e) => toggleBookmark(prompt.id)}
+                averageRating={prompt.average_rating}
+                reviewCount={prompt.review_count}
               />
             ))}
           </div>

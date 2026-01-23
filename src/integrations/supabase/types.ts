@@ -50,6 +50,48 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          id: string
+          user_id: string
+          prompt_id: string
+          rating: number
+          comment: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          prompt_id: string
+          rating: number
+          comment?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          prompt_id?: string
+          rating?: number
+          comment?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -82,6 +124,8 @@ export type Database = {
           additional_info: string | null
           category: string
           copy_count: number | null
+          average_rating: number | null
+          review_count: number | null
           created_at: string | null
           creator_email: string | null
           full_prompt: string
@@ -146,6 +190,66 @@ export type Database = {
     Functions: {
       get_creator_name: { Args: { creator_id: string }; Returns: string }
       increment_copy_count: { Args: { prompt_id: string }; Returns: undefined }
+      submit_review: {
+        Args: {
+          p_user_id: string
+          p_prompt_id: string
+          p_rating: number
+          p_comment: string
+        }
+        Returns: Json
+      }
+      toggle_bookmark: {
+        Args: {
+          p_user_id: string
+          p_prompt_id: string
+        }
+        Returns: boolean
+      }
+      get_bookmarked_prompts: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          id: string
+          profiles_id: string
+          title: string
+          category: string
+          full_prompt: string
+          image_url: string | null
+          copy_count: number
+          created_at: string
+          updated_at: string
+          status: string
+          additional_info: string | null
+          rejection_reason: string | null
+          verifier_id: string | null
+          verified_at: string | null
+          average_rating: number | null
+          review_count: number | null
+          creator_email: string | null
+        }[]
+      }
+      get_leaderboard: {
+        Args: {
+          limit_count: number
+        }
+        Returns: {
+          creator_id: string
+          creator_email: string
+          verified_prompt_count: number
+          total_copy_count: number
+          rank: number
+        }[]
+      }
+      get_user_bookmark_ids: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          prompt_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

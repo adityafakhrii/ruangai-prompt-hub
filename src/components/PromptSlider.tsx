@@ -14,6 +14,8 @@ interface Prompt {
     copy_count?: number;
     profiles?: { email: string | null } | null;
     status?: 'pending' | 'verified' | 'rejected';
+    average_rating?: number;
+    review_count?: number;
 }
 
 interface PromptSliderProps {
@@ -23,6 +25,8 @@ interface PromptSliderProps {
     onCardClick: (prompt: Prompt) => void;
     onViewAll?: () => void;
     viewAllLabel?: string;
+    bookmarkedIds?: Set<string>;
+    onToggleBookmark?: (id: string) => void;
 }
 
 const PromptSlider = ({
@@ -31,7 +35,9 @@ const PromptSlider = ({
     onCopy,
     onCardClick,
     onViewAll,
-    viewAllLabel = "Lihat semua"
+    viewAllLabel = "Lihat semua",
+    bookmarkedIds,
+    onToggleBookmark
 }: PromptSliderProps) => {
     return (
         <section className="w-full py-8">
@@ -58,7 +64,7 @@ const PromptSlider = ({
                             {prompts.map((prompt, index) => (
                                 <CarouselItem key={prompt.id} className="sm:basis-1/2 lg:basis-1/3">
                                     <PromptCard
-                                        id={parseInt(prompt.id)}
+                                        id={prompt.id}
                                         title={prompt.title}
                                         category={prompt.category}
                                         fullPrompt={prompt.full_prompt}
@@ -70,6 +76,10 @@ const PromptSlider = ({
                                         onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
                                         onClick={() => onCardClick(prompt)}
                                         priority={index < 3}
+                                        isBookmarked={bookmarkedIds?.has(prompt.id)}
+                                        onToggleBookmark={onToggleBookmark ? (e) => onToggleBookmark(prompt.id) : undefined}
+                                        averageRating={prompt.average_rating}
+                                        reviewCount={prompt.review_count}
                                     />
                                 </CarouselItem>
                             ))}
