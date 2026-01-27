@@ -7,6 +7,7 @@ import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { HelmetProvider } from "react-helmet-async";
 import { Suspense, lazy } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 // Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -72,6 +73,7 @@ const App = () => (
             <AnimatedRoutes />
           </AuthProvider>
         </BrowserRouter>
+        <Analytics />
       </TooltipProvider>
     </QueryClientProvider>
   </HelmetProvider>
