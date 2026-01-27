@@ -1,17 +1,17 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useCopyLimit } from "@/hooks/useCopyLimit";
 import {
-  fetchViralPromptsWithCreator,
-  fetchMostCopiedPromptsWithCreator,
-  fetchLatestPromptsWithCreator,
-  fetchAllPromptsWithCreator,
-  fetchPopularKeywords,
-  PromptWithCreator
-} from "@/lib/promptQueries";
+  useMostCopiedPrompts,
+  useLatestPrompts,
+  usePopularKeywords,
+  useAllPromptsInfinite,
+  usePromptDetail,
+} from "@/hooks/usePromptQueries";
+import { PromptPreview, fetchPromptDetail } from "@/lib/promptQueries";
 import Navbar from "@/components/Navbar";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
@@ -27,14 +27,25 @@ import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 
 const Index = () => {
-  const [viralPrompts, setViralPrompts] = useState<PromptWithCreator[]>([]);
-  const [mostCopiedPrompts, setMostCopiedPrompts] = useState<PromptWithCreator[]>([]);
-  const [latestPrompts, setLatestPrompts] = useState<PromptWithCreator[]>([]);
-  const [allPrompts, setAllPrompts] = useState<PromptWithCreator[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(0);
-  const [popularKeywords, setPopularKeywords] = useState<string[]>([]);
+  // Use React Query hooks with caching for reduced Supabase egress
+  const { data: mostCopiedPrompts = [], isLoading: loadingMostCopied } = useMostCopiedPrompts(5);
+  const { data: latestPrompts = [], isLoading: loadingLatest } = useLatestPrompts(5);
+  const { data: popularKeywords = [] } = usePopularKeywords(8);
 
+  // Infinite scroll for all prompts
+  const {
+    data: allPromptsData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAllPromptsInfinite(12);
+
+  // Flatten paginated data
+  const allPrompts = useMemo(() => {
+    return allPromptsData?.pages.flatMap(page => page.data) || [];
+  }, [allPromptsData]);
+
+  // Selected prompt for modal - lazy loads full prompt
   const [selectedPrompt, setSelectedPrompt] = useState<{
     id: string;
     title: string;
@@ -47,11 +58,6 @@ const Index = () => {
     creatorEmail?: string | null;
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-
-  const [loadingViral, setLoadingViral] = useState(true);
-  const [loadingMostCopied, setLoadingMostCopied] = useState(true);
-  const [loadingLatest, setLoadingLatest] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -68,36 +74,12 @@ const Index = () => {
     remainingCopies
   } = useCopyLimit(!!user);
 
-  useEffect(() => {
-    // Prioritize above-the-fold content
-    const loadCritical = async () => {
-      await Promise.all([
-        fetchViralPrompts(),
-        fetchMostCopiedPrompts()
-      ]);
-
-      // Load below-the-fold content after critical content
-      setTimeout(() => {
-        fetchLatestPrompts();
-        fetchAllPrompts(0);
-        loadKeywords();
-      }, 100);
-    };
-
-    loadCritical();
-  }, []);
-
-  const loadKeywords = async () => {
-    const keywords = await fetchPopularKeywords(8);
-    setPopularKeywords(keywords);
-  };
-
-  // Lazy loading observer
+  // Lazy loading observer for infinite scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
-          fetchAllPrompts(page + 1);
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
         }
       },
       { threshold: 0.1 }
@@ -108,45 +90,7 @@ const Index = () => {
     }
 
     return () => observer.disconnect();
-  }, [hasMore, loadingMore, page]);
-
-  const fetchViralPrompts = async () => {
-    setLoadingViral(true);
-    const { data, error } = await fetchViralPromptsWithCreator(5);
-    if (!error && data) setViralPrompts(data);
-    setLoadingViral(false);
-  };
-
-  const fetchMostCopiedPrompts = async () => {
-    setLoadingMostCopied(true);
-    const { data, error } = await fetchMostCopiedPromptsWithCreator(5);
-    if (!error && data) setMostCopiedPrompts(data);
-    setLoadingMostCopied(false);
-  };
-
-  const fetchLatestPrompts = async () => {
-    setLoadingLatest(true);
-    const { data, error } = await fetchLatestPromptsWithCreator(5);
-    if (!error && data) setLatestPrompts(data);
-    setLoadingLatest(false);
-  };
-
-  const fetchAllPrompts = async (pageNum: number) => {
-    if (pageNum === 0) {
-      setAllPrompts([]);
-    }
-
-    setLoadingMore(true);
-    const pageSize = 12;
-    const { data, error } = await fetchAllPromptsWithCreator(pageNum, pageSize);
-
-    if (!error && data) {
-      setAllPrompts(prev => pageNum === 0 ? data : [...prev, ...data]);
-      setHasMore(data.length === pageSize);
-      setPage(pageNum);
-    }
-    setLoadingMore(false);
-  };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     // Check if user can copy (respects 3-copy limit for non-logged users)
@@ -179,18 +123,31 @@ const Index = () => {
     }
   };
 
-  const handleCardClick = (prompt: PromptWithCreator) => {
-    setSelectedPrompt({
-      id: prompt.id,
-      title: prompt.title,
-      category: prompt.category,
-      prompt: prompt.full_prompt, // Derived from full_prompt
-      fullPrompt: prompt.full_prompt,
-      imageUrl: prompt.image_url || '',
-      additionalInfo: prompt.additional_info || undefined,
-      copyCount: prompt.copy_count,
-      creatorEmail: prompt.profiles?.email || null,
-    });
+  // Copy handler that fetches full prompt first (since list views only have preview)
+  const handleCopyWithFetch = async (prompt: PromptPreview) => {
+    const { data } = await fetchPromptDetail(prompt.id);
+    if (data) {
+      await handleCopy(prompt.id, data.full_prompt);
+    }
+  };
+
+  const handleCardClick = async (prompt: PromptPreview) => {
+    // Always fetch full prompt detail when clicking card (lazy load)
+    // This is because list views only have prompt_preview (truncated)
+    const { data } = await fetchPromptDetail(prompt.id);
+    if (data) {
+      setSelectedPrompt({
+        id: prompt.id,
+        title: prompt.title,
+        category: prompt.category,
+        prompt: data.full_prompt,
+        fullPrompt: data.full_prompt,
+        imageUrl: prompt.image_url || '',
+        additionalInfo: data.additional_info || undefined,
+        copyCount: prompt.copy_count,
+        creatorEmail: prompt.profiles?.email || null,
+      });
+    }
     setIsDetailModalOpen(true);
   };
 
@@ -203,7 +160,6 @@ const Index = () => {
       filtered = filtered.filter(
         (p) =>
           p.title.toLowerCase().includes(query) ||
-          p.full_prompt.toLowerCase().includes(query) ||
           p.category.toLowerCase().includes(query)
       );
     }
@@ -264,9 +220,9 @@ const Index = () => {
           ) : mostCopiedPrompts.length > 0 && (
             <PromptSlider
               title="Prompt Viral Paling Banyak Copy"
-              prompts={mostCopiedPrompts}
-              onCopy={handleCopy}
-              onCardClick={handleCardClick}
+              prompts={mostCopiedPrompts as any}
+              onCopy={handleCopyWithFetch as any}
+              onCardClick={handleCardClick as any}
               onViewAll={() => navigate('/paling-banyak-copy')}
             />
           )}
@@ -284,9 +240,9 @@ const Index = () => {
           ) : latestPrompts.length > 0 && (
             <PromptSlider
               title="Terbaru"
-              prompts={latestPrompts}
-              onCopy={handleCopy}
-              onCardClick={handleCardClick}
+              prompts={latestPrompts as any}
+              onCopy={handleCopyWithFetch as any}
+              onCardClick={handleCardClick as any}
               onViewAll={() => {
                 const el = document.getElementById('semua-prompt');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -304,7 +260,7 @@ const Index = () => {
             {showSections ? "Semua Prompt" : "Hasil Pencarian"}
           </h2>
 
-          {allPrompts.length === 0 && !loadingMore ? (
+          {allPrompts.length === 0 && !isFetchingNextPage ? (
             <div className="text-center py-20">
               <p className="text-2xl text-lightText">
                 {searchQuery || selectedCategory
@@ -321,20 +277,20 @@ const Index = () => {
                     id={parseInt(prompt.id)}
                     title={prompt.title}
                     category={prompt.category}
-                    fullPrompt={prompt.full_prompt}
+                    fullPrompt={prompt.prompt_preview || ''}
                     imageUrl={prompt.image_url || ''}
                     additionalInfo={prompt.additional_info || undefined}
                     copyCount={prompt.copy_count}
                     creatorEmail={prompt.profiles?.email || null}
                     status={prompt.status}
-                    onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
+                    onCopy={() => handleCopyWithFetch(prompt)}
                     onClick={() => handleCardClick(prompt)}
                   />
                 ))}
               </div>
 
               {/* Loading More Indicator */}
-              {loadingMore && (
+              {isFetchingNextPage && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-6">
                   {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
                 </div>

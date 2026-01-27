@@ -21,7 +21,7 @@ const AnnouncementBanner = () => {
                             <div className="flex items-center gap-2 mb-1">
                                 <Sparkles className="h-4 w-4 text-amber-600 sm:hidden" />
                                 <h3 className="text-sm md:text-base font-bold text-amber-900">
-                                    Kejutan Spesial untuk Lulusan Ruang AI!
+                                    Kejutan Spesial untuk Lulusan RuangAI!
                                 </h3>
                             </div>
                             <p className="text-xs md:text-sm text-amber-800 leading-relaxed">

@@ -1,5 +1,37 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Cache keys for React Query - enables proper caching and invalidation
+export const promptKeys = {
+    all: ['prompts'] as const,
+    viral: () => [...promptKeys.all, 'viral'] as const,
+    mostCopied: () => [...promptKeys.all, 'mostCopied'] as const,
+    latest: () => [...promptKeys.all, 'latest'] as const,
+    paginated: (page: number) => [...promptKeys.all, 'paginated', page] as const,
+    detail: (id: string) => [...promptKeys.all, 'detail', id] as const,
+    keywords: () => ['keywords'] as const,
+};
+
+// Field selection for views
+// prompts_preview view contains prompt_preview (first 200 chars) instead of full_prompt
+// This reduces egress significantly for list views
+const PREVIEW_FIELDS = '*, profiles:profiles_id(email)';
+const DETAIL_FIELDS = '*, profiles:profiles_id(email)';
+
+export interface PromptPreview {
+    id: string;
+    profiles_id: string;
+    title: string;
+    category: string;
+    prompt_preview: string;  // Truncated to 200 chars from the view
+    image_url: string | null;
+    copy_count: number;
+    created_at: string;
+    updated_at: string;
+    additional_info?: string | null;
+    profiles?: { email: string | null } | null;
+    status: 'pending' | 'verified' | 'rejected';
+}
+
 export interface PromptWithCreator {
     id: string;
     profiles_id: string;
@@ -18,7 +50,8 @@ export interface PromptWithCreator {
 }
 
 /**
- * Fetch prompts with creator information including email from profiles table
+ * Fetch prompts from prompts_preview view (with truncated prompt for reduced egress)
+ * Uses the view which contains prompt_preview (first 200 chars) instead of full_prompt
  */
 export const fetchPromptsWithCreator = async (options?: {
     isViral?: boolean;
@@ -28,7 +61,7 @@ export const fetchPromptsWithCreator = async (options?: {
     offset?: number;
     minCopyCount?: number;
     status?: 'pending' | 'verified' | 'rejected' | 'all';
-}) => {
+}): Promise<{ data: PromptPreview[] | null; error: Error | null }> => {
     const {
         orderBy = 'created_at',
         ascending = false,
@@ -38,9 +71,10 @@ export const fetchPromptsWithCreator = async (options?: {
         status = 'verified', // Default to verified only for public queries
     } = options || {};
 
+    // Use prompts_preview view for reduced egress (truncated prompt)
     let query = supabase
-        .from('prompts')
-        .select('*, profiles:profiles_id(email)')
+        .from('prompts_preview')
+        .select(PREVIEW_FIELDS)
         .order(orderBy, { ascending });
 
     if (status !== 'all') {
@@ -66,7 +100,7 @@ export const fetchPromptsWithCreator = async (options?: {
         return { data: null, error };
     }
 
-    return { data: data as PromptWithCreator[], error: null };
+    return { data: data as PromptPreview[], error: null };
 };
 
 /**
@@ -118,12 +152,33 @@ export const fetchAllPromptsWithCreator = async (page = 0, pageSize = 12) => {
 };
 
 /**
+ * Fetch full prompt detail - only loads full_prompt when needed (lazy loading)
+ * This reduces egress by not loading large full_prompt text in list views
+ */
+export const fetchPromptDetail = async (promptId: string) => {
+    const { data, error } = await supabase
+        .from('prompts')
+        .select(DETAIL_FIELDS)
+        .eq('id', promptId)
+        .single();
+
+    if (error) {
+        console.error('Error fetching prompt detail:', error);
+        return { data: null, error };
+    }
+
+    return { data: data as PromptWithCreator, error: null };
+};
+
+/**
  * Extract popular keywords from all prompts
+ * Only fetches titles to minimize egress - full_prompt is expensive
  */
 export const fetchPopularKeywords = async (limit = 10): Promise<string[]> => {
     const { data, error } = await supabase
         .from('prompts')
-        .select('title, full_prompt');
+        .select('title')
+        .eq('status', 'verified');
 
     if (error || !data) {
         console.error('Error fetching keywords:', error);
@@ -151,11 +206,11 @@ export const fetchPopularKeywords = async (limit = 10): Promise<string[]> => {
         'harus', 'tanpa', 'secara', 'sangat', 'jadi', 'saat', 'lalu', 'maka',
     ]);
 
-    // Extract and count words
+    // Extract and count words from titles only
     const wordCount: Record<string, number> = {};
 
     data.forEach(prompt => {
-        const text = `${prompt.title} ${prompt.full_prompt}`.toLowerCase();
+        const text = prompt.title.toLowerCase();
         const words = text.match(/[a-zA-Z\u00C0-\u024F]+/g) || [];
 
         words.forEach(word => {

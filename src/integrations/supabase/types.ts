@@ -141,7 +141,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      prompts_preview: {
+        Row: {
+          id: string
+          profiles_id: string
+          title: string
+          category: string
+          prompt_preview: string  // Truncated to 200 chars
+          image_url: string | null
+          copy_count: number | null
+          created_at: string | null
+          updated_at: string | null
+          additional_info: string | null
+          status: "pending" | "verified" | "rejected"
+          verified_at: string | null
+          verifier_id: string | null
+          rejection_reason: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompts_profiles_id_fkey"
+            columns: ["profiles_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_creator_name: { Args: { creator_id: string }; Returns: string }

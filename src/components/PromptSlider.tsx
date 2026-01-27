@@ -3,11 +3,13 @@ import { ChevronRight } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import PromptCard from "./PromptCard";
 
+// Support both full prompts and preview prompts from the view
 interface Prompt {
     id: string;
     title: string;
     category: string;
-    full_prompt: string;
+    full_prompt?: string;           // Full prompt (from detail or legacy)
+    prompt_preview?: string;        // Truncated preview (from prompts_preview view)
     image_url: string | null;
     creator_name?: string;
     additional_info?: string | null;
@@ -19,7 +21,7 @@ interface Prompt {
 interface PromptSliderProps {
     title: string;
     prompts: Prompt[];
-    onCopy: (id: string, fullPrompt: string) => void;
+    onCopy: (prompt: Prompt) => void;  // Changed to pass prompt object
     onCardClick: (prompt: Prompt) => void;
     onViewAll?: () => void;
     viewAllLabel?: string;
@@ -61,13 +63,13 @@ const PromptSlider = ({
                                         id={parseInt(prompt.id)}
                                         title={prompt.title}
                                         category={prompt.category}
-                                        fullPrompt={prompt.full_prompt}
+                                        fullPrompt={prompt.prompt_preview || prompt.full_prompt || ''}
                                         imageUrl={prompt.image_url || ''}
                                         additionalInfo={prompt.additional_info || undefined}
                                         copyCount={prompt.copy_count}
                                         creatorEmail={prompt.profiles?.email || null}
                                         status={prompt.status}
-                                        onCopy={() => onCopy(prompt.id, prompt.full_prompt)}
+                                        onCopy={() => onCopy(prompt)}
                                         onClick={() => onCardClick(prompt)}
                                         priority={index < 3}
                                     />

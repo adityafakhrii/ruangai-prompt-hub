@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchMostCopiedPromptsWithCreator, PromptWithCreator } from "@/lib/promptQueries";
+import { useMostCopiedPromptsPage } from "@/hooks/usePromptQueries";
+import { PromptPreview, fetchPromptDetail } from "@/lib/promptQueries";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PromptCard from "@/components/PromptCard";
@@ -13,8 +14,9 @@ import SkeletonCard from "@/components/SkeletonCard";
 import SEO from "@/components/SEO";
 
 const MostCopiedPrompts = () => {
-  const [prompts, setPrompts] = useState<PromptWithCreator[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Use React Query hook with caching
+  const { data: prompts = [], isLoading: loading } = useMostCopiedPromptsPage(100);
+
   const [selectedPrompt, setSelectedPrompt] = useState<{
     id: string;
     title: string;
@@ -31,28 +33,6 @@ const MostCopiedPrompts = () => {
 
   const { toast } = useToast();
   const { user } = useAuth();
-
-  const fetchPrompts = useCallback(async () => {
-    setLoading(true);
-
-    const { data, error } = await fetchMostCopiedPromptsWithCreator(100);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Gagal memuat prompt paling banyak dicopy",
-        variant: "destructive",
-      });
-    } else {
-      setPrompts(data || []);
-    }
-
-    setLoading(false);
-  }, [toast]);
-
-  useEffect(() => {
-    fetchPrompts();
-  }, [fetchPrompts]);
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     navigator.clipboard.writeText(fullPrompt);
@@ -74,29 +54,41 @@ const MostCopiedPrompts = () => {
     }
   };
 
-  const handleCardClick = (prompt: PromptWithCreator) => {
-    setSelectedPrompt({
-      id: prompt.id,
-      title: prompt.title,
-      category: prompt.category,
-      prompt: prompt.full_prompt,
-      fullPrompt: prompt.full_prompt,
-      imageUrl: prompt.image_url,
-      copyCount: prompt.copy_count,
-      creatorEmail: prompt.profiles?.email || null,
-    });
+  // Copy handler that fetches full prompt first (since list views only have preview)
+  const handleCopyWithFetch = async (prompt: PromptPreview) => {
+    const { data } = await fetchPromptDetail(prompt.id);
+    if (data) {
+      await handleCopy(prompt.id, data.full_prompt);
+    }
+  };
+
+  const handleCardClick = async (prompt: PromptPreview) => {
+    // Lazy load full prompt detail
+    const { data } = await fetchPromptDetail(prompt.id);
+    if (data) {
+      setSelectedPrompt({
+        id: prompt.id,
+        title: prompt.title,
+        category: prompt.category,
+        prompt: data.full_prompt,
+        fullPrompt: data.full_prompt,
+        imageUrl: prompt.image_url || '',
+        copyCount: prompt.copy_count,
+        creatorEmail: prompt.profiles?.email || null,
+      });
+    }
     setIsDetailModalOpen(true);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Prompt Viral"
+        title="Prompt Paling Banyak Copy"
         description="Daftar prompt AI yang paling banyak disalin dan digunakan oleh komunitas RuangAI."
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          "name": "Prompt Viral - RuangAI Prompt Hub",
+          "name": "Prompt Paling Banyak Copy - RuangAI Prompt Hub",
           "description": "Daftar prompt AI yang paling banyak disalin dan digunakan oleh komunitas RuangAI."
         }}
       />
@@ -104,7 +96,7 @@ const MostCopiedPrompts = () => {
 
       <div className="container mx-auto px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Prompt Viral Paling Banyak Copy</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Prompt Paling Banyak Copy</h1>
           <p className="text-lightText text-lg">
             Prompt dengan jumlah copy tertinggi dari komunitas
           </p>
@@ -128,12 +120,12 @@ const MostCopiedPrompts = () => {
                 id={parseInt(prompt.id)}
                 title={prompt.title}
                 category={prompt.category}
-                fullPrompt={prompt.full_prompt}
-                imageUrl={prompt.image_url}
+                fullPrompt={prompt.prompt_preview || ''}
+                imageUrl={prompt.image_url || ''}
                 copyCount={prompt.copy_count}
                 creatorEmail={prompt.profiles?.email || null}
                 status={prompt.status}
-                onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
+                onCopy={() => handleCopyWithFetch(prompt)}
                 onClick={() => handleCardClick(prompt)}
               />
             ))}
