@@ -125,10 +125,14 @@ export const fetchLatestPromptsWithCreator = async (limit = 5) => {
 /**
  * Fetch all prompts with pagination and creator information
  */
-export const fetchAllPromptsWithCreator = async (page = 0, pageSize = 12, orderBy: 'created_at' | 'copy_count' | 'average_rating' = 'created_at') => {
+export const fetchAllPromptsWithCreator = async (page = 0, pageSize = 12, orderBy: 'created_at' | 'created_at_asc' | 'copy_count' | 'average_rating' = 'created_at') => {
+    // Handle ascending sort for created_at_asc
+    const actualOrderBy = orderBy === 'created_at_asc' ? 'created_at' : orderBy;
+    const ascending = orderBy === 'created_at_asc';
+
     return fetchPromptsWithCreator({
-        orderBy: orderBy,
-        ascending: false,
+        orderBy: actualOrderBy,
+        ascending: ascending,
         limit: pageSize,
         offset: page * pageSize,
     });

@@ -118,8 +118,8 @@ const ViralPrompts = () => {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
@@ -128,7 +128,7 @@ const ViralPrompts = () => {
             <p className="text-2xl text-lightText">Belum ada prompt viral</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {prompts.map((prompt) => (
               <PromptCard
                 key={prompt.id}

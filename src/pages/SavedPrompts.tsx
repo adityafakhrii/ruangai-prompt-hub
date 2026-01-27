@@ -63,7 +63,7 @@ const SavedPrompts = () => {
     } else {
       const fetchedPrompts = data || [];
       setPrompts(fetchedPrompts);
-      
+
       // Extract unique categories
       const uniqueCategories = Array.from(new Set(fetchedPrompts.map(p => p.category).filter((c): c is string => !!c)));
       setCategories(uniqueCategories as string[]);
@@ -192,8 +192,8 @@ const SavedPrompts = () => {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
@@ -211,7 +211,7 @@ const SavedPrompts = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredPrompts.map((prompt) => (
               <PromptCard
                 key={prompt.id}
@@ -226,7 +226,11 @@ const SavedPrompts = () => {
                 onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                 onClick={() => handleCardClick(prompt)}
                 isBookmarked={bookmarkedIds.has(prompt.id)}
-                onToggleBookmark={(e) => toggleBookmark(prompt.id)}
+                onToggleBookmark={(e) => {
+                  toggleBookmark(prompt.id);
+                  // Remove from local state immediately for real-time UI update
+                  setPrompts(prev => prev.filter(p => p.id !== prompt.id));
+                }}
                 averageRating={prompt.average_rating}
                 reviewCount={prompt.review_count}
               />

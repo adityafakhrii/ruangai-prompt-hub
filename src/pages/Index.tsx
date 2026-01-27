@@ -1,4 +1,4 @@
-import { ArrowUpDown, Star, Clock, Copy as CopyIcon } from "lucide-react";
+import { ArrowUpDown, Star, Clock, Copy as CopyIcon, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -43,7 +43,7 @@ const Index = () => {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [popularKeywords, setPopularKeywords] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'created_at' | 'copy_count' | 'average_rating'>('created_at');
+  const [sortBy, setSortBy] = useState<'created_at' | 'created_at_asc' | 'copy_count' | 'average_rating'>('created_at');
 
   const [selectedPrompt, setSelectedPrompt] = useState<{
     id: string;
@@ -64,6 +64,7 @@ const Index = () => {
   const [loadingMostCopied, setLoadingMostCopied] = useState(true);
   const [loadingLatest, setLoadingLatest] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -166,6 +167,9 @@ const Index = () => {
       setAllPrompts(prev => pageNum === 0 ? data : [...prev, ...data]);
       setHasMore(data.length === pageSize);
       setPage(pageNum);
+      if (pageNum === 0) {
+        setInitialLoadComplete(true);
+      }
     }
     setLoadingMore(false);
   };
@@ -280,8 +284,8 @@ const Index = () => {
             <section className="w-full py-8">
               <div className="container mx-auto px-4">
                 <h2 className="text-2xl font-bold text-foreground mb-6">Prompt Viral Paling Banyak Copy</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <SkeletonCard key={i} />)}
                 </div>
               </div>
             </section>
@@ -336,13 +340,17 @@ const Index = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <ArrowUpDown className="w-4 h-4" />
-                  Urutkan: {sortBy === 'created_at' ? 'Terbaru' : sortBy === 'copy_count' ? 'Terpopuler' : 'Rating Tertinggi'}
+                  Urutkan: {sortBy === 'created_at' ? 'Terbaru' : sortBy === 'created_at_asc' ? 'Terlama' : sortBy === 'copy_count' ? 'Terpopuler' : 'Rating Tertinggi'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setSortBy('created_at')}>
                   <Clock className="w-4 h-4 mr-2" />
                   Terbaru
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('created_at_asc')}>
+                  <CalendarDays className="w-4 h-4 mr-2" />
+                  Terlama
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSortBy('copy_count')}>
                   <CopyIcon className="w-4 h-4 mr-2" />
@@ -356,8 +364,13 @@ const Index = () => {
             </DropdownMenu>
           </div>
 
-          {allPrompts.length === 0 && !loadingMore ? (
-            <div className="text-center py-20">
+          {/* Initial Loading State - prevent flickering */}
+          {!initialLoadComplete && allPrompts.length === 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 min-h-[400px]">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : filteredPrompts.length === 0 ? (
+            <div className="text-center py-20 min-h-[200px]">
               <p className="text-2xl text-lightText">
                 {searchQuery || selectedCategory
                   ? "Tidak ada prompt yang sesuai dengan filter"
@@ -366,7 +379,7 @@ const Index = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredPrompts.map((prompt) => (
                   <PromptCard
                     key={prompt.id}
@@ -389,10 +402,11 @@ const Index = () => {
                 ))}
               </div>
 
-              {/* Loading More Indicator */}
-              {loadingMore && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-6">
-                  {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
+              {/* Loading More Indicator - only show when paginating */}
+              {loadingMore && hasMore && (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <span className="ml-3 text-muted-foreground">Memuat lebih banyak...</span>
                 </div>
               )}
 
