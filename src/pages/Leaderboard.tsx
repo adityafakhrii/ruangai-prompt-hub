@@ -7,7 +7,7 @@ import SEO from "@/components/SEO";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Medal, Crown, Share2 } from "lucide-react";
+import { Medal, Crown, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -64,7 +64,7 @@ const Leaderboard = () => {
 
   const handleShare = async () => {
     const shareText = "Cek Leaderboard Kontributor Terbaik di RuangAI Prompt Hub! 🏆\nhttps://raiprompt.adityafakhri.com/leaderboard";
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -95,7 +95,7 @@ const Leaderboard = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-2">
-              <Trophy className="w-8 h-8 text-yellow-500" />
+              {/* <Trophy className="w-8 h-8 text-yellow-500" /> */}
               Leaderboard
             </h1>
             <p className="text-lightText text-lg">
@@ -112,12 +112,12 @@ const Leaderboard = () => {
         <div className="bg-gradient-to-r from-primary/20 to-secondary/20 p-6 rounded-xl border border-primary/20 mb-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-              <h3 className="text-xl font-bold text-heading mb-2">🎁 Promo Spesial Kontributor</h3>
+              <h3 className="text-xl font-bold text-heading mb-2">🎁 Reward Spesial Kontributor</h3>
               <p className="text-foreground/80">
                 Sudah upload <strong>10 prompt verified</strong>? Anda berhak mendapatkan <strong>1 Token Kelas Gratis!</strong>
               </p>
             </div>
-            <Button 
+            <Button
               className="bg-primary hover:bg-primary/90 text-primary-foreground whitespace-nowrap"
               onClick={() => window.open('https://instagram.com/ruangai.id', '_blank')}
             >
@@ -143,14 +143,13 @@ const Leaderboard = () => {
                 {data.map((entry, index) => (
                   <div
                     key={entry.profiles_id}
-                    className={`flex items-center p-4 rounded-lg border transition-colors ${
-                      index < 3 ? "bg-muted/30 border-primary/20" : "bg-card border-border"
-                    }`}
+                    className={`flex items-center p-4 rounded-lg border transition-colors ${index < 3 ? "bg-muted/30 border-primary/20" : "bg-card border-border"
+                      }`}
                   >
                     <div className="flex items-center justify-center w-10 mr-4">
                       {getRankIcon(index)}
                     </div>
-                    
+
                     <Avatar className="h-10 w-10 mr-4 border-2 border-background">
                       <AvatarFallback className="bg-primary/10 text-primary font-bold">
                         {entry.email.substring(0, 2).toUpperCase()}
