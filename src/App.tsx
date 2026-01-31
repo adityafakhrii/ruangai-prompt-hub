@@ -25,8 +25,10 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQ = lazy(() => import("./pages/FAQ"));
+const Changelog = lazy(() => import("./pages/Changelog"));
 const AdminVerification = lazy(() => import("./pages/AdminVerification"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+import BottomNav from "@/components/BottomNav";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,7 @@ const AnimatedRoutes = () => {
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/changelog" element={<Changelog />} />
           <Route path="/admin/verification" element={<AdminVerification />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
@@ -77,7 +80,10 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <AuthProvider>
-              <AnimatedRoutes />
+              <div className="pb-24 md:pb-0">
+                <AnimatedRoutes />
+              </div>
+              <BottomNav />
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>

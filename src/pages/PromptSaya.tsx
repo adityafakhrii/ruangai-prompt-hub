@@ -305,14 +305,14 @@ const PromptSaya = () => {
             />
             <Navbar />
 
-            <div className="container mx-auto px-4 py-12">
+            <div className="container mx-auto px-4 pt-12 pb-32 md:py-12">
                 <div className="max-w-4xl mx-auto">
                     <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-3xl font-bold text-heading">
+                        <h1 className="text-2xl md:text-3xl font-bold text-heading">
                             {view === 'list' ? 'Prompt Saya' : view === 'create' ? 'Buat Prompt Baru' : 'Edit Prompt'}
                         </h1>
                         {view === 'list' && (
-                            <Button onClick={() => { resetForm(); setView('create'); }}>
+                            <Button className="hidden md:flex" onClick={() => { resetForm(); setView('create'); }}>
                                 <Plus className="mr-2 h-4 w-4" /> Buat Prompt
                             </Button>
                         )}
@@ -322,6 +322,17 @@ const PromptSaya = () => {
                             </Button>
                         )}
                     </div>
+
+                    {/* Mobile Floating Action Button */}
+                    {view === 'list' && (
+                        <Button
+                            size="icon"
+                            className="md:hidden fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 text-primary-foreground"
+                            onClick={() => { resetForm(); setView('create'); }}
+                        >
+                            <Plus className="h-6 w-6" />
+                        </Button>
+                    )}
 
                     {view === 'list' && verifiedCount >= 10 && (
                         <div className="mb-6">

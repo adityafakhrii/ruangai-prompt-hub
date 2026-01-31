@@ -95,7 +95,6 @@ const Leaderboard = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-2">
-              {/* <Trophy className="w-8 h-8 text-yellow-500" /> */}
               Leaderboard
             </h1>
             <p className="text-lightText text-lg">
@@ -143,31 +142,31 @@ const Leaderboard = () => {
                 {data.map((entry, index) => (
                   <div
                     key={entry.profiles_id}
-                    className={`flex items-center p-4 rounded-lg border transition-colors ${index < 3 ? "bg-muted/30 border-primary/20" : "bg-card border-border"
+                    className={`flex items-center p-3 md:p-4 rounded-lg border transition-colors ${index < 3 ? "bg-muted/30 border-primary/20" : "bg-card border-border"
                       }`}
                   >
-                    <div className="flex items-center justify-center w-10 mr-4">
+                    <div className="flex items-center justify-center w-8 md:w-10 mr-2 md:mr-4 flex-shrink-0">
                       {getRankIcon(index)}
                     </div>
 
-                    <Avatar className="h-10 w-10 mr-4 border-2 border-background">
-                      <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                    <Avatar className="h-8 w-8 md:h-10 md:w-10 mr-2 md:mr-4 border-2 border-background flex-shrink-0">
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs md:text-base">
                         {entry.email.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
 
-                    <div className="flex-1 min-w-0 mr-4">
+                    <div className="flex-1 min-w-0 mr-2 md:mr-4">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold truncate text-foreground">
+                        <p className="font-semibold truncate text-foreground text-sm md:text-base">
                           {maskEmail(entry.email)}
                         </p>
                         {getMilestoneBadge(entry.prompt_count)}
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-2xl font-bold text-primary">{entry.prompt_count}</span>
-                      <span className="text-xs text-muted-foreground block">Prompts</span>
+                    <div className="text-right flex-shrink-0">
+                      <span className="text-xl md:text-2xl font-bold text-primary">{entry.prompt_count}</span>
+                      <span className="text-[10px] md:text-xs text-muted-foreground block">Prompts</span>
                     </div>
                   </div>
                 ))}

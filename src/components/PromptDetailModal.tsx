@@ -153,7 +153,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] bg-popover text-popover-foreground border-border">
+      <DialogContent className="max-w-3xl max-h-[90vh] bg-popover text-popover-foreground border-border z-[2000]">
         <DialogHeader>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 pr-8">
             <div>

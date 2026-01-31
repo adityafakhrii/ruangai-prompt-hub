@@ -68,10 +68,13 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        <div className="pt-8 border-t border-border">
+        <div className="pt-8 border-t border-border flex flex-col items-center gap-4">
           <p className="text-center text-sm text-lightText">
             © {currentYear} RuangAI Prompt. All rights reserved.
           </p>
+          <Link to="/changelog" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            RuangAI Prompt Hub v1.0.0
+          </Link>
         </div>
       </div>
     </footer>

@@ -366,7 +366,7 @@ const Index = () => {
 
           {/* Initial Loading State - prevent flickering */}
           {!initialLoadComplete && allPrompts.length === 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 min-h-[400px]">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 min-h-[400px]">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <SkeletonCard key={i} />)}
             </div>
           ) : filteredPrompts.length === 0 ? (
@@ -379,7 +379,7 @@ const Index = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                 {filteredPrompts.map((prompt) => (
                   <PromptCard
                     key={prompt.id}

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu, ArrowLeft, Bell, TrendingUp } from "lucide-react";
+import { LogOut, ArrowLeft, BarChart2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, NavLink } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -70,7 +70,7 @@ const Navbar = () => {
               onClick={() => navigate('/leaderboard')}
               title="Leaderboard"
             >
-              <TrendingUp className="h-5 w-5" />
+              <BarChart2 className="h-5 w-5" />
             </Button>
             <ThemeToggle />
             {user ? (
@@ -117,8 +117,9 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Menu Trigger */}
+          {/* Mobile Menu Trigger - Hidden because we use Bottom Navigation */}
           <div className="md:hidden">
+            {/* 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -151,11 +152,6 @@ const Navbar = () => {
                         <NavLink to="/prompt-tersimpan" className={getMobileLinkClass} onClick={closeSheet}>
                           Tersimpan
                         </NavLink>
-                        {/* Notifikasi - hidden until feature is ready
-                        <NavLink to="/notifikasi" className={getMobileLinkClass} onClick={closeSheet}>
-                          Notifikasi
-                        </NavLink>
-                        */}
                       </>
                     )}
                     {isAdmin && (
@@ -167,7 +163,6 @@ const Navbar = () => {
 
                   <div className="h-px bg-border" />
 
-                  {/* Leaderboard & Theme Toggle */}
                   <div className="flex items-center justify-end gap-2 py-2">
                     <Button
                       variant="ghost"
@@ -179,7 +174,7 @@ const Navbar = () => {
                       }}
                       title="Leaderboard"
                     >
-                      <TrendingUp className="h-5 w-5" />
+                      <BarChart2 className="h-5 w-5" />
                     </Button>
                     <ThemeToggle />
                   </div>
@@ -225,6 +220,9 @@ const Navbar = () => {
                 </div>
               </SheetContent>
             </Sheet>
+            */}
+            {/* Show Theme Toggle only on mobile navbar since menu is gone */}
+            <ThemeToggle />
           </div>
         </div>
       </div>

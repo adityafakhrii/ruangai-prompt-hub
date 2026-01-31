@@ -191,25 +191,26 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
             )}
 
             {/* Prompt Preview */}
-            <p className="text-sm line-clamp-3 leading-relaxed flex-1 break-words">
+            <p className="text-xs md:text-sm line-clamp-3 leading-relaxed flex-1 break-words text-muted-foreground">
               {fullPrompt}
             </p>
 
             {/* Actions */}
-            <div className="flex items-center gap-2 pt-4 mt-auto">
+            <div className="flex items-center gap-2 pt-2 md:pt-4 mt-auto">
               <Button
+                variant="default"
                 size="sm"
-                className="flex-1 bg-secondary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-sm"
+                className="flex-1 bg-secondary hover:bg-secondary/90 text-white text-xs h-8 md:h-9"
                 onClick={(e) => {
                   e.stopPropagation();
                   onCopy();
                 }}
               >
-                <Copy className="h-4 w-4 mr-2" />
+                <Copy className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5" />
                 Copy
               </Button>
 
-              <div className="flex gap-1">
+              <div className="hidden md:flex gap-1">
                 <Button
                   size="icon"
                   variant="outline"
@@ -234,13 +235,13 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
         </>
       ) : (
         /* No Image Layout - Show category, title, creator, prompt directly */
-        <div className="p-4 space-y-2 flex-1 flex flex-col">
+        <div className="p-3 md:p-4 space-y-2 flex-1 flex flex-col">
           {/* Content */}
           <div>
             {/* Row 1: Category + Verified + Bookmark (aligned in one row) */}
             <div className="flex justify-between items-center gap-2 mb-1">
-              <div className="flex flex-wrap gap-2 items-center">
-                <Badge className="w-fit bg-primary/10 hover:bg-primary/20 text-primary border-none">
+              <div className="flex flex-wrap gap-1.5 items-center">
+                <Badge className="w-fit bg-primary/10 hover:bg-primary/20 text-primary border-none text-[10px] px-1.5 py-0.5 h-5">
                   {category}
                 </Badge>
                 <StatusBadge />
@@ -249,19 +250,19 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8 backdrop-blur-sm shrink-0"
+                  className="bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 text-foreground rounded-full h-7 w-7 shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     onToggleBookmark(e);
                   }}
                 >
-                  <Bookmark className={`w-5 h-5 ${isBookmarked ? "fill-blue-500 text-blue-500" : "text-white"}`} />
+                  <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? "fill-blue-500 text-blue-500" : "text-muted-foreground"}`} />
                 </Button>
               )}
             </div>
 
             {/* Row 2: Title */}
-            <h3 className="font-semibold text-lg text-heading line-clamp-2" title={title}>
+            <h3 className="font-semibold text-sm md:text-lg text-heading line-clamp-2 leading-tight" title={title}>
               {title}
             </h3>
 
@@ -305,7 +306,7 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
               Copy
             </Button>
             {/* Same buttons as above */}
-            <div className="flex gap-1">
+            <div className="hidden md:flex gap-1">
               <Button
                 size="icon"
                 variant="outline"
