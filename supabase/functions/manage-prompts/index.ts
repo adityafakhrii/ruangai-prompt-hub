@@ -190,7 +190,42 @@ Deno.serve(async (req) => {
       )
     }
 
-    if (action === 'update' || action === 'delete') {
+    if (action === 'update' || action === 'delete' || action === 'bulk_update') {
+      if (action === 'bulk_update') {
+          if (!isAdmin) {
+              return new Response(
+                  JSON.stringify({ error: 'Unauthorized' }),
+                  { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              )
+          }
+          const { promptIds, data: updateData } = body as { promptIds: string[], data: Record<string, unknown> }
+          
+          if (!promptIds || !Array.isArray(promptIds) || promptIds.length === 0) {
+              return new Response(
+                  JSON.stringify({ error: 'Prompt IDs array required' }),
+                  { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              )
+          }
+
+          const { data: updatedPrompts, error } = await supabase
+              .from('prompts')
+              .update(updateData)
+              .in('id', promptIds)
+              .select()
+
+          if (error) {
+              return new Response(
+                  JSON.stringify({ error: error.message }),
+                  { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              )
+          }
+          
+          return new Response(
+              JSON.stringify({ prompts: updatedPrompts }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+      }
+
       if (!promptId) {
         return new Response(
           JSON.stringify({ error: 'Prompt ID required' }),
