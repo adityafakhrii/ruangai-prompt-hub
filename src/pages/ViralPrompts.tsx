@@ -111,8 +111,8 @@ const ViralPrompts = () => {
 
       <div className="container mx-auto px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Prompt Viral</h1>
-          <p className="text-lightText text-lg">
+          <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-2">Prompt Viral</h1>
+          <p className="text-lightText text-sm md:text-lg">
             Prompt paling populer dan banyak dicopy oleh komunitas
           </p>
         </div>

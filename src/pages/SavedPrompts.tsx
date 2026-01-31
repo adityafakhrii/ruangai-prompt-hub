@@ -14,13 +14,6 @@ import SearchBar from "@/components/SearchBar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Filter } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const SavedPrompts = () => {
   const [prompts, setPrompts] = useState<PromptWithCreator[]>([]);
@@ -40,8 +33,6 @@ const SavedPrompts = () => {
   } | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [categories, setCategories] = useState<string[]>([]);
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -63,10 +54,6 @@ const SavedPrompts = () => {
     } else {
       const fetchedPrompts = data || [];
       setPrompts(fetchedPrompts);
-
-      // Extract unique categories
-      const uniqueCategories = Array.from(new Set(fetchedPrompts.map(p => p.category).filter((c): c is string => !!c)));
-      setCategories(uniqueCategories as string[]);
     }
 
     setLoading(false);
@@ -80,7 +67,7 @@ const SavedPrompts = () => {
     }
   }, [user, fetchPrompts]);
 
-  // Filter prompts based on search and category
+  // Filter prompts based on search
   useEffect(() => {
     let result = prompts;
 
@@ -94,12 +81,8 @@ const SavedPrompts = () => {
       );
     }
 
-    if (selectedCategory && selectedCategory !== "all") {
-      result = result.filter((p) => p.category === selectedCategory);
-    }
-
     setFilteredPrompts(result);
-  }, [prompts, searchQuery, selectedCategory]);
+  }, [prompts, searchQuery]);
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     navigator.clipboard.writeText(fullPrompt);
@@ -154,8 +137,8 @@ const SavedPrompts = () => {
 
       <div className="container mx-auto px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Prompt Tersimpan</h1>
-          <p className="text-muted-foreground text-lg">
+          <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-2">Prompt Tersimpan</h1>
+          <p className="text-muted-foreground text-sm md:text-lg">
             Koleksi prompt favorit Anda
           </p>
         </div>
@@ -168,27 +151,6 @@ const SavedPrompts = () => {
               placeholder="Cari di prompt tersimpan..."
             />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full md:w-auto min-w-[150px]">
-                <Filter className="w-4 h-4 mr-2" />
-                {selectedCategory === "all" ? "Semua Kategori" : selectedCategory}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSelectedCategory("all")}>
-                Semua Kategori
-              </DropdownMenuItem>
-              {categories.map((category) => (
-                <DropdownMenuItem
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {category}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
 
         {loading ? (
@@ -200,11 +162,11 @@ const SavedPrompts = () => {
         ) : filteredPrompts.length === 0 ? (
           <div className="text-center py-20 bg-muted/20 rounded-lg">
             <p className="text-2xl text-lightText mb-4">
-              {searchQuery || selectedCategory !== "all"
-                ? "Tidak ada prompt yang sesuai filter"
+              {searchQuery
+                ? "Tidak ada prompt yang sesuai pencarian"
                 : "Belum ada prompt yang disimpan"}
             </p>
-            {!searchQuery && selectedCategory === "all" && (
+            {!searchQuery && (
               <Button onClick={() => navigate("/")} variant="outline">
                 Jelajahi Prompt
               </Button>

@@ -43,7 +43,7 @@ const PromptSlider = ({
         <section className="w-full py-8">
             <div className="container mx-auto px-4">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-foreground">{title}</h2>
                     {onViewAll && (
                         <Button
                             variant="ghost"

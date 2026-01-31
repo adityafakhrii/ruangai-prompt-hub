@@ -94,10 +94,10 @@ const Leaderboard = () => {
       <div className="container mx-auto px-4 py-12 flex-1">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-2">
+            <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-2 flex items-center gap-2">
               Leaderboard
             </h1>
-            <p className="text-lightText text-lg">
+            <p className="text-lightText text-sm md:text-lg">
               Para pahlawan komunitas yang paling aktif berbagi prompt
             </p>
           </div>
