@@ -30,6 +30,7 @@ const AdminVerification = lazy(() => import("./pages/AdminVerification"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const PromptDetail = lazy(() => import("./pages/PromptDetail"));
 import BottomNav from "@/components/BottomNav";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ScrollToTop />
             <AuthProvider>
               <div className="pb-24 md:pb-0">
                 <AnimatedRoutes />
