@@ -27,6 +27,7 @@ const BottomNav = () => {
       icon: BarChart2,
       label: "Rank",
       path: "/leaderboard",
+      badge: "New"
     },
     {
       icon: User,
@@ -51,7 +52,16 @@ const BottomNav = () => {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <item.icon className={cn("h-6 w-6", item.label === "Rank" && "rotate-0")} />
+              <div className="relative">
+                <item.icon className={cn("h-6 w-6", item.label === "Rank" && "rotate-0")} />
+                {/* @ts-ignore */}
+                {item.badge && (
+                  <span className="absolute -top-1.5 -right-2 bg-secondary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none border-2 border-background">
+                    {/* @ts-ignore */}
+                    {item.badge}
+                  </span>
+                )}
+              </div>
               <span className="sr-only">{item.label}</span>
               <span 
                 className={cn(

@@ -82,7 +82,10 @@ const Profile = () => {
                 <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-full text-purple-600 dark:text-purple-400">
                   <Bookmark className="h-5 w-5" />
                 </div>
-                <span className="font-medium">Prompt Tersimpan</span>
+                <span className="font-medium">
+                  Prompt Tersimpan
+                  <span className="ml-2 bg-secondary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none">New</span>
+                </span>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </Link>

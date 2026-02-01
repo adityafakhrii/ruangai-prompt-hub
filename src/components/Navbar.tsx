@@ -31,9 +31,9 @@ const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
             <a href="/" className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <img src="/iconbiru.png" alt="RuangAI Logo" className="h-11 w-10 mr-1" />
-              <span className="hidden sm:inline">RuangAI Prompt</span>
-              <span className="sm:hidden">RuangAI</span>
+              <img src="https://image.web.id/images/clipboard-image-1753328088.png" alt="RuangAI Logo" className="h-10 w-17 mr-1" />
+              {/* <span className="hidden sm:inline">RuangAI Prompt</span>
+              <span className="sm:hidden">RuangAI</span> */}
             </a>
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
@@ -49,8 +49,11 @@ const Navbar = () => {
                     Prompt Saya
                   </NavLink>
                   <NavLink to="/prompt-tersimpan" className={getLinkClass}>
-                    Tersimpan
-                  </NavLink>
+                Tersimpan
+                <span className="ml-1.5 bg-secondary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none">
+                  New
+                </span>
+              </NavLink>
                 </>
               )}
               {isAdmin && (
@@ -63,15 +66,20 @@ const Navbar = () => {
 
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={() => navigate('/leaderboard')}
-              title="Leaderboard"
-            >
-              <BarChart2 className="h-5 w-5" />
-            </Button>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => navigate('/leaderboard')}
+                title="Leaderboard"
+              >
+                <BarChart2 className="h-5 w-5" />
+              </Button>
+              <span className="absolute -top-1.5 -right-2 bg-secondary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none border-2 border-background">
+                New
+              </span>
+            </div>
             <ThemeToggle />
             {user ? (
               <>

@@ -108,16 +108,16 @@ const Leaderboard = () => {
         </div>
 
         {/* Promo Banner */}
-        <div className="bg-gradient-to-r from-primary/20 to-secondary/20 p-6 rounded-xl border border-primary/20 mb-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-primary/20 to-secondary/20 p-4 md:p-6 rounded-xl border border-primary/20 mb-6 md:mb-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
             <div>
-              <h3 className="text-xl font-bold text-heading mb-2">🎁 Reward Spesial Kontributor</h3>
-              <p className="text-foreground/80">
+              <h3 className="text-lg md:text-xl font-bold text-heading mb-1 md:mb-2">🎁 Reward Spesial Kontributor</h3>
+              <p className="text-sm md:text-base text-foreground/80">
                 Sudah upload <strong>10 prompt verified</strong>? Anda berhak mendapatkan <strong>1 Token Kelas Gratis!</strong>
               </p>
             </div>
             <Button
-              className="bg-primary hover:bg-primary/90 text-primary-foreground whitespace-nowrap"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground whitespace-nowrap h-8 text-xs md:h-10 md:text-sm w-full md:w-auto"
               onClick={() => window.open('https://instagram.com/ruangai.id', '_blank')}
             >
               Klaim via DM Instagram
