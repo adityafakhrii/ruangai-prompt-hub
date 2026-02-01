@@ -218,17 +218,15 @@ const PromptDetail = () => {
                 <span>{new Date(prompt.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
               </div>
               
-              <div className="flex items-center gap-4 mt-4">
-                 <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/10 px-2 py-1 rounded-md border border-yellow-100 dark:border-yellow-900/30">
-                    <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                    <span className="font-bold text-yellow-700 dark:text-yellow-500">{Number(prompt.average_rating || 0).toFixed(1)}</span>
-                    <span className="text-muted-foreground text-xs ml-1">({prompt.review_count || 0} ulasan)</span>
+              <div className="flex items-center gap-2 mt-4">
+                 <div className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400 font-medium bg-yellow-50 dark:bg-yellow-900/20 px-1.5 py-0.5 rounded-md border border-yellow-200 dark:border-yellow-800/50">
+                    <Star className="w-3 h-3 fill-yellow-500 dark:fill-yellow-400 text-yellow-500 dark:text-yellow-400" />
+                    <span>{Number(prompt.average_rating || 0).toFixed(1)}</span>
+                    <span className="text-muted-foreground dark:text-gray-400 ml-0.5">({prompt.review_count || 0})</span>
                   </div>
-                  <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/10 px-2 py-1 rounded-md border border-blue-100 dark:border-blue-900/30">
-                    <Copy className="w-3.5 h-3.5 text-blue-500" />
-                    <span className="font-bold text-blue-700 dark:text-blue-500">{prompt.copy_count}</span>
-                    <span className="text-muted-foreground text-xs ml-1">disalin</span>
-                  </div>
+                  <Badge variant="default" className="shrink-0 text-[10px] px-1.5 h-5">
+                    {prompt.copy_count} disalin
+                  </Badge>
               </div>
             </div>
 
@@ -246,7 +244,7 @@ const PromptDetail = () => {
                   <DropdownMenuItem onClick={() => handleShare('copy')}>Salin Link</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button onClick={handleCopy}>
+              <Button onClick={handleCopy} className="md:hidden">
                 <Copy className="h-4 w-4 mr-2" />
                 Salin Prompt
               </Button>

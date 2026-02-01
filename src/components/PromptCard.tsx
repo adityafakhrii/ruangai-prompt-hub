@@ -158,7 +158,7 @@ const PromptCard = memo(({ title, category, fullPrompt, imageUrl, additionalInfo
                 <RatingDisplay />
                 {copyCount !== undefined && (
                   <Badge variant="default" className="shrink-0 text-[10px] px-1.5 h-5">
-                    {copyCount} copied
+                    {copyCount} disalin
                   </Badge>
                 )}
               </div>
@@ -255,7 +255,7 @@ const PromptCard = memo(({ title, category, fullPrompt, imageUrl, additionalInfo
               <RatingDisplay />
               {copyCount !== undefined && (
                 <Badge variant="default" className="shrink-0 text-[10px] px-1.5 h-5">
-                  {copyCount} copied
+                  {copyCount} disalin
                 </Badge>
               )}
             </div>
