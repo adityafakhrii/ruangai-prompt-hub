@@ -1,10 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Copy, Clock, XCircle, BadgeCheck, Bookmark, Star } from "lucide-react";
-import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { maskEmail, getOptimizedImageUrl } from "@/lib/utils";
-import { memo } from "react";
+import { memo, useState } from "react";
 
 interface PromptCardProps {
   id: string;
@@ -27,6 +26,7 @@ interface PromptCardProps {
 
 const PromptCard = memo(({ title, category, fullPrompt, imageUrl, additionalInfo, copyCount = 0, creatorEmail, status, onCopy, onClick, priority = false, isBookmarked = false, onToggleBookmark, averageRating, reviewCount }: PromptCardProps) => {
   const { toast } = useToast();
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Compute creator display name: use masked email if available, otherwise "Teman RAI"
   const creatorDisplayName = creatorEmail ? maskEmail(creatorEmail) : "Teman RAI";
@@ -95,26 +95,27 @@ const PromptCard = memo(({ title, category, fullPrompt, imageUrl, additionalInfo
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)" }}
-      transition={{ duration: 0.3 }}
-      className="group relative bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-colors hover:border-primary flex flex-col h-full"
+    <div
+      className="group relative bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all hover:border-primary hover:shadow-lg flex flex-col h-full"
       onClick={onClick}
     >
       {hasImage ? (
         <>
           {/* Preview Image - Fixed height for uniform cards */}
-          <div className="relative aspect-video w-full overflow-hidden bg-muted">
+          <div className="relative aspect-video w-full overflow-hidden bg-muted/50">
             <img
               src={optimizedImageUrl}
               alt={title}
               loading={priority ? "eager" : "lazy"}
               decoding={priority ? "sync" : "async"}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              onLoad={() => setIsLoaded(true)}
+              className={`w-full h-full object-cover transition-all duration-500 ${
+                isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+              } group-hover:scale-105`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 ${
+              isLoaded ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
+            }`} />
 
             {/* Bookmark Button Overlay */}
             {onToggleBookmark && (
@@ -310,7 +311,7 @@ const PromptCard = memo(({ title, category, fullPrompt, imageUrl, additionalInfo
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 });
 

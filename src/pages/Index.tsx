@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState, forwardRef } from "react";
+import { useState, forwardRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,7 +69,7 @@ const Index = () => {
     status
   } = useAllPrompts(12, sortBy, searchQuery, selectedCategory);
 
-  const allPrompts = allPromptsData?.pages.flat() || [];
+  const allPrompts = useMemo(() => allPromptsData?.pages.flat() || [], [allPromptsData]);
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     // Check if user can copy (respects 3-copy limit for non-logged users)
@@ -249,7 +249,7 @@ const Index = () => {
                   fetchNextPage();
                 }
               }}
-              overscan={200}
+              overscan={1000}
               components={{
                 List: forwardRef<HTMLDivElement, any>(({ style, children, ...props }, ref) => (
                   <div
@@ -267,11 +267,11 @@ const Index = () => {
                   </div>
                 ),
                 Footer: () => (
-                   isFetchingNextPage ? (
-                     <div className="col-span-full flex justify-center py-8">
+                  <div className="col-span-full flex justify-center py-6 h-20">
+                     {isFetchingNextPage && (
                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                     </div>
-                   ) : null
+                     )}
+                  </div>
                 )
               }}
               itemContent={(index) => {
@@ -294,6 +294,7 @@ const Index = () => {
                     isBookmarked={bookmarkedIds.has(prompt.id)}
                     onToggleBookmark={() => toggleBookmark(prompt.id)}
                     status={prompt.status}
+                    priority={index < 12}
                   />
                 );
               }}
