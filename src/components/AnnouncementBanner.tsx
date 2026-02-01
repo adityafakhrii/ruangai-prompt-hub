@@ -25,18 +25,23 @@ const AnnouncementBanner = () => {
                                 </h3>
                             </div>
                             <p className="text-xs md:text-sm text-amber-800 leading-relaxed">
-                                Submit <span className="font-bold text-orange-600">10 prompt valid</span> dan dapatkan{" "}
-                                <span className="font-bold text-orange-600">1 Token Kelas Spesialisasi GRATIS!</span>{" "}
-                                Jika sudah tercapai, silakan klaim token kelas melalui DM Instagram{" "}
-                                <a
-                                    href="https://www.instagram.com/ruangai.id"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="font-bold text-orange-600 underline hover:text-orange-700 transition-colors"
-                                >
-                                    @ruangai.id
-                                </a> <br />
-                                Mulai berkontribusi sekarang dan tingkatkan kreativitas prompt kamu bersama RuangAI!
+                                <span className="md:hidden">
+                                    Submit <span className="font-bold text-orange-600">10 prompt</span> dapat <span className="font-bold text-orange-600">1 Token Kelas GRATIS!</span> <br /> Klaim via DM IG <a href="https://www.instagram.com/ruangai.id" target="_blank" rel="noopener noreferrer" className="font-bold text-orange-600 underline">@ruangai.id</a>
+                                </span>
+                                <span className="hidden md:inline">
+                                    Submit <span className="font-bold text-orange-600">10 prompt valid</span> dan dapatkan{" "}
+                                    <span className="font-bold text-orange-600">1 Token Kelas Spesialisasi GRATIS!</span>{" "}
+                                    Jika sudah tercapai, silakan klaim token kelas melalui DM Instagram{" "}
+                                    <a
+                                        href="https://www.instagram.com/ruangai.id"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-bold text-orange-600 underline hover:text-orange-700 transition-colors"
+                                    >
+                                        @ruangai.id
+                                    </a> <br />
+                                    Mulai berkontribusi sekarang dan tingkatkan kreativitas prompt kamu bersama RuangAI!
+                                </span>
                             </p>
                         </div>
 
