@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { slugify } from "./utils";
 
 export interface PromptWithCreator {
     id: string;
@@ -30,6 +31,8 @@ export const fetchPromptsWithCreator = async (options?: {
     offset?: number;
     minCopyCount?: number;
     status?: 'pending' | 'verified' | 'rejected' | 'all';
+    searchQuery?: string;
+    category?: string;
 }) => {
     const {
         orderBy = 'created_at',
@@ -38,6 +41,8 @@ export const fetchPromptsWithCreator = async (options?: {
         offset,
         minCopyCount,
         status = 'verified', // Default to verified only for public queries
+        searchQuery,
+        category,
     } = options || {};
 
     let query = supabase
@@ -51,6 +56,14 @@ export const fetchPromptsWithCreator = async (options?: {
 
     if (minCopyCount !== undefined) {
         query = query.gt('copy_count', minCopyCount);
+    }
+
+    if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,full_prompt.ilike.%${searchQuery}%`);
+    }
+
+    if (category) {
+        query = query.eq('category', category);
     }
 
     if (limit) {
@@ -125,7 +138,13 @@ export const fetchLatestPromptsWithCreator = async (limit = 5) => {
 /**
  * Fetch all prompts with pagination and creator information
  */
-export const fetchAllPromptsWithCreator = async (page = 0, pageSize = 12, orderBy: 'created_at' | 'created_at_asc' | 'copy_count' | 'average_rating' = 'created_at') => {
+export const fetchAllPromptsWithCreator = async (
+    page = 0, 
+    pageSize = 12, 
+    orderBy: 'created_at' | 'created_at_asc' | 'copy_count' | 'average_rating' = 'created_at',
+    searchQuery?: string,
+    category?: string
+) => {
     // Handle ascending sort for created_at_asc
     const actualOrderBy = orderBy === 'created_at_asc' ? 'created_at' : orderBy;
     const ascending = orderBy === 'created_at_asc';
@@ -135,6 +154,8 @@ export const fetchAllPromptsWithCreator = async (page = 0, pageSize = 12, orderB
         ascending: ascending,
         limit: pageSize,
         offset: page * pageSize,
+        searchQuery,
+        category,
     });
 };
 
@@ -188,4 +209,60 @@ export const fetchBookmarkedPromptsWithCreator = async (userId: string) => {
     }));
 
     return { data: formattedData, error: null };
+};
+
+/**
+ * Fetch a single prompt by ID with creator information
+ */
+export const fetchPromptById = async (id: string) => {
+    const { data, error } = await supabase
+        .from('prompts')
+        .select('*, profiles:profiles_id(email)')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error('Error fetching prompt by id:', error);
+        return { data: null, error };
+    }
+
+    return { data: data as PromptWithCreator, error: null };
+};
+
+/**
+ * Fetch a single prompt by slug (title)
+ */
+export const fetchPromptBySlug = async (slug: string) => {
+    // Strategy: 
+    // 1. Try to find prompts that roughly match the slug (replace dashes with wildcards)
+    // 2. Filter in JS to find the exact slug match
+    // This handles cases where original title has punctuation/special chars that are removed in slug
+    
+    const potentialTitle = slug.split('-').join('%');
+    
+    // Fetch candidates (limit to 10 to avoid performance hit, usually we just need 1)
+    const { data, error } = await supabase
+        .from('prompts')
+        .select('*, profiles:profiles_id(email)')
+        .ilike('title', `%${potentialTitle}%`)
+        .limit(10);
+
+    if (error) {
+        console.error('Error fetching prompt by slug:', error);
+        return { data: null, error };
+    }
+
+    if (!data || data.length === 0) {
+        return { data: null, error: null };
+    }
+
+    // Find the exact match by re-slugifying the titles
+    const exactMatch = data.find(prompt => slugify(prompt.title) === slug);
+
+    // If no exact match found, return the first one (fallback) or null
+    // Returning the first one might be safer if the slug algorithm slightly differs
+    // but ideally we want exact match. Let's try to be fuzzy if exact fails.
+    const result = exactMatch || data[0]; 
+
+    return { data: result as PromptWithCreator, error: null };
 };

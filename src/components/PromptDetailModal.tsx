@@ -15,6 +15,7 @@ import { useReviews } from "@/hooks/useReviews";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { maskEmail } from "@/lib/utils";
 
 interface PromptDetailModalProps {
   open: boolean;
@@ -34,31 +35,6 @@ interface PromptDetailModalProps {
   } | null;
   onCopy: () => void;
 }
-
-// Utility function to mask email for privacy
-// e.g., adityafakhri@gmail.com → adi******@g****.com
-const maskEmail = (email: string): string => {
-  const atIndex = email.indexOf('@');
-  if (atIndex === -1) return email;
-
-  const [localPart, domain] = email.split('@');
-  const dotIndex = domain.lastIndexOf('.');
-
-  if (dotIndex === -1) return email;
-
-  const domainName = domain.substring(0, dotIndex);
-  const domainExt = domain.substring(dotIndex);
-
-  // Show first 3 chars of local part (or less if shorter)
-  const visibleLocal = localPart.substring(0, 3);
-  const maskedLocal = visibleLocal + '*'.repeat(Math.max(0, localPart.length - 3));
-
-  // Show first 1 char of domain name
-  const visibleDomain = domainName.substring(0, 1);
-  const maskedDomain = visibleDomain + '*'.repeat(Math.max(0, domainName.length - 1));
-
-  return `${maskedLocal}@${maskedDomain}${domainExt}`;
-};
 
 const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailModalProps) => {
   const { toast } = useToast();

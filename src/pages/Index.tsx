@@ -6,21 +6,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, forwardRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { slugify } from "@/lib/utils";
 import { useCopyLimit } from "@/hooks/useCopyLimit";
 import { useBookmarks } from "@/hooks/useBookmarks";
-import {
-  fetchViralPromptsWithCreator,
-  fetchMostCopiedPromptsWithCreator,
-  fetchLatestPromptsWithCreator,
-  fetchAllPromptsWithCreator,
-  fetchPopularKeywords,
-  PromptWithCreator
-} from "@/lib/promptQueries";
+import { PromptWithCreator } from "@/lib/promptQueries";
 import Navbar from "@/components/Navbar";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
@@ -29,50 +23,27 @@ import AnnouncementBanner from "@/components/AnnouncementBanner";
 import PromptCard from "@/components/PromptCard";
 import PromptSlider from "@/components/PromptSlider";
 import SkeletonCard from "@/components/SkeletonCard";
-import PromptDetailModal from "@/components/PromptDetailModal";
 import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import { VirtuosoGrid } from "react-virtuoso";
+import {
+  useViralPrompts,
+  useMostCopiedPrompts,
+  useLatestPrompts,
+  useAllPrompts,
+  usePopularKeywords
+} from "@/hooks/usePrompts";
 
 const Index = () => {
-  const [viralPrompts, setViralPrompts] = useState<PromptWithCreator[]>([]);
-  const [mostCopiedPrompts, setMostCopiedPrompts] = useState<PromptWithCreator[]>([]);
-  const [latestPrompts, setLatestPrompts] = useState<PromptWithCreator[]>([]);
-  const [allPrompts, setAllPrompts] = useState<PromptWithCreator[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(0);
-  const [popularKeywords, setPopularKeywords] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'created_at' | 'created_at_asc' | 'copy_count' | 'average_rating'>('created_at');
-
-  const [selectedPrompt, setSelectedPrompt] = useState<{
-    id: string;
-    title: string;
-    category: string;
-    prompt: string;
-    fullPrompt: string;
-    imageUrl: string;
-    additionalInfo?: string;
-    copyCount?: number;
-    creatorEmail?: string | null;
-    averageRating?: number;
-    reviewCount?: number;
-  } | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-
-  const [loadingViral, setLoadingViral] = useState(true);
-  const [loadingMostCopied, setLoadingMostCopied] = useState(true);
-  const [loadingLatest, setLoadingLatest] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const observerTarget = useRef<HTMLDivElement>(null);
 
   const {
     showLoginModal,
@@ -83,96 +54,22 @@ const Index = () => {
 
   const { bookmarkedIds, toggleBookmark } = useBookmarks();
 
-  useEffect(() => {
-    // Prioritize above-the-fold content
-    const loadCritical = async () => {
-      await Promise.all([
-        fetchViralPrompts(),
-        fetchMostCopiedPrompts()
-      ]);
+  // React Query Hooks
+  const { data: viralPrompts = [], isLoading: loadingViral } = useViralPrompts();
+  const { data: mostCopiedPrompts = [], isLoading: loadingMostCopied } = useMostCopiedPrompts();
+  const { data: latestPrompts = [], isLoading: loadingLatest } = useLatestPrompts();
+  const { data: popularKeywords = [] } = usePopularKeywords();
 
-      // Load below-the-fold content after critical content
-      setTimeout(() => {
-        fetchLatestPrompts();
-        fetchAllPrompts(0);
-        loadKeywords();
-      }, 100);
-    };
+  const {
+    data: allPromptsData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: loadingAll,
+    status
+  } = useAllPrompts(12, sortBy, searchQuery, selectedCategory);
 
-    loadCritical();
-  }, []);
-
-  const loadKeywords = async () => {
-    const keywords = await fetchPopularKeywords(8);
-    setPopularKeywords(keywords);
-  };
-
-  // Lazy loading observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
-          fetchAllPrompts(page + 1);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasMore, loadingMore, page, sortBy]); // Added sortBy to dependency
-
-  // Fetch prompts when filters change
-  useEffect(() => {
-    setPage(0);
-    setHasMore(true);
-    // Fetch initial page
-    fetchAllPrompts(0);
-  }, [searchQuery, selectedCategory, sortBy]);
-
-  const fetchViralPrompts = async () => {
-    setLoadingViral(true);
-    const { data, error } = await fetchViralPromptsWithCreator(5);
-    if (!error && data) setViralPrompts(data);
-    setLoadingViral(false);
-  };
-
-  const fetchMostCopiedPrompts = async () => {
-    setLoadingMostCopied(true);
-    const { data, error } = await fetchMostCopiedPromptsWithCreator(5);
-    if (!error && data) setMostCopiedPrompts(data);
-    setLoadingMostCopied(false);
-  };
-
-  const fetchLatestPrompts = async () => {
-    setLoadingLatest(true);
-    const { data, error } = await fetchLatestPromptsWithCreator(5);
-    if (!error && data) setLatestPrompts(data);
-    setLoadingLatest(false);
-  };
-
-  const fetchAllPrompts = async (pageNum: number) => {
-    if (pageNum === 0) {
-      setAllPrompts([]);
-    }
-
-    setLoadingMore(true);
-    const pageSize = 12;
-    const { data, error } = await fetchAllPromptsWithCreator(pageNum, pageSize, sortBy);
-
-    if (!error && data) {
-      setAllPrompts(prev => pageNum === 0 ? data : [...prev, ...data]);
-      setHasMore(data.length === pageSize);
-      setPage(pageNum);
-      if (pageNum === 0) {
-        setInitialLoadComplete(true);
-      }
-    }
-    setLoadingMore(false);
-  };
+  const allPrompts = allPromptsData?.pages.flat() || [];
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     // Check if user can copy (respects 3-copy limit for non-logged users)
@@ -206,42 +103,8 @@ const Index = () => {
   };
 
   const handleCardClick = (prompt: PromptWithCreator) => {
-    setSelectedPrompt({
-      id: prompt.id,
-      title: prompt.title,
-      category: prompt.category,
-      prompt: prompt.full_prompt, // Derived from full_prompt
-      fullPrompt: prompt.full_prompt,
-      imageUrl: prompt.image_url || '',
-      additionalInfo: prompt.additional_info || undefined,
-      copyCount: prompt.copy_count,
-      creatorEmail: prompt.profiles?.email || null,
-      averageRating: prompt.average_rating,
-      reviewCount: prompt.review_count,
-    });
-    setIsDetailModalOpen(true);
+    navigate(`/prompt/${slugify(prompt.title)}`);
   };
-
-  // Filter prompts based on search/category
-  const filteredPrompts = useMemo(() => {
-    let filtered = [...allPrompts];
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.title.toLowerCase().includes(query) ||
-          p.full_prompt.toLowerCase().includes(query) ||
-          p.category.toLowerCase().includes(query)
-      );
-    }
-
-    if (selectedCategory) {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
-    }
-
-    return filtered;
-  }, [allPrompts, searchQuery, selectedCategory]);
 
   const showSections = !searchQuery && !selectedCategory;
 
@@ -330,8 +193,8 @@ const Index = () => {
       )}
 
       {/* All Prompts Section with Lazy Loading */}
-      <section id="semua-prompt" className="w-full py-8">
-        <div className="container mx-auto px-4">
+      <section id="semua-prompt" className="w-full py-8 min-h-[500px]">
+        <div className="container mx-auto px-4 h-full flex flex-col">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <h2 className="text-2xl font-bold text-foreground">
               {showSections ? "Semua Prompt" : "Hasil Pencarian"}
@@ -364,12 +227,12 @@ const Index = () => {
             </DropdownMenu>
           </div>
 
-          {/* Initial Loading State - prevent flickering */}
-          {!initialLoadComplete && allPrompts.length === 0 ? (
+          {/* Loading State */}
+          {loadingAll && allPrompts.length === 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 min-h-[400px]">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <SkeletonCard key={i} />)}
             </div>
-          ) : filteredPrompts.length === 0 ? (
+          ) : allPrompts.length === 0 ? (
             <div className="text-center py-20 min-h-[200px]">
               <p className="text-2xl text-lightText">
                 {searchQuery || selectedCategory
@@ -378,9 +241,42 @@ const Index = () => {
               </p>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                {filteredPrompts.map((prompt) => (
+            <VirtuosoGrid
+              useWindowScroll
+              totalCount={allPrompts.length}
+              endReached={() => {
+                if (hasNextPage && !isFetchingNextPage) {
+                  fetchNextPage();
+                }
+              }}
+              overscan={200}
+              components={{
+                List: forwardRef<HTMLDivElement, any>(({ style, children, ...props }, ref) => (
+                  <div
+                    ref={ref}
+                    {...props}
+                    style={style}
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 pb-20"
+                  >
+                    {children}
+                  </div>
+                )),
+                Item: ({ children, ...props }) => (
+                  <div {...props} className="w-full h-full">
+                    {children}
+                  </div>
+                ),
+                Footer: () => (
+                   isFetchingNextPage ? (
+                     <div className="col-span-full flex justify-center py-8">
+                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                     </div>
+                   ) : null
+                )
+              }}
+              itemContent={(index) => {
+                const prompt = allPrompts[index];
+                return (
                   <PromptCard
                     key={prompt.id}
                     id={prompt.id}
@@ -391,28 +287,17 @@ const Index = () => {
                     additionalInfo={prompt.additional_info || undefined}
                     copyCount={prompt.copy_count}
                     creatorEmail={prompt.profiles?.email || null}
-                    status={prompt.status}
                     onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                     onClick={() => handleCardClick(prompt)}
-                    isBookmarked={bookmarkedIds.has(prompt.id)}
-                    onToggleBookmark={(e) => toggleBookmark(prompt.id)}
                     averageRating={prompt.average_rating}
                     reviewCount={prompt.review_count}
+                    isBookmarked={bookmarkedIds.has(prompt.id)}
+                    onToggleBookmark={() => toggleBookmark(prompt.id)}
+                    status={prompt.status}
                   />
-                ))}
-              </div>
-
-              {/* Loading More Indicator - only show when paginating */}
-              {loadingMore && hasMore && (
-                <div className="flex justify-center items-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  <span className="ml-3 text-muted-foreground">Memuat lebih banyak...</span>
-                </div>
-              )}
-
-              {/* Intersection Observer Target */}
-              <div ref={observerTarget} className="h-10" />
-            </>
+                );
+              }}
+            />
           )}
         </div>
       </section>
@@ -421,12 +306,6 @@ const Index = () => {
       <FloatingCTA />
 
       {/* Modals */}
-      <PromptDetailModal
-        open={isDetailModalOpen}
-        onOpenChange={setIsDetailModalOpen}
-        prompt={selectedPrompt}
-        onCopy={() => selectedPrompt && handleCopy(selectedPrompt.id, selectedPrompt.fullPrompt)}
-      />
       <LoginModal
         open={showLoginModal}
         onOpenChange={setShowLoginModal}

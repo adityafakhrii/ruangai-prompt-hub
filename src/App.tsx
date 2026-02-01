@@ -28,6 +28,7 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const Changelog = lazy(() => import("./pages/Changelog"));
 const AdminVerification = lazy(() => import("./pages/AdminVerification"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const PromptDetail = lazy(() => import("./pages/PromptDetail"));
 import BottomNav from "@/components/BottomNav";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const AnimatedRoutes = () => {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/admin/verification" element={<AdminVerification />} />
+          <Route path="/prompt/:slug" element={<PromptDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

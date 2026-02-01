@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Copy, Clock, XCircle, BadgeCheck, Bookmark, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { maskEmail, getOptimizedImageUrl } from "@/lib/utils";
+import { memo } from "react";
 
 interface PromptCardProps {
   id: string;
@@ -23,36 +25,14 @@ interface PromptCardProps {
   reviewCount?: number;
 }
 
-// Utility function to mask email for privacy
-// e.g., adityafakhri@gmail.com → adi******@g****.com
-const maskEmail = (email: string): string => {
-  const atIndex = email.indexOf('@');
-  if (atIndex === -1) return email;
-
-  const [localPart, domain] = email.split('@');
-  const dotIndex = domain.lastIndexOf('.');
-
-  if (dotIndex === -1) return email;
-
-  const domainName = domain.substring(0, dotIndex);
-  const domainExt = domain.substring(dotIndex);
-
-  // Show first 3 chars of local part (or less if shorter)
-  const visibleLocal = localPart.substring(0, 3);
-  const maskedLocal = visibleLocal + '*'.repeat(Math.max(0, localPart.length - 3));
-
-  // Show first 1 char of domain name
-  const visibleDomain = domainName.substring(0, 1);
-  const maskedDomain = visibleDomain + '*'.repeat(Math.max(0, domainName.length - 1));
-
-  return `${maskedLocal}@${maskedDomain}${domainExt}`;
-};
-
-const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, copyCount = 0, creatorEmail, status, onCopy, onClick, priority = false, isBookmarked = false, onToggleBookmark, averageRating, reviewCount }: PromptCardProps) => {
+const PromptCard = memo(({ title, category, fullPrompt, imageUrl, additionalInfo, copyCount = 0, creatorEmail, status, onCopy, onClick, priority = false, isBookmarked = false, onToggleBookmark, averageRating, reviewCount }: PromptCardProps) => {
   const { toast } = useToast();
 
   // Compute creator display name: use masked email if available, otherwise "Teman RAI"
   const creatorDisplayName = creatorEmail ? maskEmail(creatorEmail) : "Teman RAI";
+  
+  // Optimize image URL
+  const optimizedImageUrl = imageUrl ? getOptimizedImageUrl(imageUrl, 400) : '';
 
   const handleOpenAI = (e: React.MouseEvent, url: string, name: string) => {
     e.stopPropagation();
@@ -119,7 +99,8 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)" }}
-      className="group relative bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all hover:border-primary hover:shadow-[var(--shadow-card-hover)] flex flex-col h-full"
+      transition={{ duration: 0.3 }}
+      className="group relative bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-colors hover:border-primary flex flex-col h-full"
       onClick={onClick}
     >
       {hasImage ? (
@@ -127,7 +108,7 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
           {/* Preview Image - Fixed height for uniform cards */}
           <div className="relative aspect-video w-full overflow-hidden bg-muted">
             <img
-              src={imageUrl}
+              src={optimizedImageUrl}
               alt={title}
               loading={priority ? "eager" : "lazy"}
               decoding={priority ? "sync" : "async"}
@@ -331,6 +312,6 @@ const PromptCard = ({ title, category, fullPrompt, imageUrl, additionalInfo, cop
       )}
     </motion.div>
   );
-};
+});
 
 export default PromptCard;

@@ -7,33 +7,22 @@ import { fetchViralPromptsWithCreator, PromptWithCreator } from "@/lib/promptQue
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PromptCard from "@/components/PromptCard";
-import PromptDetailModal from "@/components/PromptDetailModal";
 import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
 import SkeletonCard from "@/components/SkeletonCard";
 import SEO from "@/components/SEO";
+import { useNavigate } from "react-router-dom";
+import { slugify } from "@/lib/utils";
 
 const ViralPrompts = () => {
   const [prompts, setPrompts] = useState<PromptWithCreator[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPrompt, setSelectedPrompt] = useState<{
-    id: string;
-    title: string;
-    category: string;
-    prompt: string;
-    fullPrompt: string;
-    imageUrl: string;
-    copyCount?: number;
-    creatorEmail?: string | null;
-    averageRating?: number;
-    reviewCount?: number;
-  } | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [copyCount, setCopyCount] = useState(0);
 
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { bookmarkedIds, toggleBookmark } = useBookmarks();
 
   const fetchViralPrompts = useCallback(async () => {
@@ -80,19 +69,7 @@ const ViralPrompts = () => {
   };
 
   const handleCardClick = (prompt: PromptWithCreator) => {
-    setSelectedPrompt({
-      id: prompt.id,
-      title: prompt.title,
-      category: prompt.category,
-      prompt: prompt.full_prompt,
-      fullPrompt: prompt.full_prompt,
-      imageUrl: prompt.image_url,
-      copyCount: prompt.copy_count,
-      creatorEmail: prompt.profiles?.email || null,
-      averageRating: prompt.average_rating,
-      reviewCount: prompt.review_count,
-    });
-    setIsDetailModalOpen(true);
+    navigate(`/prompt/${slugify(prompt.title)}`);
   };
 
   return (
@@ -155,12 +132,6 @@ const ViralPrompts = () => {
       <Footer />
       <FloatingCTA />
 
-      <PromptDetailModal
-        open={isDetailModalOpen}
-        onOpenChange={setIsDetailModalOpen}
-        prompt={selectedPrompt}
-        onCopy={() => selectedPrompt && handleCopy(selectedPrompt.id, selectedPrompt.fullPrompt)}
-      />
       <LoginModal
         open={isLoginModalOpen}
         onOpenChange={setIsLoginModalOpen}

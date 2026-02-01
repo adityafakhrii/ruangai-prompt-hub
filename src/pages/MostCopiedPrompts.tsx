@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, forwardRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,33 +7,23 @@ import { fetchMostCopiedPromptsWithCreator, PromptWithCreator } from "@/lib/prom
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PromptCard from "@/components/PromptCard";
-import PromptDetailModal from "@/components/PromptDetailModal";
 import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
 import SkeletonCard from "@/components/SkeletonCard";
 import SEO from "@/components/SEO";
+import { useNavigate } from "react-router-dom";
+import { VirtuosoGrid } from "react-virtuoso";
+import { slugify } from "@/lib/utils";
 
 const MostCopiedPrompts = () => {
   const [prompts, setPrompts] = useState<PromptWithCreator[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPrompt, setSelectedPrompt] = useState<{
-    id: string;
-    title: string;
-    category: string;
-    prompt: string;
-    fullPrompt: string;
-    imageUrl: string;
-    copyCount?: number;
-    creatorEmail?: string | null;
-    averageRating?: number;
-    reviewCount?: number;
-  } | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [copyCount, setCopyCount] = useState(0);
 
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { bookmarkedIds, toggleBookmark } = useBookmarks();
 
   const fetchPrompts = useCallback(async () => {
@@ -79,19 +69,7 @@ const MostCopiedPrompts = () => {
   };
 
   const handleCardClick = (prompt: PromptWithCreator) => {
-    setSelectedPrompt({
-      id: prompt.id,
-      title: prompt.title,
-      category: prompt.category,
-      prompt: prompt.full_prompt,
-      fullPrompt: prompt.full_prompt,
-      imageUrl: prompt.image_url,
-      copyCount: prompt.copy_count,
-      creatorEmail: prompt.profiles?.email || null,
-      averageRating: prompt.average_rating,
-      reviewCount: prompt.review_count,
-    });
-    setIsDetailModalOpen(true);
+    navigate(`/prompt/${slugify(prompt.title)}`);
   };
 
   return (
@@ -127,39 +105,56 @@ const MostCopiedPrompts = () => {
             <p className="text-2xl text-lightText">Belum ada prompt yang banyak dicopy</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {prompts.map((prompt) => (
-              <PromptCard
-                key={prompt.id}
-                id={prompt.id}
-                title={prompt.title}
-                category={prompt.category}
-                fullPrompt={prompt.full_prompt}
-                imageUrl={prompt.image_url}
-                copyCount={prompt.copy_count}
-                creatorEmail={prompt.profiles?.email || null}
-                status={prompt.status}
-                onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
-                onClick={() => handleCardClick(prompt)}
-                isBookmarked={bookmarkedIds.has(prompt.id)}
-                onToggleBookmark={(e) => toggleBookmark(prompt.id)}
-                averageRating={prompt.average_rating}
-                reviewCount={prompt.review_count}
-              />
-            ))}
-          </div>
+          <VirtuosoGrid
+            useWindowScroll
+            totalCount={prompts.length}
+            overscan={200}
+            components={{
+              List: forwardRef(({ style, children, ...props }: any, ref) => (
+                <div
+                  ref={ref}
+                  {...props}
+                  style={style}
+                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-20"
+                >
+                  {children}
+                </div>
+              )),
+              Item: ({ children, ...props }) => (
+                <div {...props} className="w-full h-full">
+                  {children}
+                </div>
+              )
+            }}
+            itemContent={(index) => {
+              const prompt = prompts[index];
+              return (
+                <PromptCard
+                  key={prompt.id}
+                  id={prompt.id}
+                  title={prompt.title}
+                  category={prompt.category}
+                  fullPrompt={prompt.full_prompt}
+                  imageUrl={prompt.image_url}
+                  copyCount={prompt.copy_count}
+                  creatorEmail={prompt.profiles?.email || null}
+                  status={prompt.status}
+                  onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
+                  onClick={() => handleCardClick(prompt)}
+                  isBookmarked={bookmarkedIds.has(prompt.id)}
+                  onToggleBookmark={(e) => toggleBookmark(prompt.id)}
+                  averageRating={prompt.average_rating}
+                  reviewCount={prompt.review_count}
+                />
+              );
+            }}
+          />
         )}
       </div>
 
       <Footer />
       <FloatingCTA />
 
-      <PromptDetailModal
-        open={isDetailModalOpen}
-        onOpenChange={setIsDetailModalOpen}
-        prompt={selectedPrompt}
-        onCopy={() => selectedPrompt && handleCopy(selectedPrompt.id, selectedPrompt.fullPrompt)}
-      />
       <LoginModal
         open={isLoginModalOpen}
         onOpenChange={setIsLoginModalOpen}
