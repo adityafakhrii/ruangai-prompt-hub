@@ -42,24 +42,28 @@ const PromptSlider = ({
     return (
         <section className="w-full py-8">
             <div className="container mx-auto px-4">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl md:text-2xl font-bold text-foreground">{title}</h2>
-                    {onViewAll && (
-                        <Button
-                            variant="ghost"
-                            onClick={onViewAll}
-                            className="text-primary hover:text-primary/80"
-                        >
-                            {viewAllLabel}
-                            <ChevronRight className="ml-1 h-4 w-4" />
-                        </Button>
-                    )}
-                </div>
+                <Carousel opts={{ align: "start", slidesToScroll: 1, dragFree: true }} className="w-full">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6 gap-3 md:gap-0">
+                        <h2 className="text-xl md:text-2xl font-bold text-foreground">{title}</h2>
+                        <div className="flex items-center justify-between w-full md:w-auto md:gap-4">
+                            <div className="flex items-center gap-2">
+                                <CarouselPrevious className="static translate-y-0 h-8 w-8 md:h-9 md:w-9 border-muted-foreground/20 hover:bg-muted" />
+                                <CarouselNext className="static translate-y-0 h-8 w-8 md:h-9 md:w-9 border-muted-foreground/20 hover:bg-muted" />
+                            </div>
+                            {onViewAll && (
+                                <Button
+                                    variant="ghost"
+                                    onClick={onViewAll}
+                                    className="text-primary hover:text-primary/80 text-sm md:text-base px-2 md:px-4"
+                                >
+                                    {viewAllLabel}
+                                    <ChevronRight className="ml-1 h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+                    </div>
 
-                <Carousel opts={{ align: "start", slidesToScroll: 1, dragFree: true }}>
                     <div className="relative">
-                        <CarouselPrevious className="hidden sm:flex left-2 z-10" />
-                        <CarouselNext className="hidden sm:flex right-2 z-10" />
                         <CarouselContent>
                             {prompts.map((prompt, index) => (
                                 <CarouselItem key={prompt.id} className="sm:basis-1/2 lg:basis-1/3">
