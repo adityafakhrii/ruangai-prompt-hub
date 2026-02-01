@@ -2,6 +2,7 @@ import { Home, Sparkles, BarChart2, Bookmark, User, FileText } from "lucide-reac
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { NewBadge } from "@/components/NewBadge";
 
 const BottomNav = () => {
   const { user } = useAuth();
@@ -54,12 +55,10 @@ const BottomNav = () => {
             >
               <div className="relative">
                 <item.icon className={cn("h-6 w-6", item.label === "Rank" && "rotate-0")} />
-                {/* @ts-ignore */}
                 {item.badge && (
-                  <span className="absolute -top-1.5 -right-2 bg-secondary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none border-2 border-background">
-                    {/* @ts-ignore */}
+                  <NewBadge variant="absolute">
                     {item.badge}
-                  </span>
+                  </NewBadge>
                 )}
               </div>
               <span className="sr-only">{item.label}</span>

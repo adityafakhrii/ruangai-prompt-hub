@@ -1,8 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { LogOut, ArrowLeft, BarChart2 } from "lucide-react";
+import { LogOut, ArrowLeft, BarChart2, MoreVertical } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, NavLink } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NewBadge } from "@/components/NewBadge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -49,11 +56,9 @@ const Navbar = () => {
                     Prompt Saya
                   </NavLink>
                   <NavLink to="/prompt-tersimpan" className={getLinkClass}>
-                Tersimpan
-                <span className="ml-1.5 bg-secondary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none">
-                  New
-                </span>
-              </NavLink>
+                    Tersimpan
+                    <NewBadge className="ml-1.5" />
+                  </NavLink>
                 </>
               )}
               {isAdmin && (
@@ -74,44 +79,43 @@ const Navbar = () => {
                 onClick={() => navigate('/leaderboard')}
                 title="Leaderboard"
               >
-                <BarChart2 className="h-5 w-5" />
+                <BarChart2 className="h-[1.2rem] w-[1.2rem]" />
               </Button>
-              <span className="absolute -top-1.5 -right-2 bg-secondary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none border-2 border-background">
-                New
-              </span>
+              <NewBadge variant="absolute" />
             </div>
             <ThemeToggle />
             {user ? (
               <>
-                <a
-                  href="https://ruangai.codepolitan.com/"
-                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mr-4 transition-colors"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Dashboard
-                </a>
-                {/* Notification bell - hidden until feature is ready
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="mr-2 text-muted-foreground hover:text-foreground"
-                  onClick={() => navigate('/notifikasi')}
-                >
-                  <Bell className="h-5 w-5" />
-                </Button>
-                */}
                 <span className="text-sm font-medium text-foreground mr-2">
                   {user.user_metadata?.full_name || user.email}
                 </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={signOut}
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                      <MoreVertical className="h-[1.2rem] w-[1.2rem]" />
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <a
+                        href="https://ruangai.codepolitan.com/"
+                        className="w-full flex items-center cursor-pointer"
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Dashboard
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={signOut}
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <Button

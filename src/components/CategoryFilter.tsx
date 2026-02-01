@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Image, Video, User, Code, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
+import { NewBadge } from "@/components/NewBadge";
 
 const mainCategories = [
   { name: "Image", icon: Image, isNew: false },
@@ -39,9 +40,7 @@ const CategoryFilter = ({ selectedCategory, onSelectCategory }: CategoryFilterPr
               <category.icon className="h-4 w-4" />
               {category.name}
               {category.isNew && (
-                <Badge variant="secondary" className="ml-1 text-xs bg-secondary text-white">
-                  New
-                </Badge>
+                <NewBadge className="ml-1" />
               )}
             </motion.button>
           ))}
