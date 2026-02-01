@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
     const isAdmin = profileData?.role === 'admin'
 
     const { action, data, promptId } = body as { action: string, data?: Record<string, unknown>, promptId?: string }
-    console.log('Action:', action, 'User:', userId)
+    // console.log('Action:', action, 'User:', userId) - Removed for security
 
     if (action === 'list') {
       // Fetch prompts for this user (profiles_id)

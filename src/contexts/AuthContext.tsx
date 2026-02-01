@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import * as jose from 'jose';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
