@@ -593,11 +593,12 @@ const AdminVerification = () => {
 
             {/* Preview Dialog */}
             <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
+                <DialogContent className="max-w-3xl max-h-[90vh] p-0 gap-0 rounded-xl sm:rounded-2xl overflow-hidden flex flex-col">
+                    <DialogHeader className="p-6 pb-2">
                         <DialogTitle>Tinjau Prompt</DialogTitle>
                     </DialogHeader>
                     
+                    <div className="overflow-y-auto p-6 pt-2 flex-1 custom-scrollbar">
                     {selectedPrompt && (
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -668,6 +669,7 @@ const AdminVerification = () => {
                             </div>
                         </div>
                     )}
+                    </div>
                 </DialogContent>
             </Dialog>
 
