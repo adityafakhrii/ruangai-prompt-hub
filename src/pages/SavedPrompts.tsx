@@ -9,7 +9,6 @@ import PromptCard from "@/components/PromptCard";
 import FloatingCTA from "@/components/FloatingCTA";
 import SkeletonCard from "@/components/SkeletonCard";
 import SEO from "@/components/SEO";
-import SearchBar from "@/components/SearchBar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,9 +17,7 @@ import { slugify } from "@/lib/utils";
 
 const SavedPrompts = () => {
   const [prompts, setPrompts] = useState<PromptWithCreator[]>([]);
-  const [filteredPrompts, setFilteredPrompts] = useState<PromptWithCreator[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -54,23 +51,6 @@ const SavedPrompts = () => {
       setLoading(false);
     }
   }, [user, fetchPrompts]);
-
-  // Filter prompts based on search
-  useEffect(() => {
-    let result = prompts;
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.title.toLowerCase().includes(query) ||
-          p.full_prompt.toLowerCase().includes(query) ||
-          p.category.toLowerCase().includes(query)
-      );
-    }
-
-    setFilteredPrompts(result);
-  }, [prompts, searchQuery]);
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     navigator.clipboard.writeText(fullPrompt);
@@ -119,39 +99,25 @@ const SavedPrompts = () => {
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-8 items-start md:items-center">
-          <div className="flex-1 w-full">
-            <SearchBar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              placeholder="Cari di prompt tersimpan..."
-            />
-          </div>
-        </div>
-
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
-        ) : filteredPrompts.length === 0 ? (
+        ) : prompts.length === 0 ? (
           <div className="text-center py-20 bg-muted/20 rounded-lg">
             <p className="text-2xl text-lightText mb-4">
-              {searchQuery
-                ? "Tidak ada prompt yang sesuai pencarian"
-                : "Belum ada prompt yang disimpan"}
+              Belum ada prompt yang disimpan
             </p>
-            {!searchQuery && (
-              <Button onClick={() => navigate("/")} variant="outline">
-                Jelajahi Prompt
-              </Button>
-            )}
+            <Button onClick={() => navigate("/")} variant="outline">
+              Jelajahi Prompt
+            </Button>
           </div>
         ) : (
           <VirtuosoGrid
             useWindowScroll
-            totalCount={filteredPrompts.length}
+            totalCount={prompts.length}
             overscan={200}
             components={{
               List: forwardRef(({ style, children, ...props }: any, ref) => (
@@ -171,7 +137,7 @@ const SavedPrompts = () => {
               )
             }}
             itemContent={(index) => {
-              const prompt = filteredPrompts[index];
+              const prompt = prompts[index];
               return (
                 <PromptCard
                   key={prompt.id}

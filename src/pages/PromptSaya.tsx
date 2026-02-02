@@ -306,7 +306,7 @@ const PromptSaya = () => {
             <Navbar />
 
             <div className="container mx-auto px-4 pt-12 pb-32 md:py-12">
-                <div className="max-w-4xl mx-auto">
+                <div>
                     <div className="flex justify-between items-center mb-8">
                         <h1 className="text-2xl md:text-3xl font-bold text-heading">
                             {view === 'list' ? 'Prompt Saya' : view === 'create' ? 'Buat Prompt Baru' : 'Edit Prompt'}
@@ -317,7 +317,7 @@ const PromptSaya = () => {
                             </Button>
                         )}
                         {view !== 'list' && (
-                            <Button variant="outline" onClick={() => { resetForm(); setView('list'); }}>
+                            <Button className="bg-destructive text-destructive-foreground hover:bg-destructive/80 hover:text-destructive-foreground" variant="outline" onClick={() => { resetForm(); setView('list'); }}>
                                 <X className="mr-2 h-4 w-4" /> Batal
                             </Button>
                         )}
@@ -368,7 +368,7 @@ const PromptSaya = () => {
                             <div className="grid gap-4">
                                 {prompts.map((prompt) => (
                                     <div key={prompt.id} className="bg-card p-6 rounded-lg border border-border shadow-sm flex justify-between items-start hover:shadow-md transition-shadow">
-                                        <div>
+                                        <div className="flex-1 min-w-0 mr-4">
                                             <h3 className="font-semibold text-lg text-heading mb-1">{prompt.title}</h3>
                                             <div className="flex flex-wrap gap-2 mb-2 items-center">
                                                 <span className="inline-block px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
