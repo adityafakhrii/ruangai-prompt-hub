@@ -673,34 +673,41 @@ const AdminVerification = () => {
 
             {/* Reject Dialog */}
             <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-                <DialogContent className="sm:max-w-[425px] top-[30%] translate-y-[-30%] sm:top-[50%] sm:translate-y-[-50%] max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>
+                <DialogContent className="sm:max-w-[425px] w-[90vw] max-h-[85vh] overflow-y-auto p-6 gap-6">
+                    <DialogHeader className="space-y-3 text-left">
+                        <DialogTitle className="text-xl">
                             {selectedPrompt ? 'Tolak Prompt' : `Tolak Massal (${selectedPromptIds.length} Prompt)`}
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-sm">
                             Mohon berikan alasan penolakan prompt ini (opsional). Alasan akan dikirimkan ke pengguna.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4">
+                    <div className="flex flex-col gap-4">
                         <Textarea 
                             placeholder="Alasan penolakan (opsional)..." 
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
-                            rows={4}
+                            className="min-h-[120px] resize-none text-base"
                         />
+                        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:space-x-2">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setIsRejectDialogOpen(false)}
+                                className="w-full sm:w-auto h-11 sm:h-10"
+                            >
+                                Batal
+                            </Button>
+                            <Button 
+                                variant="destructive" 
+                                onClick={handleReject}
+                                disabled={actionLoading}
+                                className="w-full sm:w-auto h-11 sm:h-10"
+                            >
+                                {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {selectedPrompt ? 'Tolak Prompt' : 'Tolak Massal'}
+                            </Button>
+                        </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>Batal</Button>
-                        <Button 
-                            variant="destructive" 
-                            onClick={handleReject}
-                            disabled={actionLoading}
-                        >
-                            {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {selectedPrompt ? 'Tolak Prompt' : 'Tolak Massal'}
-                        </Button>
-                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
