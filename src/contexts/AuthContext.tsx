@@ -51,8 +51,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           try {
             const { payload } = await jose.jwtVerify(tokenToVerify, secret);
 
-            console.log("JWT Payload:", payload);
-
             // Construct User object from specific claims
             const userId = (payload.user_id as string) || (payload.sub as string) || 'unknown';
             const mockUser: User = {
