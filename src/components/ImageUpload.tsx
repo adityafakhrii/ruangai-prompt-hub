@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, FileDown, RefreshCw } from "lucide-react";
 import { compressImage, formatBytes } from "@/lib/imageUtils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,8 +21,25 @@ const ImageUpload = ({
 }: ImageUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [remoteSize, setRemoteSize] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (imageUrl && !imageFile && !imagePreview) {
+      fetch(imageUrl, { method: 'HEAD' })
+        .then(res => {
+          const length = res.headers.get('content-length');
+          if (length) setRemoteSize(parseInt(length, 10));
+        })
+        .catch(err => {
+          console.error('Error fetching image size:', err);
+          setRemoteSize(null);
+        });
+    } else {
+      setRemoteSize(null);
+    }
+  }, [imageUrl, imageFile, imagePreview]);
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return;
@@ -63,6 +80,26 @@ const ImageUpload = ({
       setIsCompressing(false);
     }
   }, [onFileChange, toast]);
+
+  const handleCompressRemote = async () => {
+    if (!imageUrl) return;
+    setIsCompressing(true);
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const fileName = imageUrl.split('/').pop()?.split('?')[0] || 'image.jpg';
+      const file = new File([blob], fileName, { type: blob.type });
+      await handleFile(file);
+    } catch (error) {
+      console.error('Failed to process remote image:', error);
+      toast({
+        title: "Gagal memproses gambar",
+        description: "Tidak dapat mengunduh gambar untuk dikompresi.",
+        variant: "destructive",
+      });
+      setIsCompressing(false);
+    }
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -115,6 +152,32 @@ const ImageUpload = ({
           {imageFile && (
             <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
               {imageFile.name} ({formatBytes(imageFile.size)})
+            </div>
+          )}
+
+          {!imageFile && imageUrl && (
+            <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
+              <div className="bg-black/60 text-white text-xs px-2 py-1 rounded">
+                Ukuran: {remoteSize ? formatBytes(remoteSize) : 'Mengecek...'}
+              </div>
+              
+              {(!remoteSize || remoteSize > 1 * 1024 * 1024) && (
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  variant="secondary" 
+                  className="h-7 text-xs gap-1 shadow-lg"
+                  onClick={handleCompressRemote}
+                  disabled={isCompressing}
+                >
+                  {isCompressing ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-3 w-3" />
+                  )}
+                  Compress & Convert
+                </Button>
+              )}
             </div>
           )}
         </div>

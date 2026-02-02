@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -112,12 +112,12 @@ const ViralPrompts = () => {
                 id={prompt.id}
                 title={prompt.title}
                 category={prompt.category}
-                fullPrompt={prompt.prompt_preview || ''}
+                fullPrompt={prompt.prompt_preview || prompt.full_prompt || ''}
                 imageUrl={prompt.image_url || ''}
                 copyCount={prompt.copy_count}
                 creatorEmail={prompt.profiles?.email || null}
                 status={prompt.status}
-                onCopy={() => handleCopyWithFetch(prompt)}
+                onCopy={() => handleCopy(prompt.id, prompt.full_prompt || prompt.prompt_preview || '')}
                 onClick={() => handleCardClick(prompt)}
                 isBookmarked={bookmarkedIds.has(prompt.id)}
                 onToggleBookmark={(e) => toggleBookmark(prompt.id)}

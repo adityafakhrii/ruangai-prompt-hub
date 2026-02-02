@@ -178,7 +178,7 @@ const SavedPrompts = () => {
                   id={prompt.id}
                   title={prompt.title}
                   category={prompt.category}
-                  fullPrompt={prompt.full_prompt}
+                  fullPrompt={prompt.prompt_preview || prompt.full_prompt || ''}
                   imageUrl={prompt.image_url}
                   copyCount={prompt.copy_count}
                   creatorEmail={prompt.profiles?.email || null}

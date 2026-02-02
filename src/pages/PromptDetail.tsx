@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPromptById, fetchPromptBySlug } from "@/lib/promptQueries";
@@ -68,8 +69,12 @@ const PromptDetail = () => {
   const creatorDisplayName = prompt.profiles?.email ? maskEmail(prompt.profiles.email) : "Teman RAI";
   const optimizedImageUrl = prompt.image_url ? getOptimizedImageUrl(prompt.image_url, 800) : "";
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(prompt.full_prompt);
+  const handleCopy = async () => {
+    navigator.clipboard.writeText(prompt.full_prompt || '');
+    
+    // Increment copy count using secure RPC function (bypasses RLS)
+    await supabase.rpc('increment_copy_count', { prompt_id: prompt.id });
+
     toast({
       title: "Prompt disalin!",
       description: "Prompt telah disalin ke clipboard.",
@@ -272,7 +277,7 @@ const PromptDetail = () => {
                 <h3 className="text-lg font-semibold">Full Prompt</h3>
                 <div className="bg-muted/50 p-6 rounded-xl border border-border relative group">
                   <p className="whitespace-pre-wrap leading-relaxed font-mono text-sm select-none">
-                    {prompt.full_prompt}
+                    {prompt.full_prompt || ''}
                   </p>
                 </div>
               </div>

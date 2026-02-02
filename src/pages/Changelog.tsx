@@ -25,6 +25,23 @@ interface Release {
 
 const releases: Release[] = [
   {
+    version: "v1.1.0",
+    date: "02 Feb 2026",
+    title: "Performance Optimization & New Features",
+    changes: [
+      "Optimasi performa rendering list prompt dan loading gambar",
+      "Penambahan halaman detail prompt (Prompt Detail Page)",
+      "Fitur Scroll to Top untuk kemudahan navigasi",
+      "Navigasi Mobile Bottom Bar untuk akses cepat",
+      "Badge 'New' untuk fitur-fitur baru",
+      "Integrasi notifikasi Sonner (Toast) yang lebih baik",
+      "Komponen Error Boundary untuk penanganan error aplikasi",
+      "Fitur Verifikasi & Penolakan Massal (Bulk Action) untuk Admin",
+      "Perbaikan responsivitas layout dan slider"
+    ],
+    type: "minor"
+  },
+  {
     version: "v1.0.0",
     date: "29 Jan 2026",
     title: "Stable Release & UI Polish",

@@ -189,14 +189,23 @@ const AdminVerification = () => {
                 title: "Berhasil Verifikasi Massal",
                 description: `${selectedPromptIds.length} prompt berhasil diverifikasi.`,
             });
+            
+            // Optimistic update
+            setPrompts(prev => prev.map(p => 
+                selectedPromptIds.includes(p.id) 
+                    ? { ...p, status: 'verified', verifier: { email: user?.email || 'Anda' } } 
+                    : p
+            ));
+
             setSelectedPromptIds([]);
-            fetchPrompts();
         } catch (error: unknown) {
             toast({
                 title: "Gagal verifikasi massal",
                 description: error instanceof Error ? error.message : 'Terjadi kesalahan',
                 variant: "destructive",
             });
+            // Revert or fetch on error if needed, but for now just show error
+            fetchPrompts(); 
         } finally {
             setActionLoading(false);
         }
@@ -232,7 +241,14 @@ const AdminVerification = () => {
                 title: "Prompt Terverifikasi",
                 description: "Prompt sekarang sudah publik.",
             });
-            fetchPrompts();
+            
+            // Optimistic update
+            setPrompts(prev => prev.map(p => 
+                p.id === promptId 
+                    ? { ...p, status: 'verified', verifier: { email: user?.email || 'Anda' } } 
+                    : p
+            ));
+            
             setIsPreviewDialogOpen(false);
         } catch (error: unknown) {
             toast({
@@ -240,6 +256,7 @@ const AdminVerification = () => {
                 description: error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diketahui',
                 variant: "destructive",
             });
+            fetchPrompts();
         } finally {
             setActionLoading(false);
         }
@@ -276,6 +293,13 @@ const AdminVerification = () => {
                     title: "Prompt Ditolak",
                     description: "Prompt telah dikembalikan ke pengguna.",
                 });
+
+                // Optimistic update single
+                setPrompts(prev => prev.map(p => 
+                    p.id === selectedPrompt.id 
+                        ? { ...p, status: 'rejected', verifier: { email: user?.email || 'Anda' } } 
+                        : p
+                ));
             } else {
                 const { data, error } = await supabase.functions.invoke('manage-prompts', {
                     body: {
@@ -298,12 +322,19 @@ const AdminVerification = () => {
                     title: "Berhasil Menolak Massal",
                     description: `${selectedPromptIds.length} prompt berhasil ditolak.`,
                 });
+
+                // Optimistic update bulk
+                setPrompts(prev => prev.map(p => 
+                    selectedPromptIds.includes(p.id) 
+                        ? { ...p, status: 'rejected', verifier: { email: user?.email || 'Anda' } } 
+                        : p
+                ));
+
                 setSelectedPromptIds([]);
             }
 
             setIsRejectDialogOpen(false);
             setRejectionReason("");
-            fetchPrompts();
             setIsPreviewDialogOpen(false);
         } catch (error: unknown) {
             toast({
@@ -311,6 +342,7 @@ const AdminVerification = () => {
                 description: error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diketahui',
                 variant: "destructive",
             });
+            fetchPrompts();
         } finally {
             setActionLoading(false);
         }
@@ -641,7 +673,7 @@ const AdminVerification = () => {
 
             {/* Reject Dialog */}
             <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-[425px] top-[30%] translate-y-[-30%] sm:top-[50%] sm:translate-y-[-50%] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>
                             {selectedPrompt ? 'Tolak Prompt' : `Tolak Massal (${selectedPromptIds.length} Prompt)`}

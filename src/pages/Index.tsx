@@ -156,7 +156,7 @@ const Index = () => {
             <PromptSlider
               title="Prompt Viral Paling Banyak Copy"
               prompts={mostCopiedPrompts as any}
-              onCopy={handleCopyWithFetch as any}
+              onCopy={(prompt: any) => handleCopy(prompt.id, prompt.full_prompt || prompt.prompt_preview || '')}
               onCardClick={handleCardClick as any}
               onViewAll={() => navigate('/paling-banyak-copy')}
               bookmarkedIds={bookmarkedIds}
@@ -178,7 +178,7 @@ const Index = () => {
             <PromptSlider
               title="Terbaru"
               prompts={latestPrompts as any}
-              onCopy={handleCopyWithFetch as any}
+              onCopy={(prompt: any) => handleCopy(prompt.id, prompt.full_prompt || prompt.prompt_preview || '')}
               onCardClick={handleCardClick as any}
               onViewAll={() => {
                 const el = document.getElementById('semua-prompt');
@@ -282,12 +282,12 @@ const Index = () => {
                     id={prompt.id}
                     title={prompt.title}
                     category={prompt.category}
-                    fullPrompt={prompt.prompt_preview || ''}
+                    fullPrompt={prompt.prompt_preview || prompt.full_prompt || ''}
                     imageUrl={prompt.image_url || ''}
                     additionalInfo={prompt.additional_info || undefined}
                     copyCount={prompt.copy_count}
                     creatorEmail={prompt.profiles?.email || null}
-                    onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
+                    onCopy={() => handleCopy(prompt.id, prompt.full_prompt || prompt.prompt_preview || '')}
                     onClick={() => handleCardClick(prompt)}
                     averageRating={prompt.average_rating}
                     reviewCount={prompt.review_count}

@@ -38,7 +38,7 @@ const BottomNav = () => {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] w-[90%] max-w-sm">
+    <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-sm">
       <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-full shadow-2xl px-6 py-4 flex justify-between items-center ring-1 ring-white/20 dark:ring-white/10">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;

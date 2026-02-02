@@ -438,12 +438,22 @@ const PromptSaya = () => {
                                 <Info className="h-4 w-4 text-blue-800" />
                                 <AlertTitle className="mb-2 font-semibold">Penting: Panduan & Proses Verifikasi</AlertTitle>
                                 <AlertDescription className="text-sm leading-relaxed">
-                                    <p className="mb-2">
-                                        Pastikan prompt yang Anda buat positif, bermanfaat, dan <strong>tidak mengandung unsur SARA atau konten negatif</strong>.
-                                    </p>
-                                    <p>
-                                        Demi menjaga kualitas komunitas, setiap prompt baru akan melalui proses <strong>verifikasi oleh Admin</strong> terlebih dahulu. Prompt Anda akan berstatus <em>Pending</em> hingga disetujui. Mohon kesabarannya menunggu verifikasi admin sebelum prompt terpublish.
-                                    </p>
+                                    <div className="md:hidden space-y-2">
+                                        <p>
+                                            Prompt harus positif, bermanfaat, dan <strong>bebas SARA</strong>.
+                                        </p>
+                                        <p>
+                                            Prompt akan <strong>diverifikasi Admin</strong> sebelum terbit (status <em>Pending</em>).
+                                        </p>
+                                    </div>
+                                    <div className="hidden md:block space-y-2">
+                                        <p>
+                                            Pastikan prompt yang Anda buat positif, bermanfaat, dan <strong>tidak mengandung unsur SARA atau konten negatif</strong>.
+                                        </p>
+                                        <p>
+                                            Demi menjaga kualitas komunitas, setiap prompt baru akan melalui proses <strong>verifikasi oleh Admin</strong> terlebih dahulu. Prompt Anda akan berstatus <em>Pending</em> hingga disetujui. Mohon kesabarannya menunggu verifikasi admin sebelum prompt terpublish.
+                                        </p>
+                                    </div>
                                 </AlertDescription>
                             </Alert>
 
@@ -522,6 +532,10 @@ const PromptSaya = () => {
                                         onFileChange={(file, preview) => {
                                             setImageFile(file);
                                             setImagePreview(preview);
+                                            // Clear existing URL if user removes the image
+                                            if (!file && !preview) {
+                                                setImageUrl("");
+                                            }
                                         }}
                                         error={errors.imageUrl}
                                     />

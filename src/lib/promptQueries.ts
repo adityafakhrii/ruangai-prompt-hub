@@ -6,7 +6,8 @@ export interface PromptWithCreator {
     profiles_id: string;
     title: string;
     category: string;
-    full_prompt: string;
+    full_prompt?: string;
+    prompt_preview?: string;
     image_url: string | null;
     copy_count: number;
     created_at: string;
@@ -21,8 +22,7 @@ export interface PromptWithCreator {
 }
 
 /**
- * Fetch prompts from prompts_preview view (with truncated prompt for reduced egress)
- * Uses the view which contains prompt_preview (first 200 chars) instead of full_prompt
+ * Fetch prompts with creator information including email from profiles table
  */
 export const fetchPromptsWithCreator = async (options?: {
     isViral?: boolean;
@@ -46,10 +46,9 @@ export const fetchPromptsWithCreator = async (options?: {
         category,
     } = options || {};
 
-    // Use prompts_preview view for reduced egress (truncated prompt)
     let query = supabase
-        .from('prompts_preview')
-        .select(PREVIEW_FIELDS)
+        .from('prompts')
+        .select('*, profiles:profiles_id(email)')
         .order(orderBy, { ascending });
 
     if (status !== 'all') {
@@ -159,25 +158,6 @@ export const fetchAllPromptsWithCreator = async (
         searchQuery,
         category,
     });
-};
-
-/**
- * Fetch full prompt detail - only loads full_prompt when needed (lazy loading)
- * This reduces egress by not loading large full_prompt text in list views
- */
-export const fetchPromptDetail = async (promptId: string) => {
-    const { data, error } = await supabase
-        .from('prompts')
-        .select(DETAIL_FIELDS)
-        .eq('id', promptId)
-        .single();
-
-    if (error) {
-        console.error('Error fetching prompt detail:', error);
-        return { data: null, error };
-    }
-
-    return { data: data as PromptWithCreator, error: null };
 };
 
 /**
