@@ -267,3 +267,15 @@ export const fetchPromptBySlug = async (slug: string) => {
 
     return { data: result as PromptWithCreator, error: null };
 };
+
+export const promptKeys = {
+  all: ['prompts'] as const,
+  lists: () => [...promptKeys.all, 'list'] as const,
+  list: (filters: any) => [...promptKeys.lists(), { filters }] as const,
+  details: () => [...promptKeys.all, 'detail'] as const,
+  detail: (id: string) => [...promptKeys.details(), id] as const,
+  viral: () => [...promptKeys.all, 'viral'] as const,
+  mostCopied: () => [...promptKeys.all, 'mostCopied'] as const,
+  latest: () => [...promptKeys.all, 'latest'] as const,
+  keywords: () => [...promptKeys.all, 'keywords'] as const,
+};

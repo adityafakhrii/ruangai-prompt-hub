@@ -34,6 +34,8 @@ export const submitReview = async (promptId: string, rating: number, comment: st
         return { error: new Error("User not logged in") };
     }
 
+    // Use upsert or rely on RPC if possible, but keeping insert for compatibility if unique constraint exists it will fail
+    // Better to use RPC 'submit_review' generally.
     const { data, error } = await supabase
         .from('reviews')
         .insert({
@@ -53,10 +55,15 @@ export const submitReview = async (promptId: string, rating: number, comment: st
     return { data, error: null };
 };
 
-export const getUserReview = async (promptId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
+export const getUserReview = async (promptId: string, userId?: string) => {
+    let targetUserId = userId;
+    
+    if (!targetUserId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        targetUserId = user?.id;
+    }
 
-    if (!user) {
+    if (!targetUserId) {
         return { data: null, error: null };
     }
 
@@ -64,7 +71,9 @@ export const getUserReview = async (promptId: string) => {
         .from('reviews')
         .select('*')
         .eq('prompt_id', promptId)
-        .eq('user_id', user.id)
+        .eq('user_id', targetUserId)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
     if (error) {

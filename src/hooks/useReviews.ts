@@ -3,6 +3,8 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchReviews, submitReview, getUserReview, Review } from '@/lib/reviewQueries';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { promptKeys } from '@/lib/promptQueries';
 
 export const useReviews = (promptId: string) => {
     const [reviews, setReviews] = useState<Review[]>([]);
@@ -11,6 +13,7 @@ export const useReviews = (promptId: string) => {
     const [submitting, setSubmitting] = useState(false);
     const { toast } = useToast();
     const { user } = useAuth();
+    const queryClient = useQueryClient();
 
     const loadReviews = useCallback(async () => {
         setLoading(true);
@@ -26,7 +29,7 @@ export const useReviews = (promptId: string) => {
         }
         
         if (user) {
-            const { data: userReviewData } = await getUserReview(promptId);
+            const { data: userReviewData } = await getUserReview(promptId, user.id);
             setUserReview(userReviewData as Review | null);
         }
         
@@ -62,6 +65,11 @@ export const useReviews = (promptId: string) => {
 
             // Reload reviews
             await loadReviews();
+            
+            // Invalidate prompt queries to update rating summary UI
+            queryClient.invalidateQueries({ queryKey: promptKeys.detail(promptId) });
+            queryClient.invalidateQueries({ queryKey: promptKeys.all });
+
             setSubmitting(false);
             return true;
         } catch (error) {

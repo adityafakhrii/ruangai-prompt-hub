@@ -30,6 +30,7 @@ const PromptDetail = () => {
   const { toast } = useToast();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || "");
 
@@ -46,6 +47,7 @@ const PromptDetail = () => {
   useEffect(() => {
     if (prompt?.id) {
       loadReviews();
+      setIsEditing(false);
     }
   }, [prompt?.id, loadReviews]);
 
@@ -153,6 +155,7 @@ const PromptDetail = () => {
     if (success) {
       setRating(0);
       setComment("");
+      setIsEditing(false);
     }
   };
 
@@ -319,9 +322,23 @@ const PromptDetail = () => {
                   <h3 className="font-semibold text-lg">Ulasan ({reviews.length})</h3>
                   
                    {/* Review Form */}
-                  {!userReview ? (
+                  {!userReview || isEditing ? (
                     <div className="space-y-3">
-                      <p className="text-xs text-muted-foreground">Bagaimana pengalaman Anda?</p>
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-muted-foreground">
+                          {isEditing ? "Edit Ulasan Anda" : "Bagaimana pengalaman Anda?"}
+                        </p>
+                        {isEditing && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 text-[10px] px-2"
+                            onClick={() => setIsEditing(false)}
+                          >
+                            Batal
+                          </Button>
+                        )}
+                      </div>
                       <div className="flex gap-1">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
@@ -339,18 +356,34 @@ const PromptDetail = () => {
                       />
                       <p className="text-[10px] text-muted-foreground text-right">Minimal 10 karakter</p>
                       <Button size="sm" className="w-full" onClick={handleSubmitReview} disabled={submitting || rating === 0 || comment.length < 10}>
-                        Kirim Ulasan
+                        {submitting ? "Mengirim..." : (isEditing ? "Update Ulasan" : "Kirim Ulasan")}
                       </Button>
                     </div>
                   ) : (
                     <div className="bg-muted/50 p-3 rounded-lg text-sm">
-                      <p className="font-medium mb-1">Ulasan Anda</p>
-                      <div className="flex gap-1 mb-1">
-                         {[1, 2, 3, 4, 5].map((star) => (
-                          <Star key={star} className={`w-3 h-3 ${star <= userReview.rating ? "fill-yellow-400 text-yellow-400" : "text-muted/30"}`} />
-                        ))}
+                      <div className="flex justify-between items-start mb-1">
+                        <div>
+                          <p className="font-medium">Ulasan Anda</p>
+                          <div className="flex gap-1">
+                             {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className={`w-3 h-3 ${star <= userReview.rating ? "fill-yellow-400 text-yellow-400" : "text-muted/30"}`} />
+                            ))}
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 text-[10px] px-2"
+                          onClick={() => {
+                            setRating(userReview.rating);
+                            setComment(userReview.comment || "");
+                            setIsEditing(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
                       </div>
-                      <p className="text-muted-foreground text-xs">{userReview.comment}</p>
+                      <p className="text-muted-foreground text-xs mt-1">{userReview.comment}</p>
                     </div>
                   )}
 

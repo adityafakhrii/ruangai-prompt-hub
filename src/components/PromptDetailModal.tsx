@@ -41,12 +41,14 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
   const { reviews, userReview, loading: loadingReviews, submitting, loadReviews, addReview } = useReviews(prompt?.id || "");
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (open && prompt?.id) {
       loadReviews();
       setRating(0);
       setComment("");
+      setIsEditing(false);
     }
   }, [open, prompt?.id, loadReviews]);
 
@@ -124,6 +126,7 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
     if (success) {
       setRating(0);
       setComment("");
+      setIsEditing(false);
     }
   };
 
@@ -273,9 +276,23 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
               <h3 className="text-lg font-semibold text-heading">Ulasan & Rating</h3>
 
               {/* Review Form */}
-              {!userReview ? (
+              {!userReview || isEditing ? (
                 <div className="bg-muted/50 p-4 rounded-lg space-y-4">
-                  <h4 className="font-medium text-sm">Berikan Ulasan Anda</h4>
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium text-sm">
+                      {isEditing ? "Edit Ulasan Anda" : "Berikan Ulasan Anda"}
+                    </h4>
+                    {isEditing && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 text-xs"
+                        onClick={() => setIsEditing(false)}
+                      >
+                        Batal
+                      </Button>
+                    )}
+                  </div>
                   <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
@@ -297,21 +314,37 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                     disabled={submitting || rating === 0 || comment.length < 10}
                     size="sm"
                   >
-                    {submitting ? "Mengirim..." : "Kirim Ulasan"}
+                    {submitting ? "Mengirim..." : (isEditing ? "Update Ulasan" : "Kirim Ulasan")}
                     <Send className="w-3 h-3 ml-2" />
                   </Button>
                 </div>
               ) : (
                 <div className="bg-primary/10 p-4 rounded-lg">
-                  <p className="text-sm font-medium mb-2">Ulasan Anda</p>
-                  <div className="flex gap-1 mb-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${star <= userReview.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                          }`}
-                      />
-                    ))}
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="text-sm font-medium">Ulasan Anda</p>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-4 h-4 ${star <= userReview.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                              }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        setRating(userReview.rating);
+                        setComment(userReview.comment || "");
+                        setIsEditing(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
                   </div>
                   <p className="text-sm">{userReview.comment}</p>
                 </div>
