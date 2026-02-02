@@ -1,36 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-
-// Cache keys for React Query - enables proper caching and invalidation
-export const promptKeys = {
-    all: ['prompts'] as const,
-    viral: () => [...promptKeys.all, 'viral'] as const,
-    mostCopied: () => [...promptKeys.all, 'mostCopied'] as const,
-    latest: () => [...promptKeys.all, 'latest'] as const,
-    paginated: (page: number) => [...promptKeys.all, 'paginated', page] as const,
-    detail: (id: string) => [...promptKeys.all, 'detail', id] as const,
-    keywords: () => ['keywords'] as const,
-};
-
-// Field selection for views
-// prompts_preview view contains prompt_preview (first 200 chars) instead of full_prompt
-// This reduces egress significantly for list views
-const PREVIEW_FIELDS = '*, profiles:profiles_id(email)';
-const DETAIL_FIELDS = '*, profiles:profiles_id(email)';
-
-export interface PromptPreview {
-    id: string;
-    profiles_id: string;
-    title: string;
-    category: string;
-    prompt_preview: string;  // Truncated to 200 chars from the view
-    image_url: string | null;
-    copy_count: number;
-    created_at: string;
-    updated_at: string;
-    additional_info?: string | null;
-    profiles?: { email: string | null } | null;
-    status: 'pending' | 'verified' | 'rejected';
-}
+import { slugify } from "./utils";
 
 export interface PromptWithCreator {
     id: string;
@@ -47,6 +16,8 @@ export interface PromptWithCreator {
     creator_email?: string | null;
     profiles?: { email: string | null } | null;
     status: 'pending' | 'verified' | 'rejected';
+    average_rating?: number;
+    review_count?: number;
 }
 
 /**
@@ -55,13 +26,15 @@ export interface PromptWithCreator {
  */
 export const fetchPromptsWithCreator = async (options?: {
     isViral?: boolean;
-    orderBy?: 'created_at' | 'copy_count';
+    orderBy?: 'created_at' | 'copy_count' | 'average_rating';
     ascending?: boolean;
     limit?: number;
     offset?: number;
     minCopyCount?: number;
     status?: 'pending' | 'verified' | 'rejected' | 'all';
-}): Promise<{ data: PromptPreview[] | null; error: Error | null }> => {
+    searchQuery?: string;
+    category?: string;
+}) => {
     const {
         orderBy = 'created_at',
         ascending = false,
@@ -69,6 +42,8 @@ export const fetchPromptsWithCreator = async (options?: {
         offset,
         minCopyCount,
         status = 'verified', // Default to verified only for public queries
+        searchQuery,
+        category,
     } = options || {};
 
     // Use prompts_preview view for reduced egress (truncated prompt)
@@ -83,6 +58,14 @@ export const fetchPromptsWithCreator = async (options?: {
 
     if (minCopyCount !== undefined) {
         query = query.gt('copy_count', minCopyCount);
+    }
+
+    if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,full_prompt.ilike.%${searchQuery}%`);
+    }
+
+    if (category) {
+        query = query.eq('category', category);
     }
 
     if (limit) {
@@ -100,7 +83,22 @@ export const fetchPromptsWithCreator = async (options?: {
         return { data: null, error };
     }
 
-    return { data: data as PromptPreview[], error: null };
+    return { data: data as PromptWithCreator[], error: null };
+};
+
+/**
+ * Fetch leaderboard data
+ */
+export const fetchLeaderboard = async (limit = 50) => {
+    const { data, error } = await supabase
+        .rpc('get_leaderboard', { limit_count: limit });
+
+    if (error) {
+        console.error('Error fetching leaderboard:', error);
+        return { data: null, error };
+    }
+
+    return { data, error: null };
 };
 
 /**
@@ -142,12 +140,24 @@ export const fetchLatestPromptsWithCreator = async (limit = 5) => {
 /**
  * Fetch all prompts with pagination and creator information
  */
-export const fetchAllPromptsWithCreator = async (page = 0, pageSize = 12) => {
+export const fetchAllPromptsWithCreator = async (
+    page = 0, 
+    pageSize = 12, 
+    orderBy: 'created_at' | 'created_at_asc' | 'copy_count' | 'average_rating' = 'created_at',
+    searchQuery?: string,
+    category?: string
+) => {
+    // Handle ascending sort for created_at_asc
+    const actualOrderBy = orderBy === 'created_at_asc' ? 'created_at' : orderBy;
+    const ascending = orderBy === 'created_at_asc';
+
     return fetchPromptsWithCreator({
-        orderBy: 'created_at',
-        ascending: false,
+        orderBy: actualOrderBy,
+        ascending: ascending,
         limit: pageSize,
         offset: page * pageSize,
+        searchQuery,
+        category,
     });
 };
 
@@ -171,58 +181,109 @@ export const fetchPromptDetail = async (promptId: string) => {
 };
 
 /**
- * Extract popular keywords from all prompts
- * Only fetches titles to minimize egress - full_prompt is expensive
+ * Fetch popular keywords (categories)
  */
-export const fetchPopularKeywords = async (limit = 10): Promise<string[]> => {
+export const fetchPopularKeywords = async (limit = 10) => {
+    // This is a simplified implementation. Ideally we would aggregate tags or categories.
+    // For now, let's just return distinct categories from the prompts table
     const { data, error } = await supabase
         .from('prompts')
-        .select('title')
-        .eq('status', 'verified');
+        .select('category')
+        .limit(50); // Fetch a sample
 
-    if (error || !data) {
+    if (error) {
         console.error('Error fetching keywords:', error);
         return [];
     }
 
-    // Common stop words to filter out
-    const stopWords = new Set([
-        'yang', 'dan', 'di', 'ke', 'dari', 'untuk', 'dengan', 'pada', 'ini', 'itu',
-        'adalah', 'akan', 'atau', 'juga', 'sudah', 'bisa', 'ada', 'tidak', 'saya',
-        'anda', 'kamu', 'dia', 'mereka', 'kita', 'kami', 'nya', 'kan', 'ya', 'lah',
-        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-        'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should',
-        'may', 'might', 'must', 'shall', 'can', 'need', 'dare', 'ought', 'used',
-        'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as', 'into',
-        'through', 'during', 'before', 'after', 'above', 'below', 'between',
-        'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when',
-        'where', 'why', 'how', 'all', 'each', 'few', 'more', 'most', 'other',
-        'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than',
-        'too', 'very', 'just', 'but', 'and', 'or', 'if', 'because', 'as', 'until',
-        'while', 'although', 'even', 'though', 'after', 'before', 'since', 'unless',
-        'your', 'you', 'this', 'that', 'these', 'those', 'what', 'which', 'who',
-        'whom', 'whose', 'it', 'its', 'i', 'me', 'my', 'myself', 'we', 'our',
-        'seperti', 'tentang', 'dalam', 'lebih', 'buat', 'sebuah', 'membuat', 'cara',
-        'harus', 'tanpa', 'secara', 'sangat', 'jadi', 'saat', 'lalu', 'maka',
-    ]);
-
-    // Extract and count words from titles only
-    const wordCount: Record<string, number> = {};
-
-    data.forEach(prompt => {
-        const text = prompt.title.toLowerCase();
-        const words = text.match(/[a-zA-Z\u00C0-\u024F]+/g) || [];
-
-        words.forEach(word => {
-            if (word.length >= 4 && !stopWords.has(word)) {
-                wordCount[word] = (wordCount[word] || 0) + 1;
-            }
-        });
+    // Count occurrences
+    const counts: Record<string, number> = {};
+    data.forEach((p) => {
+        if (p.category) {
+            counts[p.category] = (counts[p.category] || 0) + 1;
+        }
     });
 
-    // Sort by frequency and return top keywords
-    return Object.entries(wordCount)
+    // Sort by count
+    return Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, limit)
-        .map(([word]) => word.charAt(0).toUpperCase() + word.slice(1));
+        .map(([keyword]) => keyword);
+};
+
+/**
+ * Fetch bookmarked prompts for a specific user
+ */
+export const fetchBookmarkedPromptsWithCreator = async (userId: string) => {
+    const { data, error } = await supabase
+        .rpc('get_bookmarked_prompts', { p_user_id: userId });
+
+    if (error) {
+        console.error('Error fetching bookmarked prompts:', error);
+        return { data: null, error };
+    }
+
+    // Transform data to match PromptWithCreator interface
+    const formattedData: PromptWithCreator[] = (data || []).map((p: any) => ({
+        ...p,
+        profiles: { email: p.creator_email }
+    }));
+
+    return { data: formattedData, error: null };
+};
+
+/**
+ * Fetch a single prompt by ID with creator information
+ */
+export const fetchPromptById = async (id: string) => {
+    const { data, error } = await supabase
+        .from('prompts')
+        .select('*, profiles:profiles_id(email)')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error('Error fetching prompt by id:', error);
+        return { data: null, error };
+    }
+
+    return { data: data as PromptWithCreator, error: null };
+};
+
+/**
+ * Fetch a single prompt by slug (title)
+ */
+export const fetchPromptBySlug = async (slug: string) => {
+    // Strategy: 
+    // 1. Try to find prompts that roughly match the slug (replace dashes with wildcards)
+    // 2. Filter in JS to find the exact slug match
+    // This handles cases where original title has punctuation/special chars that are removed in slug
+    
+    const potentialTitle = slug.split('-').join('%');
+    
+    // Fetch candidates (limit to 10 to avoid performance hit, usually we just need 1)
+    const { data, error } = await supabase
+        .from('prompts')
+        .select('*, profiles:profiles_id(email)')
+        .ilike('title', `%${potentialTitle}%`)
+        .limit(10);
+
+    if (error) {
+        console.error('Error fetching prompt by slug:', error);
+        return { data: null, error };
+    }
+
+    if (!data || data.length === 0) {
+        return { data: null, error: null };
+    }
+
+    // Find the exact match by re-slugifying the titles
+    const exactMatch = data.find(prompt => slugify(prompt.title) === slug);
+
+    // If no exact match found, return the first one (fallback) or null
+    // Returning the first one might be safer if the slug algorithm slightly differs
+    // but ideally we want exact match. Let's try to be fuzzy if exact fails.
+    const result = exactMatch || data[0]; 
+
+    return { data: result as PromptWithCreator, error: null };
 };

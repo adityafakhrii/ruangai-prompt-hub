@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Image, Video, User, Code, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
+import { NewBadge } from "@/components/NewBadge";
 
 const mainCategories = [
   { name: "Image", icon: Image, isNew: false },
@@ -22,7 +23,7 @@ const CategoryFilter = ({ selectedCategory, onSelectCategory }: CategoryFilterPr
         <h2 className="text-2xl font-bold text-foreground mb-6">Kategori</h2>
 
         {/* Main Categories */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex overflow-x-auto pb-2 gap-2 md:flex-wrap md:overflow-visible no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
           {mainCategories.map((category, index) => (
             <motion.button
               key={category.name}
@@ -31,7 +32,7 @@ const CategoryFilter = ({ selectedCategory, onSelectCategory }: CategoryFilterPr
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -2 }}
               onClick={() => onSelectCategory(selectedCategory === category.name ? "" : category.name)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium hover:shadow-lg transition-all ${selectedCategory === category.name
+              className={`flex items-center gap-2 px-4 py-2 text-sm md:px-5 md:py-2.5 md:text-base rounded-full font-medium whitespace-nowrap hover:shadow-lg transition-all flex-shrink-0 ${selectedCategory === category.name
                 ? "bg-primary text-primary-foreground"
                 : "bg-primary-light text-heading"
                 }`}
@@ -39,9 +40,7 @@ const CategoryFilter = ({ selectedCategory, onSelectCategory }: CategoryFilterPr
               <category.icon className="h-4 w-4" />
               {category.name}
               {category.isNew && (
-                <Badge variant="secondary" className="ml-1 text-xs bg-secondary text-white">
-                  New
-                </Badge>
+                <NewBadge className="ml-1" />
               )}
             </motion.button>
           ))}

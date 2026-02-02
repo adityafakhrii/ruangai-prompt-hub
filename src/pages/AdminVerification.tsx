@@ -15,6 +15,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Check, X, Eye, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
     Dialog,
@@ -54,6 +55,7 @@ const AdminVerification = () => {
     const [prompts, setPrompts] = useState<PromptWithProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedPrompt, setSelectedPrompt] = useState<PromptWithProfile | null>(null);
+    const [selectedPromptIds, setSelectedPromptIds] = useState<string[]>([]);
     const [rejectionReason, setRejectionReason] = useState("");
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
     const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
@@ -123,10 +125,10 @@ const AdminVerification = () => {
         if (!sortConfig) return 0;
         const { key, direction } = sortConfig;
         
-        let aValue: any = key === 'profiles.email' ? (a.profiles?.email || '') : 
+        let aValue: string | PromptWithProfile[keyof PromptWithProfile] = key === 'profiles.email' ? (a.profiles?.email || '') :
                           key === 'verifier.email' ? (a.verifier?.email || '') :
                           a[key as keyof PromptWithProfile];
-        let bValue: any = key === 'profiles.email' ? (b.profiles?.email || '') : 
+        let bValue: string | PromptWithProfile[keyof PromptWithProfile] = key === 'profiles.email' ? (b.profiles?.email || '') :
                           key === 'verifier.email' ? (b.verifier?.email || '') :
                           b[key as keyof PromptWithProfile];
 
@@ -143,6 +145,67 @@ const AdminVerification = () => {
         pending: prompts.filter(p => p.status === 'pending').length,
         verified: prompts.filter(p => p.status === 'verified').length,
         rejected: prompts.filter(p => p.status === 'rejected').length
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedPromptIds.length === filteredPrompts.length) {
+            setSelectedPromptIds([]);
+        } else {
+            setSelectedPromptIds(filteredPrompts.map(p => p.id));
+        }
+    };
+
+    const toggleSelectOne = (id: string) => {
+        if (selectedPromptIds.includes(id)) {
+            setSelectedPromptIds(selectedPromptIds.filter(pid => pid !== id));
+        } else {
+            setSelectedPromptIds([...selectedPromptIds, id]);
+        }
+    };
+
+    const handleBulkVerify = async () => {
+        if (selectedPromptIds.length === 0) return;
+        
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem('heroic_token');
+            const { data, error } = await supabase.functions.invoke('manage-prompts', {
+                body: {
+                    action: 'bulk_update',
+                    token,
+                    promptIds: selectedPromptIds,
+                    data: {
+                        status: 'verified',
+                        verified_at: new Date().toISOString(),
+                        verifier_id: user?.id
+                    }
+                }
+            });
+
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+
+            toast({
+                title: "Berhasil Verifikasi Massal",
+                description: `${selectedPromptIds.length} prompt berhasil diverifikasi.`,
+            });
+            setSelectedPromptIds([]);
+            fetchPrompts();
+        } catch (error: unknown) {
+            toast({
+                title: "Gagal verifikasi massal",
+                description: error instanceof Error ? error.message : 'Terjadi kesalahan',
+                variant: "destructive",
+            });
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const openBulkRejectDialog = () => {
+        setSelectedPrompt(null);
+        setRejectionReason("");
+        setIsRejectDialogOpen(true);
     };
 
     const handleVerify = async (promptId: string) => {
@@ -183,40 +246,61 @@ const AdminVerification = () => {
     };
 
     const handleReject = async () => {
-        if (!selectedPrompt) return;
-        if (!rejectionReason.trim()) {
-            toast({
-                title: "Alasan diperlukan",
-                description: "Mohon berikan alasan penolakan.",
-                variant: "destructive",
-            });
-            return;
-        }
+        if (!selectedPrompt && selectedPromptIds.length === 0) return;
+        
+        // Removed mandatory check for rejectionReason
 
         setActionLoading(true);
         try {
             const token = localStorage.getItem('heroic_token');
-            const { data, error } = await supabase.functions.invoke('manage-prompts', {
-                body: {
-                    action: 'update',
-                    token,
-                    promptId: selectedPrompt.id,
-                    data: {
-                        status: 'rejected',
-                        verified_at: new Date().toISOString(),
-                        verifier_id: user?.id,
-                        rejection_reason: rejectionReason
+            
+            if (selectedPrompt) {
+                const { data, error } = await supabase.functions.invoke('manage-prompts', {
+                    body: {
+                        action: 'update',
+                        token,
+                        promptId: selectedPrompt.id,
+                        data: {
+                            status: 'rejected',
+                            verified_at: new Date().toISOString(),
+                            verifier_id: user?.id,
+                            rejection_reason: rejectionReason
+                        }
                     }
-                }
-            });
+                });
 
-            if (error) throw error;
-            if (data?.error) throw new Error(data.error);
+                if (error) throw error;
+                if (data?.error) throw new Error(data.error);
 
-            toast({
-                title: "Prompt Ditolak",
-                description: "Prompt telah dikembalikan ke pengguna.",
-            });
+                toast({
+                    title: "Prompt Ditolak",
+                    description: "Prompt telah dikembalikan ke pengguna.",
+                });
+            } else {
+                const { data, error } = await supabase.functions.invoke('manage-prompts', {
+                    body: {
+                        action: 'bulk_update',
+                        token,
+                        promptIds: selectedPromptIds,
+                        data: {
+                            status: 'rejected',
+                            verified_at: new Date().toISOString(),
+                            verifier_id: user?.id,
+                            rejection_reason: rejectionReason
+                        }
+                    }
+                });
+
+                if (error) throw error;
+                if (data?.error) throw new Error(data.error);
+
+                toast({
+                    title: "Berhasil Menolak Massal",
+                    description: `${selectedPromptIds.length} prompt berhasil ditolak.`,
+                });
+                setSelectedPromptIds([]);
+            }
+
             setIsRejectDialogOpen(false);
             setRejectionReason("");
             fetchPrompts();
@@ -252,54 +336,69 @@ const AdminVerification = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col transition-colors duration-200">
             <Navbar />
             <main className="flex-grow container mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold mb-6">Dashboard Verifikasi Admin</h1>
+                <h1 className="text-2xl md:text-3xl font-bold mb-6 text-foreground">Dashboard Verifikasi Admin</h1>
                 
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="bg-white dark:bg-card rounded-lg shadow p-6 border dark:border-border">
                     <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-                        <div className="flex bg-gray-100 p-1 rounded-lg">
-                            <button
-                                onClick={() => setFilterStatus('all')}
-                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                                    filterStatus === 'all' 
-                                        ? 'bg-white text-gray-900 shadow-sm' 
-                                        : 'text-gray-500 hover:text-gray-900'
-                                }`}
-                            >
-                                Semua ({counts.all})
-                            </button>
-                            <button
-                                onClick={() => setFilterStatus('pending')}
-                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                                    filterStatus === 'pending' 
-                                        ? 'bg-white text-yellow-700 shadow-sm' 
-                                        : 'text-gray-500 hover:text-gray-900'
-                                }`}
-                            >
-                                Pending ({counts.pending})
-                            </button>
-                            <button
-                                onClick={() => setFilterStatus('verified')}
-                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                                    filterStatus === 'verified' 
-                                        ? 'bg-white text-green-700 shadow-sm' 
-                                        : 'text-gray-500 hover:text-gray-900'
-                                }`}
-                            >
-                                Verified ({counts.verified})
-                            </button>
-                            <button
-                                onClick={() => setFilterStatus('rejected')}
-                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                                    filterStatus === 'rejected' 
-                                        ? 'bg-white text-red-700 shadow-sm' 
-                                        : 'text-gray-500 hover:text-gray-900'
-                                }`}
-                            >
-                                Rejected ({counts.rejected})
-                            </button>
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <div className="flex bg-gray-100 dark:bg-muted p-1 rounded-lg">
+                                <button
+                                    onClick={() => { setFilterStatus('all'); setSelectedPromptIds([]); }}
+                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                        filterStatus === 'all' 
+                                            ? 'bg-white dark:bg-background text-gray-900 dark:text-foreground shadow-sm' 
+                                            : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
+                                    }`}
+                                >
+                                    Semua ({counts.all})
+                                </button>
+                                <button
+                                    onClick={() => { setFilterStatus('pending'); setSelectedPromptIds([]); }}
+                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                        filterStatus === 'pending' 
+                                            ? 'bg-white dark:bg-background text-yellow-700 dark:text-yellow-500 shadow-sm' 
+                                            : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
+                                    }`}
+                                >
+                                    Pending ({counts.pending})
+                                </button>
+                                <button
+                                    onClick={() => { setFilterStatus('verified'); setSelectedPromptIds([]); }}
+                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                        filterStatus === 'verified' 
+                                            ? 'bg-white dark:bg-background text-green-700 dark:text-green-500 shadow-sm' 
+                                            : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
+                                    }`}
+                                >
+                                    Verified ({counts.verified})
+                                </button>
+                                <button
+                                    onClick={() => { setFilterStatus('rejected'); setSelectedPromptIds([]); }}
+                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                        filterStatus === 'rejected' 
+                                            ? 'bg-white dark:bg-background text-red-700 dark:text-red-500 shadow-sm' 
+                                            : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
+                                    }`}
+                                >
+                                    Rejected ({counts.rejected})
+                                </button>
+                            </div>
+
+                            {selectedPromptIds.length > 0 && (
+                                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-5">
+                                    <Button size="sm" onClick={handleBulkVerify} className="bg-green-600 hover:bg-green-700">
+                                        <Check className="w-4 h-4 mr-1" />
+                                        Verifikasi ({selectedPromptIds.length})
+                                    </Button>
+                                    <Button size="sm" variant="destructive" onClick={openBulkRejectDialog}>
+                                        <X className="w-4 h-4 mr-1" />
+                                        Tolak ({selectedPromptIds.length})
+                                    </Button>
+                                </div>
+                            )}
                         </div>
 
                         <Button onClick={fetchPrompts} variant="outline" size="sm">
@@ -316,6 +415,13 @@ const AdminVerification = () => {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead className="w-[50px]">
+                                            <Checkbox 
+                                                checked={filteredPrompts.length > 0 && selectedPromptIds.length === filteredPrompts.length}
+                                                onCheckedChange={toggleSelectAll}
+                                                aria-label="Select all"
+                                            />
+                                        </TableHead>
                                         <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('created_at')}>
                                             <div className="flex items-center gap-2">
                                                 Tanggal
@@ -370,6 +476,13 @@ const AdminVerification = () => {
                                 <TableBody>
                                     {sortedPrompts.map((prompt) => (
                                         <TableRow key={prompt.id}>
+                                            <TableCell>
+                                                <Checkbox 
+                                                    checked={selectedPromptIds.includes(prompt.id)}
+                                                    onCheckedChange={() => toggleSelectOne(prompt.id)}
+                                                    aria-label={`Select ${prompt.title}`}
+                                                />
+                                            </TableCell>
                                             <TableCell className="whitespace-nowrap">
                                                 {format(new Date(prompt.created_at), 'dd MMM yyyy')}
                                             </TableCell>
@@ -457,22 +570,22 @@ const AdminVerification = () => {
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Judul</h3>
+                                    <h3 className="text-sm font-medium text-muted-foreground">Judul</h3>
                                     <p className="text-lg font-semibold">{selectedPrompt.title}</p>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Kategori</h3>
+                                    <h3 className="text-sm font-medium text-muted-foreground">Kategori</h3>
                                     <Badge>{selectedPrompt.category}</Badge>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Penulis</h3>
+                                    <h3 className="text-sm font-medium text-muted-foreground">Penulis</h3>
                                     <p className="text-sm font-medium">{selectedPrompt.profiles?.email || 'Pengguna Tidak Dikenal'}</p>
                                 </div>
                             </div>
 
                             <div>
-                                <h3 className="text-sm font-medium text-gray-500 mb-2">Prompt Lengkap</h3>
-                                <div className="bg-gray-100 p-4 rounded-md whitespace-pre-wrap text-sm">
+                                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Prompt Lengkap</h3>
+                                <div className="bg-gray-100 dark:bg-muted p-4 rounded-md whitespace-pre-wrap text-sm text-foreground">
                                     {selectedPrompt.full_prompt}
                                 </div>
                             </div>
@@ -530,14 +643,16 @@ const AdminVerification = () => {
             <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Tolak Prompt</DialogTitle>
+                        <DialogTitle>
+                            {selectedPrompt ? 'Tolak Prompt' : `Tolak Massal (${selectedPromptIds.length} Prompt)`}
+                        </DialogTitle>
                         <DialogDescription>
-                            Mohon berikan alasan penolakan prompt ini. Alasan akan dikirimkan ke pengguna.
+                            Mohon berikan alasan penolakan prompt ini (opsional). Alasan akan dikirimkan ke pengguna.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                         <Textarea 
-                            placeholder="Alasan penolakan..." 
+                            placeholder="Alasan penolakan (opsional)..." 
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
                             rows={4}
@@ -548,10 +663,10 @@ const AdminVerification = () => {
                         <Button 
                             variant="destructive" 
                             onClick={handleReject}
-                            disabled={actionLoading || !rejectionReason.trim()}
+                            disabled={actionLoading}
                         >
                             {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Tolak Prompt
+                            {selectedPrompt ? 'Tolak Prompt' : 'Tolak Massal'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

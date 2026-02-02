@@ -1,17 +1,20 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { ArrowUpDown, Star, Clock, Copy as CopyIcon, CalendarDays } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useState, forwardRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { slugify } from "@/lib/utils";
 import { useCopyLimit } from "@/hooks/useCopyLimit";
-import {
-  useMostCopiedPrompts,
-  useLatestPrompts,
-  usePopularKeywords,
-  useAllPromptsInfinite,
-  usePromptDetail,
-} from "@/hooks/usePromptQueries";
-import { PromptPreview, fetchPromptDetail } from "@/lib/promptQueries";
+import { useBookmarks } from "@/hooks/useBookmarks";
+import { PromptWithCreator } from "@/lib/promptQueries";
 import Navbar from "@/components/Navbar";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
@@ -20,52 +23,27 @@ import AnnouncementBanner from "@/components/AnnouncementBanner";
 import PromptCard from "@/components/PromptCard";
 import PromptSlider from "@/components/PromptSlider";
 import SkeletonCard from "@/components/SkeletonCard";
-import PromptDetailModal from "@/components/PromptDetailModal";
 import LoginModal from "@/components/LoginModal";
 import FloatingCTA from "@/components/FloatingCTA";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import { VirtuosoGrid } from "react-virtuoso";
+import {
+  useViralPrompts,
+  useMostCopiedPrompts,
+  useLatestPrompts,
+  useAllPrompts,
+  usePopularKeywords
+} from "@/hooks/usePrompts";
 
 const Index = () => {
-  // Use React Query hooks with caching for reduced Supabase egress
-  const { data: mostCopiedPrompts = [], isLoading: loadingMostCopied } = useMostCopiedPrompts(5);
-  const { data: latestPrompts = [], isLoading: loadingLatest } = useLatestPrompts(5);
-  const { data: popularKeywords = [] } = usePopularKeywords(8);
-
-  // Infinite scroll for all prompts
-  const {
-    data: allPromptsData,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useAllPromptsInfinite(12);
-
-  // Flatten paginated data
-  const allPrompts = useMemo(() => {
-    return allPromptsData?.pages.flatMap(page => page.data) || [];
-  }, [allPromptsData]);
-
-  // Selected prompt for modal - lazy loads full prompt
-  const [selectedPrompt, setSelectedPrompt] = useState<{
-    id: string;
-    title: string;
-    category: string;
-    prompt: string;
-    fullPrompt: string;
-    imageUrl: string;
-    additionalInfo?: string;
-    copyCount?: number;
-    creatorEmail?: string | null;
-  } | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-
+  const [sortBy, setSortBy] = useState<'created_at' | 'created_at_asc' | 'copy_count' | 'average_rating'>('created_at');
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const observerTarget = useRef<HTMLDivElement>(null);
 
   const {
     showLoginModal,
@@ -74,23 +52,24 @@ const Index = () => {
     remainingCopies
   } = useCopyLimit(!!user);
 
-  // Lazy loading observer for infinite scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
+  const { bookmarkedIds, toggleBookmark } = useBookmarks();
 
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
+  // React Query Hooks
+  const { data: viralPrompts = [], isLoading: loadingViral } = useViralPrompts();
+  const { data: mostCopiedPrompts = [], isLoading: loadingMostCopied } = useMostCopiedPrompts();
+  const { data: latestPrompts = [], isLoading: loadingLatest } = useLatestPrompts();
+  const { data: popularKeywords = [] } = usePopularKeywords();
 
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const {
+    data: allPromptsData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: loadingAll,
+    status
+  } = useAllPrompts(12, sortBy, searchQuery, selectedCategory);
+
+  const allPrompts = useMemo(() => allPromptsData?.pages.flat() || [], [allPromptsData]);
 
   const handleCopy = async (promptId: string, fullPrompt: string) => {
     // Check if user can copy (respects 3-copy limit for non-logged users)
@@ -123,53 +102,9 @@ const Index = () => {
     }
   };
 
-  // Copy handler that fetches full prompt first (since list views only have preview)
-  const handleCopyWithFetch = async (prompt: PromptPreview) => {
-    const { data } = await fetchPromptDetail(prompt.id);
-    if (data) {
-      await handleCopy(prompt.id, data.full_prompt);
-    }
+  const handleCardClick = (prompt: PromptWithCreator) => {
+    navigate(`/prompt/${slugify(prompt.title)}`);
   };
-
-  const handleCardClick = async (prompt: PromptPreview) => {
-    // Always fetch full prompt detail when clicking card (lazy load)
-    // This is because list views only have prompt_preview (truncated)
-    const { data } = await fetchPromptDetail(prompt.id);
-    if (data) {
-      setSelectedPrompt({
-        id: prompt.id,
-        title: prompt.title,
-        category: prompt.category,
-        prompt: data.full_prompt,
-        fullPrompt: data.full_prompt,
-        imageUrl: prompt.image_url || '',
-        additionalInfo: data.additional_info || undefined,
-        copyCount: prompt.copy_count,
-        creatorEmail: prompt.profiles?.email || null,
-      });
-    }
-    setIsDetailModalOpen(true);
-  };
-
-  // Filter prompts based on search/category
-  const filteredPrompts = useMemo(() => {
-    let filtered = [...allPrompts];
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.title.toLowerCase().includes(query) ||
-          p.category.toLowerCase().includes(query)
-      );
-    }
-
-    if (selectedCategory) {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
-    }
-
-    return filtered;
-  }, [allPrompts, searchQuery, selectedCategory]);
 
   const showSections = !searchQuery && !selectedCategory;
 
@@ -212,8 +147,8 @@ const Index = () => {
             <section className="w-full py-8">
               <div className="container mx-auto px-4">
                 <h2 className="text-2xl font-bold text-foreground mb-6">Prompt Viral Paling Banyak Copy</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <SkeletonCard key={i} />)}
                 </div>
               </div>
             </section>
@@ -224,6 +159,8 @@ const Index = () => {
               onCopy={handleCopyWithFetch as any}
               onCardClick={handleCardClick as any}
               onViewAll={() => navigate('/paling-banyak-copy')}
+              bookmarkedIds={bookmarkedIds}
+              onToggleBookmark={toggleBookmark}
             />
           )}
 
@@ -231,7 +168,7 @@ const Index = () => {
           {loadingLatest ? (
             <section className="w-full py-8">
               <div className="container mx-auto px-4">
-                <h2 className="text-2xl font-bold text-foreground mb-6">Terbaru</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-6">Terbaru</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
                 </div>
@@ -248,20 +185,55 @@ const Index = () => {
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
               viewAllLabel="Lihat semua"
+              bookmarkedIds={bookmarkedIds}
+              onToggleBookmark={toggleBookmark}
             />
           )}
         </>
       )}
 
       {/* All Prompts Section with Lazy Loading */}
-      <section id="semua-prompt" className="w-full py-8">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-foreground mb-6">
-            {showSections ? "Semua Prompt" : "Hasil Pencarian"}
-          </h2>
+      <section id="semua-prompt" className="w-full py-8 min-h-[500px]">
+        <div className="container mx-auto px-4 h-full flex flex-col">
+          <div className="flex items-center justify-between mb-6 gap-4">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">
+              {showSections ? "Semua Prompt" : "Hasil Pencarian"}
+            </h2>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <ArrowUpDown className="w-4 h-4" />
+                  Urutkan: {sortBy === 'created_at' ? 'Terbaru' : sortBy === 'created_at_asc' ? 'Terlama' : sortBy === 'copy_count' ? 'Terpopuler' : 'Rating Tertinggi'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setSortBy('created_at')}>
+                  <Clock className="w-4 h-4 mr-2" />
+                  Terbaru
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('created_at_asc')}>
+                  <CalendarDays className="w-4 h-4 mr-2" />
+                  Terlama
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('copy_count')}>
+                  <CopyIcon className="w-4 h-4 mr-2" />
+                  Terpopuler
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('average_rating')}>
+                  <Star className="w-4 h-4 mr-2" />
+                  Rating Tertinggi
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
-          {allPrompts.length === 0 && !isFetchingNextPage ? (
-            <div className="text-center py-20">
+          {/* Loading State */}
+          {loadingAll && allPrompts.length === 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 min-h-[400px]">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : allPrompts.length === 0 ? (
+            <div className="text-center py-20 min-h-[200px]">
               <p className="text-2xl text-lightText">
                 {searchQuery || selectedCategory
                   ? "Tidak ada prompt yang sesuai dengan filter"
@@ -269,12 +241,45 @@ const Index = () => {
               </p>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {filteredPrompts.map((prompt) => (
+            <VirtuosoGrid
+              useWindowScroll
+              totalCount={allPrompts.length}
+              endReached={() => {
+                if (hasNextPage && !isFetchingNextPage) {
+                  fetchNextPage();
+                }
+              }}
+              overscan={1000}
+              components={{
+                List: forwardRef<HTMLDivElement, any>(({ style, children, ...props }, ref) => (
+                  <div
+                    ref={ref}
+                    {...props}
+                    style={style}
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 pb-20"
+                  >
+                    {children}
+                  </div>
+                )),
+                Item: ({ children, ...props }) => (
+                  <div {...props} className="w-full h-full">
+                    {children}
+                  </div>
+                ),
+                Footer: () => (
+                  <div className="col-span-full flex justify-center py-6 h-20">
+                     {isFetchingNextPage && (
+                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                     )}
+                  </div>
+                )
+              }}
+              itemContent={(index) => {
+                const prompt = allPrompts[index];
+                return (
                   <PromptCard
                     key={prompt.id}
-                    id={parseInt(prompt.id)}
+                    id={prompt.id}
                     title={prompt.title}
                     category={prompt.category}
                     fullPrompt={prompt.prompt_preview || ''}
@@ -282,23 +287,18 @@ const Index = () => {
                     additionalInfo={prompt.additional_info || undefined}
                     copyCount={prompt.copy_count}
                     creatorEmail={prompt.profiles?.email || null}
-                    status={prompt.status}
-                    onCopy={() => handleCopyWithFetch(prompt)}
+                    onCopy={() => handleCopy(prompt.id, prompt.full_prompt)}
                     onClick={() => handleCardClick(prompt)}
+                    averageRating={prompt.average_rating}
+                    reviewCount={prompt.review_count}
+                    isBookmarked={bookmarkedIds.has(prompt.id)}
+                    onToggleBookmark={() => toggleBookmark(prompt.id)}
+                    status={prompt.status}
+                    priority={index < 12}
                   />
-                ))}
-              </div>
-
-              {/* Loading More Indicator */}
-              {isFetchingNextPage && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-6">
-                  {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
-                </div>
-              )}
-
-              {/* Intersection Observer Target */}
-              <div ref={observerTarget} className="h-10" />
-            </>
+                );
+              }}
+            />
           )}
         </div>
       </section>
@@ -307,12 +307,6 @@ const Index = () => {
       <FloatingCTA />
 
       {/* Modals */}
-      <PromptDetailModal
-        open={isDetailModalOpen}
-        onOpenChange={setIsDetailModalOpen}
-        prompt={selectedPrompt}
-        onCopy={() => selectedPrompt && handleCopy(selectedPrompt.id, selectedPrompt.fullPrompt)}
-      />
       <LoginModal
         open={showLoginModal}
         onOpenChange={setShowLoginModal}

@@ -65,6 +65,8 @@ const PromptSaya = () => {
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
+    const verifiedCount = prompts.filter(p => p.status === 'verified').length;
+
     useEffect(() => {
         if (!authLoading && !user) {
             navigate('/auth');
@@ -303,14 +305,14 @@ const PromptSaya = () => {
             />
             <Navbar />
 
-            <div className="container mx-auto px-4 py-12">
+            <div className="container mx-auto px-4 pt-12 pb-32 md:py-12">
                 <div className="max-w-4xl mx-auto">
                     <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-3xl font-bold text-heading">
+                        <h1 className="text-2xl md:text-3xl font-bold text-heading">
                             {view === 'list' ? 'Prompt Saya' : view === 'create' ? 'Buat Prompt Baru' : 'Edit Prompt'}
                         </h1>
                         {view === 'list' && (
-                            <Button onClick={() => { resetForm(); setView('create'); }}>
+                            <Button className="hidden md:flex" onClick={() => { resetForm(); setView('create'); }}>
                                 <Plus className="mr-2 h-4 w-4" /> Buat Prompt
                             </Button>
                         )}
@@ -320,6 +322,37 @@ const PromptSaya = () => {
                             </Button>
                         )}
                     </div>
+
+                    {/* Mobile Floating Action Button */}
+                    {view === 'list' && (
+                        <Button
+                            size="icon"
+                            className="md:hidden fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 text-primary-foreground"
+                            onClick={() => { resetForm(); setView('create'); }}
+                        >
+                            <Plus className="h-6 w-6" />
+                        </Button>
+                    )}
+
+                    {view === 'list' && verifiedCount >= 10 && (
+                        <div className="mb-6">
+                             <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+                                <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                <AlertTitle className="text-green-800 dark:text-green-300 font-semibold">Selamat! Anda memiliki {verifiedCount} prompt terverifikasi</AlertTitle>
+                                <AlertDescription className="text-green-700 dark:text-green-400 mt-1">
+                                    Anda berhak mendapatkan hadiah spesial. Silakan klaim dengan mengirimkan DM ke Instagram <a href="https://instagram.com/ruangi.id" target="_blank" rel="noopener noreferrer" className="font-bold underline hover:text-green-900 dark:hover:text-green-200">@ruangi.id</a>
+                                </AlertDescription>
+                            </Alert>
+                        </div>
+                    )}
+                    
+                    {view === 'list' && verifiedCount > 0 && verifiedCount < 10 && (
+                        <div className="mb-6">
+                            <p className="text-sm text-muted-foreground">
+                                Anda memiliki <span className="font-semibold text-primary">{verifiedCount}</span> prompt terverifikasi. Kumpulkan 10 prompt terverifikasi untuk mendapatkan hadiah!
+                            </p>
+                        </div>
+                    )}
 
                     {view === 'list' ? (
                         loading ? (

@@ -6,21 +6,22 @@ interface SearchBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   keywords?: string[];
+  placeholder?: string;
 }
 
-const SearchBar = ({ searchQuery, onSearchChange, keywords = [] }: SearchBarProps) => {
+const SearchBar = ({ searchQuery, onSearchChange, keywords = [], placeholder }: SearchBarProps) => {
   return (
     <section className="w-full py-6 bg-background">
       <div className="container mx-auto px-4">
         <div className="flex flex-col gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
             <Input
               type="text"
-              placeholder="Cari di judul dan isi prompt..."
+              placeholder={placeholder || "Cari di judul dan isi prompt..."}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-12 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground rounded-xl"
+              className="pl-12 h-12 bg-background border-2 border-primary/20 focus-visible:border-primary text-foreground placeholder:text-muted-foreground/70 rounded-xl shadow-sm"
             />
           </div>
           
