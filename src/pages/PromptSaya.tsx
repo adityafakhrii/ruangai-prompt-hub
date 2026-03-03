@@ -27,6 +27,7 @@ import {
 import { promptSchema } from "@/lib/validationSchemas";
 import SEO from "@/components/SEO";
 import ImageUpload from "@/components/ImageUpload";
+import { verifyPromptByAI } from "@/lib/gemini";
 
 const categories = [
     "Image", "Video", "Persona", "Vibe Coding", "Produktivitas"
@@ -64,6 +65,7 @@ const PromptSaya = () => {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [isVerifyingByAI, setIsVerifyingByAI] = useState(false);
 
     const verifiedCount = prompts.filter(p => p.status === 'verified').length;
 
@@ -183,8 +185,24 @@ const PromptSaya = () => {
         }
 
         setSubmitting(true);
+        setIsVerifyingByAI(true);
 
         try {
+            const hasImage = !!(imageFile || imageUrl);
+            const aiVerification = await verifyPromptByAI(title, category, fullPrompt, hasImage);
+
+            setIsVerifyingByAI(false);
+
+            if (!aiVerification.verified) {
+                toast({
+                    title: "Peringatan Analisis AI",
+                    description: aiVerification.feedback,
+                    variant: "destructive",
+                });
+                setSubmitting(false);
+                return;
+            }
+
             const token = getHeroicToken();
             if (!token) throw new Error('Not authenticated');
 
@@ -250,7 +268,7 @@ const PromptSaya = () => {
                 full_prompt: fullPrompt,
                 image_url: finalImageUrl || null,
                 additional_info: additionalInfo || null,
-                status: 'pending', // Reset status to pending on update or create
+                status: 'verified', // Automatis verified oleh AI
             };
 
             if (view === 'edit' && editingId) {
@@ -336,7 +354,7 @@ const PromptSaya = () => {
 
                     {view === 'list' && verifiedCount >= 10 && (
                         <div className="mb-6">
-                             <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+                            <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
                                 <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
                                 <AlertTitle className="text-green-800 dark:text-green-300 font-semibold">Selamat! Anda memiliki {verifiedCount} prompt terverifikasi</AlertTitle>
                                 <AlertDescription className="text-green-700 dark:text-green-400 mt-1">
@@ -345,7 +363,7 @@ const PromptSaya = () => {
                             </Alert>
                         </div>
                     )}
-                    
+
                     {view === 'list' && verifiedCount > 0 && verifiedCount < 10 && (
                         <div className="mb-6">
                             <p className="text-sm text-muted-foreground">
@@ -433,25 +451,43 @@ const PromptSaya = () => {
                             </div>
                         )
                     ) : (
-                        <div className="bg-card p-8 rounded-lg border border-border shadow-sm">
+                        <div className="bg-card p-8 rounded-lg border border-border shadow-sm relative overflow-hidden">
+                            {isVerifyingByAI && (
+                                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-md p-6 text-center animate-in fade-in duration-300">
+                                    <div className="relative w-24 h-24 mb-6">
+                                        <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+                                        <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="w-10 h-10 rounded-full bg-primary/20 animate-pulse" />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
+                                        AI Sedang Menganalisis Prompt
+                                    </h3>
+                                    <p className="text-muted-foreground text-sm max-w-[320px]">
+                                        Mohon tunggu sebentar. Sistem AI kami sedang mengevaluasi kualitas, detail, dan kriteria prompt Anda...
+                                    </p>
+                                </div>
+                            )}
+
                             <Alert className="mb-6 bg-blue-50 border-blue-200 text-blue-800">
                                 <Info className="h-4 w-4 text-blue-800" />
                                 <AlertTitle className="mb-2 font-semibold">Penting: Panduan & Proses Verifikasi</AlertTitle>
                                 <AlertDescription className="text-sm leading-relaxed">
                                     <div className="md:hidden space-y-2">
                                         <p>
-                                            Prompt harus positif, bermanfaat, dan <strong>bebas SARA</strong>.
+                                            Prompt harus detail, jelas nilainya, dan <strong>bebas SARA</strong>.
                                         </p>
                                         <p>
-                                            Prompt akan <strong>diverifikasi Admin</strong> sebelum terbit (status <em>Pending</em>).
+                                            Prompt akan <strong>dievaluasi AI secara realtime</strong>. Jika lolos, akan langsung terbit (Verified).
                                         </p>
                                     </div>
                                     <div className="hidden md:block space-y-2">
                                         <p>
-                                            Pastikan prompt yang Anda buat positif, bermanfaat, dan <strong>tidak mengandung unsur SARA atau konten negatif</strong>.
+                                            Pastikan prompt yang Anda buat sangat mendetail, instruktif, dan <strong>tidak mengandung unsur SARA atau konten ilegal</strong>. Jika kategori "Image", pastikan menyertakan gambar contoh.
                                         </p>
                                         <p>
-                                            Demi menjaga kualitas komunitas, setiap prompt baru akan melalui proses <strong>verifikasi oleh Admin</strong> terlebih dahulu. Prompt Anda akan berstatus <em>Pending</em> hingga disetujui. Mohon kesabarannya menunggu verifikasi admin sebelum prompt terpublish.
+                                            Setiap prompt baru akan melalui <strong>Review AI Otomatis</strong> saat dikirim. Jika kualitasnya memadai, prompt akan otomatis mendapat status <em>Verified</em> dan terpublikasi seketika. Jika gagal, ikuti saran revisi dari AI.
                                         </p>
                                     </div>
                                 </AlertDescription>
