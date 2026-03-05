@@ -76,7 +76,7 @@ const AnimatedRoutes = () => {
 
 const App = () => (
   <HelmetProvider>
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Sonner />
@@ -89,7 +89,7 @@ const App = () => (
               <BottomNav />
             </AuthProvider>
           </BrowserRouter>
-        <Analytics />
+          <Analytics />
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
