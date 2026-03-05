@@ -13,6 +13,7 @@ import Footer from "@/components/Footer";
 import { Loader2, Plus, Pencil, Trash2, X, Check, Clock, XCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -66,6 +67,7 @@ const PromptSaya = () => {
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [isVerifyingByAI, setIsVerifyingByAI] = useState(false);
+    const [verificationFeedback, setVerificationFeedback] = useState<{ type: 'error' | 'success', message: string } | null>(null);
 
     const verifiedCount = prompts.filter(p => p.status === 'verified').length;
 
@@ -118,6 +120,7 @@ const PromptSaya = () => {
         setAdditionalInfo("");
         setEditingId(null);
         setErrors({});
+        setVerificationFeedback(null);
     };
 
     const handleEdit = (prompt: Prompt) => {
@@ -129,6 +132,7 @@ const PromptSaya = () => {
         setImageFile(null);
         setEditingId(prompt.id);
         setErrors({});
+        setVerificationFeedback(null);
         setView('edit');
     };
 
@@ -166,6 +170,7 @@ const PromptSaya = () => {
         if (!user) return;
 
         setErrors({});
+        setVerificationFeedback(null);
 
         // Validate form data
         const result = promptSchema.safeParse({
@@ -202,10 +207,10 @@ const PromptSaya = () => {
                 });
                 finalStatus = 'pending';
             } else if (!aiVerification.verified) {
-                toast({
-                    title: "Peringatan Analisis AI",
-                    description: aiVerification.feedback,
-                    variant: "destructive",
+                // Show inline error alert
+                setVerificationFeedback({
+                    type: 'error',
+                    message: aiVerification.feedback
                 });
                 setSubmitting(false);
                 return;
@@ -302,8 +307,30 @@ const PromptSaya = () => {
             }
 
             await fetchPrompts();
+
+            // Show inline success alert if it was auto-verified
+            if (finalStatus === 'verified') {
+                setVerificationFeedback({
+                    type: 'success',
+                    message: "Bagus Mase! Prompt Anda sangat detail dan lolos verifikasi AI otomatis. Prompt Anda kini Live dan bisa digunakan semua orang."
+                });
+            } else {
+                setVerificationFeedback(null);
+            }
+
             setView('list');
-            resetForm();
+
+            // Reset form fields but keep the feedback
+            setTitle("");
+            setCategory("");
+            setFullPrompt("");
+            setImageUrl("");
+            setImageFile(null);
+            setImagePreview(null);
+            setAdditionalInfo("");
+            setEditingId(null);
+            setErrors({});
+
         } catch (error: unknown) {
             toast({
                 title: "Gagal menyimpan",
@@ -378,6 +405,23 @@ const PromptSaya = () => {
                                 Anda memiliki <span className="font-semibold text-primary">{verifiedCount}</span> prompt terverifikasi. Kumpulkan 10 prompt terverifikasi untuk mendapatkan hadiah!
                             </p>
                         </div>
+                    )}
+
+                    {view === 'list' && verificationFeedback?.type === 'success' && (
+                        <Alert className="mb-6 bg-green-50 border-green-500 text-green-900 shadow-sm relative pr-10">
+                            <Check className="h-5 w-5 text-green-600 mt-0.5" />
+                            <AlertTitle className="text-green-800 font-bold text-base">Berhasil Diverifikasi AI!</AlertTitle>
+                            <AlertDescription className="text-green-700 mt-1">
+                                {verificationFeedback.message}
+                            </AlertDescription>
+                            <button
+                                onClick={() => setVerificationFeedback(null)}
+                                className="absolute right-3 top-3 p-1 rounded-full hover:bg-green-100/50 text-green-700 transition-colors flex items-center justify-center h-7 w-7"
+                                aria-label="Tutup"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </Alert>
                     )}
 
                     {view === 'list' ? (
@@ -476,6 +520,24 @@ const PromptSaya = () => {
                                         Mohon tunggu sebentar. Sistem AI kami sedang mengevaluasi kualitas, detail, dan kriteria prompt Anda...
                                     </p>
                                 </div>
+                            )}
+
+                            {verificationFeedback?.type === 'error' && (
+                                <Alert className="mb-8 border-destructive/50 bg-destructive/10 text-destructive shadow-sm relative pr-10">
+                                    <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+                                    <AlertTitle className="font-bold text-base">Revisi Diperlukan (Masukan dari AI)</AlertTitle>
+                                    <AlertDescription className="mt-2 text-sm leading-relaxed">
+                                        {verificationFeedback.message}
+                                    </AlertDescription>
+                                    <button
+                                        type="button"
+                                        onClick={() => setVerificationFeedback(null)}
+                                        className="absolute right-3 top-3 p-1 rounded-full hover:bg-destructive/20 text-destructive transition-colors flex items-center justify-center h-7 w-7"
+                                        aria-label="Tutup pesan"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </Alert>
                             )}
 
                             <Alert className="mb-6 bg-blue-50 border-blue-200 text-blue-800">
