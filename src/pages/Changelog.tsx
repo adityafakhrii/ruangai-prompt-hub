@@ -4,8 +4,8 @@ import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   Calendar,
   Rocket,
   Shield,
@@ -24,6 +24,20 @@ interface Release {
 }
 
 const releases: Release[] = [
+  {
+    version: "v1.2.0",
+    date: "05 Mar 2026",
+    title: "AI Verification & Prompt Management",
+    changes: [
+      "Sistem Verifikasi Prompt Otomatis menggunakan AI (Gemini 2.5 Flash)",
+      "Fitur Verifikasi AI Satuan dan Massal di Dashboard Admin",
+      "Halaman 'Prompt Saya' untuk manajemen prompt pribadi",
+      "Pengecekan AI ketat untuk kelengkapan gambar, meta-prompt, dan anti-spam",
+      "Notifikasi (Banner Alert) inline untuk umpan balik verifikasi AI",
+      "Penyederhanaan fitur ubah tema menjadi Light/Dark mode langsung"
+    ],
+    type: "minor"
+  },
   {
     version: "v1.1.0",
     date: "02 Feb 2026",
@@ -148,17 +162,17 @@ const Changelog = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <SEO 
-        title="Riwayat Pembaruan" 
-        description="Catatan perubahan dan pembaruan aplikasi RuangAI Prompt Hub." 
+      <SEO
+        title="Riwayat Pembaruan"
+        description="Catatan perubahan dan pembaruan aplikasi RuangAI Prompt Hub."
       />
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => navigate(-1)}
             className="rounded-full"
           >
@@ -210,7 +224,7 @@ const Changelog = () => {
                         <span>{release.date}</span>
                       </div>
                     </div>
-                    
+
                     <ul className="space-y-2">
                       {release.changes.map((change, i) => (
                         <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/80 leading-relaxed">
