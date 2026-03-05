@@ -10,10 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Loader2, Plus, Pencil, Trash2, X, Check, Clock, XCircle, Info } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, X, Check, Clock, XCircle, Info, Bot, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import React from 'react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -29,6 +30,7 @@ import { promptSchema } from "@/lib/validationSchemas";
 import SEO from "@/components/SEO";
 import ImageUpload from "@/components/ImageUpload";
 import { verifyPromptByAI } from "@/lib/gemini";
+import { slugify } from "@/lib/utils";
 
 const categories = [
     "Image", "Video", "Persona", "Vibe Coding", "Produktivitas"
@@ -43,7 +45,22 @@ interface Prompt {
     created_at: string;
     status: 'pending' | 'verified' | 'rejected';
     rejection_reason?: string;
+    additional_info?: string | null;
 }
+
+const formatFeedbackText = (text: string) => {
+    if (!text) return null;
+
+    // Split by **...**
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+
+    return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>;
+        }
+        return <span key={i}>{part}</span>;
+    });
+};
 
 const PromptSaya = () => {
     const { user, loading: authLoading } = useAuth();
@@ -67,7 +84,8 @@ const PromptSaya = () => {
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [isVerifyingByAI, setIsVerifyingByAI] = useState(false);
-    const [verificationFeedback, setVerificationFeedback] = useState<{ type: 'error' | 'success', message: string } | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [verificationFeedback, setVerificationFeedback] = useState<{ type: 'success' | 'error', message: string, link?: string } | null>(null);
 
     const verifiedCount = prompts.filter(p => p.status === 'verified').length;
 
@@ -81,12 +99,12 @@ const PromptSaya = () => {
 
     const getHeroicToken = () => localStorage.getItem('heroic_token');
 
-    const fetchPrompts = async () => {
+    const fetchPrompts = async (setBackground = true): Promise<Prompt[]> => {
         try {
             const token = getHeroicToken();
             if (!token) {
                 setLoading(false);
-                return;
+                return [];
             }
 
             const response = await supabase.functions.invoke('manage-prompts', {
@@ -97,13 +115,16 @@ const PromptSaya = () => {
             });
 
             if (response.error) throw response.error;
-            setPrompts(response.data?.prompts || []);
+            const updatedPrompts = response.data?.prompts || [];
+            if (setBackground) setPrompts(updatedPrompts);
+            return updatedPrompts;
         } catch (error: unknown) {
             toast({
                 title: "Error fetching prompts",
                 description: error instanceof Error ? error.message : String(error),
                 variant: "destructive",
             });
+            return [];
         } finally {
             setLoading(false);
         }
@@ -128,6 +149,7 @@ const PromptSaya = () => {
         setCategory(prompt.category);
         setFullPrompt(prompt.full_prompt);
         setImageUrl(prompt.image_url || "");
+        setAdditionalInfo(prompt.additional_info || "");
         // imageMode removed
         setImageFile(null);
         setEditingId(prompt.id);
@@ -138,6 +160,7 @@ const PromptSaya = () => {
 
     const handleDelete = async (id: string) => {
         try {
+            setDeletingId(id);
             const token = getHeroicToken();
             if (!token) throw new Error('Not authenticated');
 
@@ -162,6 +185,8 @@ const PromptSaya = () => {
                 description: error instanceof Error ? error.message : String(error),
                 variant: "destructive",
             });
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -194,7 +219,8 @@ const PromptSaya = () => {
 
         try {
             const hasImage = !!(imageFile || imageUrl);
-            const aiVerification = await verifyPromptByAI(title, category, fullPrompt, hasImage);
+            const hasAdditionalInfo = additionalInfo.trim().length > 0;
+            const aiVerification = await verifyPromptByAI(title, category, fullPrompt, hasImage, hasAdditionalInfo);
 
             setIsVerifyingByAI(false);
 
@@ -282,6 +308,7 @@ const PromptSaya = () => {
                 image_url: finalImageUrl || null,
                 additional_info: additionalInfo || null,
                 status: finalStatus,
+                rejection_reason: finalStatus === 'verified' ? 'AI_VERIFIED_GEMINI_2_5_FLASH' : undefined,
             };
 
             if (view === 'edit' && editingId) {
@@ -306,13 +333,15 @@ const PromptSaya = () => {
                 toast({ title: "Berhasil ditambahkan", description: "Prompt baru telah dibuat." });
             }
 
-            await fetchPrompts();
+            // Fetch and SET prompts so the list updates immediately
+            const refreshedData = await fetchPrompts(true);
 
             // Show inline success alert if it was auto-verified
             if (finalStatus === 'verified') {
                 setVerificationFeedback({
                     type: 'success',
-                    message: "Bagus Mase! Prompt Anda sangat detail dan lolos verifikasi AI otomatis. Prompt Anda kini Live dan bisa digunakan semua orang."
+                    message: "Mantap! Prompt Anda sangat detail dan lolos verifikasi AI otomatis. Prompt Anda kini Live dan bisa digunakan semua orang.",
+                    link: `/prompt/${slugify(title)}`
                 });
             } else {
                 setVerificationFeedback(null);
@@ -412,7 +441,14 @@ const PromptSaya = () => {
                             <Check className="h-5 w-5 text-green-600 mt-0.5" />
                             <AlertTitle className="text-green-800 font-bold text-base">Berhasil Diverifikasi AI!</AlertTitle>
                             <AlertDescription className="text-green-700 mt-1">
-                                {verificationFeedback.message}
+                                <p>{formatFeedbackText(verificationFeedback.message)}</p>
+                                {verificationFeedback.link && (
+                                    <Button asChild variant="link" className="px-0 h-auto text-green-800 font-semibold mt-2">
+                                        <a href={verificationFeedback.link} target="_blank" rel="noopener noreferrer">
+                                            Lihat Prompt Anda ↗
+                                        </a>
+                                    </Button>
+                                )}
                             </AlertDescription>
                             <button
                                 onClick={() => setVerificationFeedback(null)}
@@ -490,9 +526,23 @@ const PromptSaya = () => {
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={() => handleDelete(prompt.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                                            Hapus
+                                                        <AlertDialogCancel disabled={deletingId === prompt.id}>Batal</AlertDialogCancel>
+                                                        <AlertDialogAction
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                handleDelete(prompt.id);
+                                                            }}
+                                                            disabled={deletingId === prompt.id}
+                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                        >
+                                                            {deletingId === prompt.id ? (
+                                                                <>
+                                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                    Menghapus...
+                                                                </>
+                                                            ) : (
+                                                                "Hapus"
+                                                            )}
                                                         </AlertDialogAction>
                                                     </AlertDialogFooter>
                                                 </AlertDialogContent>
@@ -507,13 +557,23 @@ const PromptSaya = () => {
                             {isVerifyingByAI && (
                                 <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-md p-6 text-center animate-in fade-in duration-300">
                                     <div className="relative w-24 h-24 mb-6">
+                                        {/* Outer glow */}
+                                        <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+
+                                        {/* Spinning rings */}
                                         <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
                                         <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+
+                                        {/* Inner pulse ring */}
+                                        <div className="absolute inset-2 rounded-full border border-primary/30 animate-ping" />
+
+                                        {/* Center Icon */}
                                         <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="w-10 h-10 rounded-full bg-primary/20 animate-pulse" />
+                                            <Bot className="w-10 h-10 text-primary animate-pulse" />
+                                            <Sparkles className="absolute top-4 right-4 w-4 h-4 text-yellow-400 animate-bounce" />
                                         </div>
                                     </div>
-                                    <h3 className="text-xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
+                                    <h3 className="text-xl font-bold mb-3 text-primary drop-shadow-sm">
                                         AI Sedang Menganalisis Prompt
                                     </h3>
                                     <p className="text-muted-foreground text-sm max-w-[320px]">
@@ -526,8 +586,8 @@ const PromptSaya = () => {
                                 <Alert className="mb-8 border-destructive/50 bg-destructive/10 text-destructive shadow-sm relative pr-10">
                                     <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
                                     <AlertTitle className="font-bold text-base">Revisi Diperlukan (Masukan dari AI)</AlertTitle>
-                                    <AlertDescription className="mt-2 text-sm leading-relaxed">
-                                        {verificationFeedback.message}
+                                    <AlertDescription className="mt-2 text-sm leading-relaxed whitespace-pre-line">
+                                        {formatFeedbackText(verificationFeedback.message)}
                                     </AlertDescription>
                                     <button
                                         type="button"

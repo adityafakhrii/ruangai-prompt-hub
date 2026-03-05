@@ -39,6 +39,7 @@ interface PromptWithProfile {
     additional_info: string | null;
     created_at: string;
     status: 'pending' | 'verified' | 'rejected';
+    rejection_reason?: string | null;
     profiles: {
         email: string | null;
     } | null;
@@ -89,7 +90,7 @@ const AdminVerification = () => {
 
             if (error) throw error;
             if (data?.error) throw new Error(data.error);
-            
+
             setPrompts(data.prompts as PromptWithProfile[]);
         } catch (error: unknown) {
             toast({
@@ -113,7 +114,7 @@ const AdminVerification = () => {
                 direction = null;
             }
         }
-        
+
         if (direction === null) {
             setSortConfig(null);
         } else {
@@ -124,13 +125,13 @@ const AdminVerification = () => {
     const sortedPrompts = [...filteredPrompts].sort((a, b) => {
         if (!sortConfig) return 0;
         const { key, direction } = sortConfig;
-        
+
         let aValue: string | PromptWithProfile[keyof PromptWithProfile] = key === 'profiles.email' ? (a.profiles?.email || '') :
-                          key === 'verifier.email' ? (a.verifier?.email || '') :
-                          a[key as keyof PromptWithProfile];
+            key === 'verifier.email' ? (a.verifier?.email || '') :
+                a[key as keyof PromptWithProfile];
         let bValue: string | PromptWithProfile[keyof PromptWithProfile] = key === 'profiles.email' ? (b.profiles?.email || '') :
-                          key === 'verifier.email' ? (b.verifier?.email || '') :
-                          b[key as keyof PromptWithProfile];
+            key === 'verifier.email' ? (b.verifier?.email || '') :
+                b[key as keyof PromptWithProfile];
 
         if (typeof aValue === 'string') aValue = aValue.toLowerCase();
         if (typeof bValue === 'string') bValue = bValue.toLowerCase();
@@ -139,7 +140,7 @@ const AdminVerification = () => {
         if (aValue > bValue) return direction === 'asc' ? 1 : -1;
         return 0;
     });
-    
+
     const counts = {
         all: prompts.length,
         pending: prompts.filter(p => p.status === 'pending').length,
@@ -165,7 +166,7 @@ const AdminVerification = () => {
 
     const handleBulkVerify = async () => {
         if (selectedPromptIds.length === 0) return;
-        
+
         setActionLoading(true);
         try {
             const token = localStorage.getItem('heroic_token');
@@ -189,11 +190,11 @@ const AdminVerification = () => {
                 title: "Berhasil Verifikasi Massal",
                 description: `${selectedPromptIds.length} prompt berhasil diverifikasi.`,
             });
-            
+
             // Optimistic update
-            setPrompts(prev => prev.map(p => 
-                selectedPromptIds.includes(p.id) 
-                    ? { ...p, status: 'verified', verifier: { email: user?.email || 'Anda' } } 
+            setPrompts(prev => prev.map(p =>
+                selectedPromptIds.includes(p.id)
+                    ? { ...p, status: 'verified', verifier: { email: user?.email || 'Anda' } }
                     : p
             ));
 
@@ -205,7 +206,7 @@ const AdminVerification = () => {
                 variant: "destructive",
             });
             // Revert or fetch on error if needed, but for now just show error
-            fetchPrompts(); 
+            fetchPrompts();
         } finally {
             setActionLoading(false);
         }
@@ -241,14 +242,14 @@ const AdminVerification = () => {
                 title: "Prompt Terverifikasi",
                 description: "Prompt sekarang sudah publik.",
             });
-            
+
             // Optimistic update
-            setPrompts(prev => prev.map(p => 
-                p.id === promptId 
-                    ? { ...p, status: 'verified', verifier: { email: user?.email || 'Anda' } } 
+            setPrompts(prev => prev.map(p =>
+                p.id === promptId
+                    ? { ...p, status: 'verified', verifier: { email: user?.email || 'Anda' } }
                     : p
             ));
-            
+
             setIsPreviewDialogOpen(false);
         } catch (error: unknown) {
             toast({
@@ -264,13 +265,13 @@ const AdminVerification = () => {
 
     const handleReject = async () => {
         if (!selectedPrompt && selectedPromptIds.length === 0) return;
-        
+
         // Removed mandatory check for rejectionReason
 
         setActionLoading(true);
         try {
             const token = localStorage.getItem('heroic_token');
-            
+
             if (selectedPrompt) {
                 const { data, error } = await supabase.functions.invoke('manage-prompts', {
                     body: {
@@ -295,9 +296,9 @@ const AdminVerification = () => {
                 });
 
                 // Optimistic update single
-                setPrompts(prev => prev.map(p => 
-                    p.id === selectedPrompt.id 
-                        ? { ...p, status: 'rejected', verifier: { email: user?.email || 'Anda' } } 
+                setPrompts(prev => prev.map(p =>
+                    p.id === selectedPrompt.id
+                        ? { ...p, status: 'rejected', verifier: { email: user?.email || 'Anda' } }
                         : p
                 ));
             } else {
@@ -324,9 +325,9 @@ const AdminVerification = () => {
                 });
 
                 // Optimistic update bulk
-                setPrompts(prev => prev.map(p => 
-                    selectedPromptIds.includes(p.id) 
-                        ? { ...p, status: 'rejected', verifier: { email: user?.email || 'Anda' } } 
+                setPrompts(prev => prev.map(p =>
+                    selectedPromptIds.includes(p.id)
+                        ? { ...p, status: 'rejected', verifier: { email: user?.email || 'Anda' } }
                         : p
                 ));
 
@@ -372,48 +373,44 @@ const AdminVerification = () => {
             <Navbar />
             <main className="flex-grow container mx-auto px-4 py-8">
                 <h1 className="text-2xl md:text-3xl font-bold mb-6 text-foreground">Dashboard Verifikasi Admin</h1>
-                
+
                 <div className="bg-white dark:bg-card rounded-lg shadow p-6 border dark:border-border">
                     <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
                         <div className="flex flex-col sm:flex-row items-center gap-4">
                             <div className="flex bg-gray-100 dark:bg-muted p-1 rounded-lg">
                                 <button
                                     onClick={() => { setFilterStatus('all'); setSelectedPromptIds([]); }}
-                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                                        filterStatus === 'all' 
-                                            ? 'bg-white dark:bg-background text-gray-900 dark:text-foreground shadow-sm' 
-                                            : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
-                                    }`}
+                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${filterStatus === 'all'
+                                        ? 'bg-white dark:bg-background text-gray-900 dark:text-foreground shadow-sm'
+                                        : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
+                                        }`}
                                 >
                                     Semua ({counts.all})
                                 </button>
                                 <button
                                     onClick={() => { setFilterStatus('pending'); setSelectedPromptIds([]); }}
-                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                                        filterStatus === 'pending' 
-                                            ? 'bg-white dark:bg-background text-yellow-700 dark:text-yellow-500 shadow-sm' 
-                                            : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
-                                    }`}
+                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${filterStatus === 'pending'
+                                        ? 'bg-white dark:bg-background text-yellow-700 dark:text-yellow-500 shadow-sm'
+                                        : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
+                                        }`}
                                 >
                                     Pending ({counts.pending})
                                 </button>
                                 <button
                                     onClick={() => { setFilterStatus('verified'); setSelectedPromptIds([]); }}
-                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                                        filterStatus === 'verified' 
-                                            ? 'bg-white dark:bg-background text-green-700 dark:text-green-500 shadow-sm' 
-                                            : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
-                                    }`}
+                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${filterStatus === 'verified'
+                                        ? 'bg-white dark:bg-background text-green-700 dark:text-green-500 shadow-sm'
+                                        : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
+                                        }`}
                                 >
                                     Verified ({counts.verified})
                                 </button>
                                 <button
                                     onClick={() => { setFilterStatus('rejected'); setSelectedPromptIds([]); }}
-                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                                        filterStatus === 'rejected' 
-                                            ? 'bg-white dark:bg-background text-red-700 dark:text-red-500 shadow-sm' 
-                                            : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
-                                    }`}
+                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${filterStatus === 'rejected'
+                                        ? 'bg-white dark:bg-background text-red-700 dark:text-red-500 shadow-sm'
+                                        : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
+                                        }`}
                                 >
                                     Rejected ({counts.rejected})
                                 </button>
@@ -448,7 +445,7 @@ const AdminVerification = () => {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead className="w-[50px]">
-                                            <Checkbox 
+                                            <Checkbox
                                                 checked={filteredPrompts.length > 0 && selectedPromptIds.length === filteredPrompts.length}
                                                 onCheckedChange={toggleSelectAll}
                                                 aria-label="Select all"
@@ -509,7 +506,7 @@ const AdminVerification = () => {
                                     {sortedPrompts.map((prompt) => (
                                         <TableRow key={prompt.id}>
                                             <TableCell>
-                                                <Checkbox 
+                                                <Checkbox
                                                     checked={selectedPromptIds.includes(prompt.id)}
                                                     onCheckedChange={() => toggleSelectOne(prompt.id)}
                                                     aria-label={`Select ${prompt.title}`}
@@ -549,9 +546,15 @@ const AdminVerification = () => {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <span className="text-sm text-gray-500">
-                                                    {prompt.verifier?.email || '-'}
-                                                </span>
+                                                {prompt.status === 'verified' && prompt.rejection_reason === 'AI_VERIFIED_GEMINI_2_5_FLASH' ? (
+                                                    <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50 font-normal shadow-sm">
+                                                        Verified by AI (Gemini 2.5 Flash)
+                                                    </Badge>
+                                                ) : (
+                                                    <span className="text-sm text-gray-500">
+                                                        {prompt.verifier?.email || '-'}
+                                                    </span>
+                                                )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
@@ -560,9 +563,9 @@ const AdminVerification = () => {
                                                         Lihat
                                                     </Button>
                                                     {prompt.status !== 'verified' && (
-                                                        <Button 
-                                                            variant="default" 
-                                                            size="sm" 
+                                                        <Button
+                                                            variant="default"
+                                                            size="sm"
                                                             className="bg-green-600 hover:bg-green-700"
                                                             onClick={() => handleVerify(prompt.id)}
                                                             title="Verifikasi"
@@ -571,8 +574,8 @@ const AdminVerification = () => {
                                                         </Button>
                                                     )}
                                                     {prompt.status !== 'rejected' && (
-                                                        <Button 
-                                                            variant="destructive" 
+                                                        <Button
+                                                            variant="destructive"
                                                             size="sm"
                                                             onClick={() => openRejectDialog(prompt)}
                                                             title="Tolak"
@@ -597,78 +600,78 @@ const AdminVerification = () => {
                     <DialogHeader className="p-6 pb-2">
                         <DialogTitle>Tinjau Prompt</DialogTitle>
                     </DialogHeader>
-                    
+
                     <div className="overflow-y-auto p-6 pt-2 flex-1 custom-scrollbar">
-                    {selectedPrompt && (
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <h3 className="text-sm font-medium text-muted-foreground">Judul</h3>
-                                    <p className="text-lg font-semibold">{selectedPrompt.title}</p>
+                        {selectedPrompt && (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h3 className="text-sm font-medium text-muted-foreground">Judul</h3>
+                                        <p className="text-lg font-semibold">{selectedPrompt.title}</p>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-medium text-muted-foreground">Kategori</h3>
+                                        <Badge>{selectedPrompt.category}</Badge>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-medium text-muted-foreground">Penulis</h3>
+                                        <p className="text-sm font-medium">{selectedPrompt.profiles?.email || 'Pengguna Tidak Dikenal'}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-sm font-medium text-muted-foreground">Kategori</h3>
-                                    <Badge>{selectedPrompt.category}</Badge>
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-medium text-muted-foreground">Penulis</h3>
-                                    <p className="text-sm font-medium">{selectedPrompt.profiles?.email || 'Pengguna Tidak Dikenal'}</p>
-                                </div>
-                            </div>
 
-                            <div>
-                                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Prompt Lengkap</h3>
-                                <div className="bg-gray-100 dark:bg-muted p-4 rounded-md whitespace-pre-wrap text-sm text-foreground">
-                                    {selectedPrompt.full_prompt}
-                                </div>
-                            </div>
-
-                            {selectedPrompt.additional_info && (
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500 mb-2">Info Tambahan</h3>
-                                    <p className="text-sm">{selectedPrompt.additional_info}</p>
+                                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Prompt Lengkap</h3>
+                                    <div className="bg-gray-100 dark:bg-muted p-4 rounded-md whitespace-pre-wrap text-sm text-foreground">
+                                        {selectedPrompt.full_prompt}
+                                    </div>
                                 </div>
-                            )}
 
-                            {selectedPrompt.image_url && (
-                                <div>
-                                    <h3 className="text-sm font-medium text-gray-500 mb-2">Gambar</h3>
-                                    <img 
-                                        src={selectedPrompt.image_url} 
-                                        alt="Pratinjau Prompt" 
-                                        className="rounded-lg max-h-[300px] object-cover"
-                                    />
-                                </div>
-                            )}
-
-                            <div className="flex justify-end gap-3 pt-4 border-t">
-                                <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
-                                    Batal
-                                </Button>
-                                {selectedPrompt.status === 'pending' && (
-                                    <>
-                                        <Button 
-                                            variant="destructive" 
-                                            onClick={() => {
-                                                setIsPreviewDialogOpen(false);
-                                                openRejectDialog(selectedPrompt);
-                                            }}
-                                        >
-                                            Tolak
-                                        </Button>
-                                        <Button 
-                                            className="bg-green-600 hover:bg-green-700"
-                                            onClick={() => handleVerify(selectedPrompt.id)}
-                                            disabled={actionLoading}
-                                        >
-                                            {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Setujui & Verifikasi
-                                        </Button>
-                                    </>
+                                {selectedPrompt.additional_info && (
+                                    <div>
+                                        <h3 className="text-sm font-medium text-gray-500 mb-2">Info Tambahan</h3>
+                                        <p className="text-sm">{selectedPrompt.additional_info}</p>
+                                    </div>
                                 )}
+
+                                {selectedPrompt.image_url && (
+                                    <div>
+                                        <h3 className="text-sm font-medium text-gray-500 mb-2">Gambar</h3>
+                                        <img
+                                            src={selectedPrompt.image_url}
+                                            alt="Pratinjau Prompt"
+                                            className="rounded-lg max-h-[300px] object-cover"
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-3 pt-4 border-t">
+                                    <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
+                                        Batal
+                                    </Button>
+                                    {selectedPrompt.status === 'pending' && (
+                                        <>
+                                            <Button
+                                                variant="destructive"
+                                                onClick={() => {
+                                                    setIsPreviewDialogOpen(false);
+                                                    openRejectDialog(selectedPrompt);
+                                                }}
+                                            >
+                                                Tolak
+                                            </Button>
+                                            <Button
+                                                className="bg-green-600 hover:bg-green-700"
+                                                onClick={() => handleVerify(selectedPrompt.id)}
+                                                disabled={actionLoading}
+                                            >
+                                                {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Setujui & Verifikasi
+                                            </Button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                     </div>
                 </DialogContent>
             </Dialog>
@@ -685,22 +688,22 @@ const AdminVerification = () => {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex flex-col gap-4">
-                        <Textarea 
-                            placeholder="Alasan penolakan (opsional)..." 
+                        <Textarea
+                            placeholder="Alasan penolakan (opsional)..."
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
                             className="min-h-[120px] resize-none text-base"
                         />
                         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:space-x-2">
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 onClick={() => setIsRejectDialogOpen(false)}
                                 className="w-full sm:w-auto h-11 sm:h-10"
                             >
                                 Batal
                             </Button>
-                            <Button 
-                                variant="destructive" 
+                            <Button
+                                variant="destructive"
                                 onClick={handleReject}
                                 disabled={actionLoading}
                                 className="w-full sm:w-auto h-11 sm:h-10"

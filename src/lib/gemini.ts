@@ -14,7 +14,8 @@ export const verifyPromptByAI = async (
     title: string,
     category: string,
     fullPrompt: string,
-    hasImage: boolean
+    hasImage: boolean,
+    hasAdditionalInfo: boolean
 ): Promise<AIVerificationResult> => {
     if (!apiKey) {
         console.warn("Gemini API key is missing. Skipping AI verification.");
@@ -36,15 +37,20 @@ Jika prompt memiliki KUALITAS TINGGI, SANGAT DETAIL, TERSTRUKTUR, dan memiliki j
 Jika prompt berkualitas rendah, terlalu singkat, membingungkan, terkesan malas (lazy prompting), atau meminta fungsi visual tapi tidak menyertakan contoh visual, maka "verified" harus bernilai false dan beri "feedback" yang jelas tentang apa masalahnya dan cara merevisinya.
 
 KRITERIA WAJIB:
-1. Judul harus spesifik dan merepresentasikan isi prompt dengan baik.
-2. Kedetailan: Prompt harus detail (idealnya memiliki konteks, instruksi spesifik, dan format output yang diinginkan). Prompt yang hanya 1-3 kalimat pendek atau instruksi yang sangat basic (misal: "buatkan artikel SEO", "gambar kucing") HARUS DITOLAK karena kurang berguna bagi komunitas.
-3. Kategori Visual: Jika Kategori adalah "Image" atau "Video", pengguna WAJIB menyertakan gambar aslinya (hasImage harus true) karena pengguna lain butuh melihat seperti apa hasil gambar dari prompt tersebut. Jika hasImage false untuk kategori visual, TOLAK (verified: false) dan minta pengguna mengupload gambar hasilnya.
-4. Prompt tidak boleh mengandung unsur SARA, pornografi, atau konten ilegal. Jika ada, langsung tolak (verified: false) dengan peringatan.
+1. Judul dan Isi HARUS KONSISTEN. Judul harus spesifik dan merepresentasikan isi prompt. Jika judul dan prompt bertolak belakang (misal: judul "Resep Masakan" tapi isi prompt "Minta kode React"), TOLAK (verified: false) dan sebutkan ketidakkonsistenannya.
+2. Kedetailan & Pengecualian Meta-Prompt: Prompt harus detail (idealnya memiliki konteks, instruksi spesifik, dan format output yang diinginkan). Prompt yang hanya 1-3 kalimat pendek atau instruksi yang sangat basic HARUS DITOLAK. PENGECUALIAN: Jika prompt bertujuan untuk "membuat prompt lain" (Meta-Prompt), prompt diizinkan mesikpun singkat, asalkan *hasAdditionalInfo* bernilai true (pengguna sudah mengisi Keterangan Tambahan). Jika *hasAdditionalInfo* false, TOLAK (verified: false) dan wajibkan pengguna menuliskan detail di kolom "Keterangan Tambahan".
+3. Kategori Visual Wajib Gambar: 
+   - Kategori "Image": WAJIB ada gambar aslinya (hasImage harus true).
+   - Kategori "Video": WAJIB melampirkan screenshot/preview cuplikan videonya (hasImage harus true).
+   - Kategori "Vibe Coding": WAJIB melampirkan screenshot tampilan hasil web/aplikasinya (hasImage harus true).
+   Jika Kategori memuat unsur visual di atas namun tidak ada lampiran gambar (hasImage false), TOLAK (verified: false) dan minta pengguna spesifik mengupload gambar sesuai kategorinya.
+4. Spam & Konten Ilegal: Prompt TIDAK BOLEH mengandung unsur SARA, pornografi, maupun SPAM eksplisit/implisit (termasuk tapi tidak terbatas pada promosikan judi online/judol, pinjaman online/pinjol ilegal, malware, scam). Jika terdeteksi, LANGSUNG TOLAK (verified: false) dengan peringatan tegas tanpa toleransi.
 
 Berikut adalah data prompt yang disubmit:
 Judul: "${title}"
 Kategori: "${category}"
 Apakah menyertakan gambar contoh?: ${hasImage ? "Ya" : "Tidak"}
+Apakah kolom Keterangan Tambahan diisi?: ${hasAdditionalInfo ? "Ya" : "Tidak"}
 Isi Prompt:
 "${fullPrompt}"
 
