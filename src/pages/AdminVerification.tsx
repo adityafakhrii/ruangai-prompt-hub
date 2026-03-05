@@ -721,7 +721,7 @@ const AdminVerification = () => {
                                                         <Eye className="h-4 w-4 mr-1" />
                                                         Lihat
                                                     </Button>
-                                                    {prompt.status !== 'verified' && (
+                                                    {prompt.status === 'pending' && (
                                                         <>
                                                             <Button
                                                                 variant="default"
