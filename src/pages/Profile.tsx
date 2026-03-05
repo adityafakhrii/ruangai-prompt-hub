@@ -42,7 +42,7 @@ const Profile = () => {
         description="Kelola profil dan pengaturan akun RuangAI Prompt Hub Anda."
       />
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8 max-w-md">
         {/* User Header */}
         <div className="flex flex-col items-center mb-8">
@@ -59,9 +59,9 @@ const Profile = () => {
         {/* Menu Links */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
-            <a 
-              href="https://ruangai.codepolitan.com/" 
-              target="_blank" 
+            <a
+              href="https://ruangai.codepolitan.com/"
+              target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors border-b border-border/50 last:border-0"
             >
@@ -74,7 +74,7 @@ const Profile = () => {
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </a>
 
-            <Link 
+            <Link
               to="/prompt-tersimpan"
               className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors border-b border-border/50 last:border-0"
             >
@@ -91,7 +91,7 @@ const Profile = () => {
             </Link>
 
             {isAdmin && (
-              <Link 
+              <Link
                 to="/admin/verification"
                 className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors border-b border-border/50 last:border-0"
               >
@@ -107,7 +107,7 @@ const Profile = () => {
           </div>
 
           <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm mt-6">
-            <button 
+            <button
               onClick={handleSignOut}
               className="w-full flex items-center justify-between p-4 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-red-600 dark:text-red-400"
             >
@@ -120,9 +120,9 @@ const Profile = () => {
               <ChevronRight className="h-5 w-5 text-red-400/50" />
             </button>
           </div>
-          
+
           <Link to="/changelog" className="text-center text-xs text-muted-foreground mt-16 hover:text-primary transition-colors block w-fit mx-auto">
-            RuangAI Prompt Hub v1.0.0
+            RuangAI Prompt Hub v1.2.0
           </Link>
         </div>
       </div>

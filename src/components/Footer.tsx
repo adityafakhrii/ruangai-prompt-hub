@@ -56,9 +56,9 @@ const Footer = () => {
             <h3 className="font-semibold text-foreground mb-3">Follow Us</h3>
             <ul className="space-y-2">
               <li>
-                <a 
-                  href="https://instagram.com/ruangai.id" 
-                  target="_blank" 
+                <a
+                  href="https://instagram.com/ruangai.id"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-lightText hover:text-foreground transition-colors"
                 >
@@ -73,7 +73,7 @@ const Footer = () => {
             © {currentYear} RuangAI Prompt. All rights reserved.
           </p>
           <Link to="/changelog" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            RuangAI Prompt Hub v1.0.0
+            RuangAI Prompt Hub v1.2.0
           </Link>
         </div>
       </div>
