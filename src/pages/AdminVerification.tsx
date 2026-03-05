@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Check, X, Eye, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Loader2, Check, X, Eye, ArrowUpDown, ArrowUp, ArrowDown, Sparkles } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -29,6 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
+import { verifyPromptByAI } from "@/lib/gemini";
 
 interface PromptWithProfile {
     id: string;
@@ -218,6 +219,79 @@ const AdminVerification = () => {
         setIsRejectDialogOpen(true);
     };
 
+    const handleBulkAIVerify = async () => {
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem('heroic_token');
+            const promptsToVerify = prompts.filter(p => selectedPromptIds.includes(p.id));
+
+            let verifiedCount = 0;
+            let rejectedCount = 0;
+            const newPromptsState = [...prompts];
+
+            // Process sequentially to be safe against rate limits
+            for (const prompt of promptsToVerify) {
+                const hasAdditionalInfo = !!(prompt.additional_info && prompt.additional_info.trim().length > 0);
+                const aiResult = await verifyPromptByAI(
+                    prompt.title,
+                    prompt.category,
+                    prompt.full_prompt,
+                    !!prompt.image_url,
+                    hasAdditionalInfo
+                );
+
+                if (aiResult.isError) {
+                    continue; // Skip this one on AI error
+                }
+
+                const finalStatus = aiResult.verified ? 'verified' : 'rejected';
+                const finalReason = aiResult.verified ? 'AI_VERIFIED_GEMINI_2_5_FLASH' : `[AI_REJECTED] ${aiResult.feedback}`;
+
+                const { error } = await supabase.functions.invoke('manage-prompts', {
+                    body: {
+                        action: 'update',
+                        token,
+                        promptId: prompt.id,
+                        data: {
+                            status: finalStatus,
+                            verified_at: new Date().toISOString(),
+                            verifier_id: user?.id,
+                            rejection_reason: finalReason
+                        }
+                    }
+                });
+
+                if (!error) {
+                    if (aiResult.verified) verifiedCount++;
+                    else rejectedCount++;
+
+                    // Update state array incrementally
+                    const index = newPromptsState.findIndex(p => p.id === prompt.id);
+                    if (index !== -1) {
+                        newPromptsState[index] = { ...newPromptsState[index], status: finalStatus, rejection_reason: finalReason, verifier: { email: user?.email || 'Anda' } };
+                    }
+                }
+            }
+
+            toast({
+                title: "Bulk AI Verification Selesai",
+                description: `${verifiedCount} lolos, ${rejectedCount} ditolak oleh AI.`,
+            });
+
+            setPrompts(newPromptsState);
+            setSelectedPromptIds([]);
+        } catch (error: unknown) {
+            toast({
+                title: "Gagal Bulk AI Verify",
+                description: error instanceof Error ? error.message : 'Terjadi kesalahan eksekusi batch',
+                variant: "destructive",
+            });
+            fetchPrompts();
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const handleVerify = async (promptId: string) => {
         setActionLoading(true);
         try {
@@ -263,6 +337,76 @@ const AdminVerification = () => {
         }
     };
 
+    const handleAIVerify = async (prompt: PromptWithProfile) => {
+        setActionLoading(true);
+        try {
+            const hasAdditionalInfo = !!(prompt.additional_info && prompt.additional_info.trim().length > 0);
+
+            // Run AI Verification
+            const aiResult = await verifyPromptByAI(
+                prompt.title,
+                prompt.category,
+                prompt.full_prompt,
+                !!prompt.image_url,
+                hasAdditionalInfo
+            );
+
+            if (aiResult.isError) {
+                toast({
+                    title: "Gagal Verifikasi AI",
+                    description: aiResult.feedback,
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            const token = localStorage.getItem('heroic_token');
+            const finalStatus = aiResult.verified ? 'verified' : 'rejected';
+            const finalReason = aiResult.verified ? 'AI_VERIFIED_GEMINI_2_5_FLASH' : `[AI_REJECTED] ${aiResult.feedback}`;
+
+            const { data, error } = await supabase.functions.invoke('manage-prompts', {
+                body: {
+                    action: 'update',
+                    token,
+                    promptId: prompt.id,
+                    data: {
+                        status: finalStatus,
+                        verified_at: new Date().toISOString(),
+                        verifier_id: user?.id,
+                        rejection_reason: finalReason
+                    }
+                }
+            });
+
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+
+            toast({
+                title: aiResult.verified ? "Lolos Verifikasi AI" : "Ditolak oleh AI",
+                description: aiResult.feedback || "Status prompt telah diupdate oleh AI.",
+                variant: aiResult.verified ? "default" : "destructive",
+            });
+
+            // Optimistic update
+            setPrompts(prev => prev.map(p =>
+                p.id === prompt.id
+                    ? { ...p, status: finalStatus, rejection_reason: finalReason, verifier: { email: user?.email || 'Anda' } }
+                    : p
+            ));
+
+            setIsPreviewDialogOpen(false);
+        } catch (error: unknown) {
+            toast({
+                title: "Gagal memproses AI verifikasi",
+                description: error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diketahui',
+                variant: "destructive",
+            });
+            fetchPrompts();
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const handleReject = async () => {
         if (!selectedPrompt && selectedPromptIds.length === 0) return;
 
@@ -298,7 +442,7 @@ const AdminVerification = () => {
                 // Optimistic update single
                 setPrompts(prev => prev.map(p =>
                     p.id === selectedPrompt.id
-                        ? { ...p, status: 'rejected', verifier: { email: user?.email || 'Anda' } }
+                        ? { ...p, status: 'rejected', rejection_reason: rejectionReason, verifier: { email: user?.email || 'Anda' } }
                         : p
                 ));
             } else {
@@ -327,7 +471,7 @@ const AdminVerification = () => {
                 // Optimistic update bulk
                 setPrompts(prev => prev.map(p =>
                     selectedPromptIds.includes(p.id)
-                        ? { ...p, status: 'rejected', verifier: { email: user?.email || 'Anda' } }
+                        ? { ...p, status: 'rejected', rejection_reason: rejectionReason, verifier: { email: user?.email || 'Anda' } }
                         : p
                 ));
 
@@ -358,6 +502,13 @@ const AdminVerification = () => {
     const openPreview = (prompt: PromptWithProfile) => {
         setSelectedPrompt(prompt);
         setIsPreviewDialogOpen(true);
+    };
+
+    const getSortIcon = (key: string) => {
+        if (!sortConfig || sortConfig.key !== key) {
+            return <ArrowUpDown className="h-4 w-4 opacity-50" />;
+        }
+        return sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
     };
 
     if (authLoading || loading) {
@@ -418,11 +569,15 @@ const AdminVerification = () => {
 
                             {selectedPromptIds.length > 0 && (
                                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-5">
-                                    <Button size="sm" onClick={handleBulkVerify} className="bg-green-600 hover:bg-green-700">
-                                        <Check className="w-4 h-4 mr-1" />
-                                        Verifikasi ({selectedPromptIds.length})
+                                    <Button size="sm" onClick={handleBulkAIVerify} className="bg-blue-600 hover:bg-blue-700 text-white" disabled={actionLoading}>
+                                        <Sparkles className="w-4 h-4 mr-1" />
+                                        Verifikasi AI ({selectedPromptIds.length})
                                     </Button>
-                                    <Button size="sm" variant="destructive" onClick={openBulkRejectDialog}>
+                                    <Button size="sm" onClick={handleBulkVerify} className="bg-green-600 hover:bg-green-700" disabled={actionLoading}>
+                                        <Check className="w-4 h-4 mr-1" />
+                                        Verifikasi Manual ({selectedPromptIds.length})
+                                    </Button>
+                                    <Button size="sm" variant="destructive" onClick={openBulkRejectDialog} disabled={actionLoading}>
                                         <X className="w-4 h-4 mr-1" />
                                         Tolak ({selectedPromptIds.length})
                                     </Button>
@@ -454,51 +609,44 @@ const AdminVerification = () => {
                                         <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('created_at')}>
                                             <div className="flex items-center gap-2">
                                                 Tanggal
-                                                {sortConfig?.key === 'created_at' ? (
-                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                                {getSortIcon('created_at')}
                                             </div>
                                         </TableHead>
                                         <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('title')}>
                                             <div className="flex items-center gap-2">
                                                 Judul
-                                                {sortConfig?.key === 'title' ? (
-                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                                {getSortIcon('title')}
                                             </div>
                                         </TableHead>
                                         <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('category')}>
                                             <div className="flex items-center gap-2">
                                                 Kategori
-                                                {sortConfig?.key === 'category' ? (
-                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                                {getSortIcon('category')}
                                             </div>
                                         </TableHead>
                                         <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('status')}>
                                             <div className="flex items-center gap-2">
                                                 Status
-                                                {sortConfig?.key === 'status' ? (
-                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                                {getSortIcon('status')}
                                             </div>
                                         </TableHead>
                                         <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('profiles.email')}>
                                             <div className="flex items-center gap-2">
                                                 Penulis
-                                                {sortConfig?.key === 'profiles.email' ? (
-                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                                {getSortIcon('profiles.email')}
                                             </div>
                                         </TableHead>
                                         <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('verifier.email')}>
                                             <div className="flex items-center gap-2">
                                                 Verifier
-                                                {sortConfig?.key === 'verifier.email' ? (
-                                                    sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                                                ) : <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                                                {getSortIcon('verifier.email')}
                                             </div>
                                         </TableHead>
+                                        {filterStatus === 'rejected' && (
+                                            <TableHead className="w-[200px]">
+                                                Alasan
+                                            </TableHead>
+                                        )}
                                         <TableHead className="text-right">Aksi</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -550,12 +698,23 @@ const AdminVerification = () => {
                                                     <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50 font-normal shadow-sm">
                                                         Verified by AI (Gemini 2.5 Flash)
                                                     </Badge>
+                                                ) : prompt.status === 'rejected' && prompt.rejection_reason?.startsWith('[AI_REJECTED]') ? (
+                                                    <Badge variant="outline" className="text-indigo-600 border-indigo-200 bg-indigo-50 font-normal shadow-sm">
+                                                        Rejected by AI (Gemini 2.5 Flash)
+                                                    </Badge>
                                                 ) : (
                                                     <span className="text-sm text-gray-500">
                                                         {prompt.verifier?.email || '-'}
                                                     </span>
                                                 )}
                                             </TableCell>
+                                            {filterStatus === 'rejected' && (
+                                                <TableCell>
+                                                    <span className="text-sm text-gray-500 line-clamp-2" title={prompt.rejection_reason?.replace('[AI_REJECTED] ', '') || '-'}>
+                                                        {prompt.rejection_reason?.replace('[AI_REJECTED] ', '') || '-'}
+                                                    </span>
+                                                </TableCell>
+                                            )}
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <Button variant="outline" size="sm" onClick={() => openPreview(prompt)}>
@@ -563,15 +722,28 @@ const AdminVerification = () => {
                                                         Lihat
                                                     </Button>
                                                     {prompt.status !== 'verified' && (
-                                                        <Button
-                                                            variant="default"
-                                                            size="sm"
-                                                            className="bg-green-600 hover:bg-green-700"
-                                                            onClick={() => handleVerify(prompt.id)}
-                                                            title="Verifikasi"
-                                                        >
-                                                            <Check className="h-4 w-4" />
-                                                        </Button>
+                                                        <>
+                                                            <Button
+                                                                variant="default"
+                                                                size="sm"
+                                                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                                onClick={() => handleAIVerify(prompt)}
+                                                                disabled={actionLoading}
+                                                                title="Verifikasi by AI"
+                                                            >
+                                                                <Sparkles className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="default"
+                                                                size="sm"
+                                                                className="bg-green-600 hover:bg-green-700"
+                                                                onClick={() => handleVerify(prompt.id)}
+                                                                disabled={actionLoading}
+                                                                title="Verifikasi Manual"
+                                                            >
+                                                                <Check className="h-4 w-4" />
+                                                            </Button>
+                                                        </>
                                                     )}
                                                     {prompt.status !== 'rejected' && (
                                                         <Button
@@ -604,6 +776,23 @@ const AdminVerification = () => {
                     <div className="overflow-y-auto p-6 pt-2 flex-1 custom-scrollbar">
                         {selectedPrompt && (
                             <div className="space-y-6">
+                                {selectedPrompt.status === 'rejected' && selectedPrompt.rejection_reason && (
+                                    <div className="bg-red-50 border border-red-100 text-red-800 p-4 rounded-lg">
+                                        <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                            <X className="w-4 h-4" />
+                                            Alasan Penolakan
+                                            {selectedPrompt.rejection_reason.startsWith('[AI_REJECTED]') && (
+                                                <Badge variant="outline" className="ml-2 text-indigo-600 border-indigo-200 bg-indigo-50/50 font-normal shadow-sm">
+                                                    Ditolak oleh AI (Gemini 2.5)
+                                                </Badge>
+                                            )}
+                                        </h3>
+                                        <p className="text-sm whitespace-pre-wrap">
+                                            {selectedPrompt.rejection_reason.replace('[AI_REJECTED] ', '')}
+                                        </p>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <h3 className="text-sm font-medium text-muted-foreground">Judul</h3>
@@ -656,8 +845,18 @@ const AdminVerification = () => {
                                                     setIsPreviewDialogOpen(false);
                                                     openRejectDialog(selectedPrompt);
                                                 }}
+                                                disabled={actionLoading}
                                             >
                                                 Tolak
+                                            </Button>
+                                            <Button
+                                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                onClick={() => handleAIVerify(selectedPrompt)}
+                                                disabled={actionLoading}
+                                            >
+                                                {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                <Sparkles className="mr-2 h-4 w-4" />
+                                                Verifikasi via AI
                                             </Button>
                                             <Button
                                                 className="bg-green-600 hover:bg-green-700"
@@ -665,7 +864,7 @@ const AdminVerification = () => {
                                                 disabled={actionLoading}
                                             >
                                                 {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                Setujui & Verifikasi
+                                                Setujui Manual
                                             </Button>
                                         </>
                                     )}
