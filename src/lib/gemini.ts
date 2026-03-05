@@ -7,6 +7,7 @@ const genAI = new GoogleGenerativeAI(apiKey || "");
 export interface AIVerificationResult {
     verified: boolean;
     feedback: string;
+    isError?: boolean;
 }
 
 export const verifyPromptByAI = async (
@@ -18,8 +19,9 @@ export const verifyPromptByAI = async (
     if (!apiKey) {
         console.warn("Gemini API key is missing. Skipping AI verification.");
         return {
-            verified: true, // Bypass verification if no API key is set
-            feedback: "API key missing, skipping verification.",
+            verified: false,
+            feedback: "API key Gemini belum dikonfigurasi.",
+            isError: true,
         };
     }
 
@@ -27,15 +29,16 @@ export const verifyPromptByAI = async (
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         const promptText = `
-Anda adalah seorang AI reviewer untuk platform direktori prompt bernama "RuangAI Prompt Hub".
-Tugas Anda adalah memverifikasi kualitas prompt yang disubmit oleh pengguna secara kritis dan tegas.
-Jika prompt dinilai berkualitas tinggi, sangat detail, memiliki judul yang jelas, maka status verified harus true.
-Jika kurang berkualitas, terlalu pendek, membingungkan, atau meminta gambar tapi tidak ada gambar, maka status verified harus false, dan sertakan feedback yang menjelaskan apa yang harus diperbaiki.
+Anda adalah seorang AI reviewer/kurator ahli untuk platform direktori prompt bernama "RuangAI Prompt Hub".
+Tugas Anda adalah meninjau KUALITAS prompt yang dikirim oleh pengguna secara SANGAT KRITIS dan TEGAS.
 
-Kriteria:
-1. Judul harus jelas dan merepresentasikan prompt.
-2. Panjang dan kedetailan prompt: Prompt harus detail dan cukup panjang untuk memberikan instruksi yang jelas kepada AI. Prompt yang hanya 1-2 kalimat pendek atau kurang dari 10 kata harus ditolak karena kurang mendetail.
-3. Jika Kategori adalah "Image" atau "Video", pengguna SANGAT DISARANKAN atau BAHKAN DIWAJIBKAN menyertakan gambar (hasImage harus true) karena ini mempermudah pengguna lain melihat contoh hasil. Jika Kategori "Image" atau "Video" dan tidak ada gambar, tolak (verified: false) dan minta pengguna mengupload gambar hasil prompt tersebut.
+Jika prompt memiliki KUALITAS TINGGI, SANGAT DETAIL, TERSTRUKTUR, dan memiliki judul yang jelas, maka "verified" harus bernilai true.
+Jika prompt berkualitas rendah, terlalu singkat, membingungkan, terkesan malas (lazy prompting), atau meminta fungsi visual tapi tidak menyertakan contoh visual, maka "verified" harus bernilai false dan beri "feedback" yang jelas tentang apa masalahnya dan cara merevisinya.
+
+KRITERIA WAJIB:
+1. Judul harus spesifik dan merepresentasikan isi prompt dengan baik.
+2. Kedetailan: Prompt harus detail (idealnya memiliki konteks, instruksi spesifik, dan format output yang diinginkan). Prompt yang hanya 1-3 kalimat pendek atau instruksi yang sangat basic (misal: "buatkan artikel SEO", "gambar kucing") HARUS DITOLAK karena kurang berguna bagi komunitas.
+3. Kategori Visual: Jika Kategori adalah "Image" atau "Video", pengguna WAJIB menyertakan gambar aslinya (hasImage harus true) karena pengguna lain butuh melihat seperti apa hasil gambar dari prompt tersebut. Jika hasImage false untuk kategori visual, TOLAK (verified: false) dan minta pengguna mengupload gambar hasilnya.
 4. Prompt tidak boleh mengandung unsur SARA, pornografi, atau konten ilegal. Jika ada, langsung tolak (verified: false) dengan peringatan.
 
 Berikut adalah data prompt yang disubmit:
@@ -72,11 +75,10 @@ Berikan hasil evaluasi Anda HANYA dalam format JSON dengan skema berikut, tanpa 
         return parsedResult;
     } catch (error) {
         console.error("Error during AI verification:", error);
-        // In case of error (network issue, parse issue, etc.), we can either fail or pass.
-        // Let's fail safely so the user is informed there's a problem, or we can just pass them to manual admin verification.
         return {
             verified: false,
-            feedback: "Maaf, terjadi kesalahan pada sistem verifikasi AI kami saat ini. Silakan coba lagi nanti atau kurangi panjang teks.",
+            feedback: "Maaf, sistem verifikasi AI sedang mengalami kendala. Prompt akan masuk antrean manual.",
+            isError: true,
         };
     }
 };

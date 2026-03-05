@@ -193,7 +193,15 @@ const PromptSaya = () => {
 
             setIsVerifyingByAI(false);
 
-            if (!aiVerification.verified) {
+            let finalStatus = 'verified';
+
+            if (aiVerification.isError) {
+                toast({
+                    title: "Pemberitahuan Sistem",
+                    description: aiVerification.feedback,
+                });
+                finalStatus = 'pending';
+            } else if (!aiVerification.verified) {
                 toast({
                     title: "Peringatan Analisis AI",
                     description: aiVerification.feedback,
@@ -268,7 +276,7 @@ const PromptSaya = () => {
                 full_prompt: fullPrompt,
                 image_url: finalImageUrl || null,
                 additional_info: additionalInfo || null,
-                status: 'verified', // Automatis verified oleh AI
+                status: finalStatus,
             };
 
             if (view === 'edit' && editingId) {
