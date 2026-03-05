@@ -31,6 +31,7 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const PromptDetail = lazy(() => import("./pages/PromptDetail"));
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
+import { WhatsNewModal } from "@/components/WhatsNewModal";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,7 @@ const App = () => (
                 <AnimatedRoutes />
               </div>
               <BottomNav />
+              <WhatsNewModal />
             </AuthProvider>
           </BrowserRouter>
           <Analytics />
