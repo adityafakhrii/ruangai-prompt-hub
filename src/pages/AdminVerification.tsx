@@ -39,6 +39,7 @@ interface PromptWithProfile {
     image_url: string | null;
     additional_info: string | null;
     created_at: string;
+    verified_at?: string | null;
     status: 'pending' | 'verified' | 'rejected';
     rejection_reason?: string | null;
     profiles: {
@@ -64,7 +65,7 @@ const AdminVerification = () => {
     const [actionLoading, setActionLoading] = useState(false);
 
     const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'verified' | 'rejected'>('pending');
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'verified_at', direction: 'desc' });
 
     useEffect(() => {
         if (!authLoading) {
@@ -134,6 +135,10 @@ const AdminVerification = () => {
             key === 'verifier.email' ? (b.verifier?.email || '') :
                 b[key as keyof PromptWithProfile];
 
+        // Handle null values gracefully (e.g. verified_at can be null)
+        if (aValue === null || aValue === undefined) aValue = '';
+        if (bValue === null || bValue === undefined) bValue = '';
+
         if (typeof aValue === 'string') aValue = aValue.toLowerCase();
         if (typeof bValue === 'string') bValue = bValue.toLowerCase();
 
@@ -193,9 +198,10 @@ const AdminVerification = () => {
             });
 
             // Optimistic update
+            const timestamp = new Date().toISOString();
             setPrompts(prev => prev.map(p =>
                 selectedPromptIds.includes(p.id)
-                    ? { ...p, status: 'verified', verifier: { email: user?.email || 'Anda' } }
+                    ? { ...p, status: 'verified', verifier: { email: user?.email || 'Anda' }, verified_at: timestamp }
                     : p
             ));
 
@@ -268,7 +274,7 @@ const AdminVerification = () => {
                     // Update state array incrementally
                     const index = newPromptsState.findIndex(p => p.id === prompt.id);
                     if (index !== -1) {
-                        newPromptsState[index] = { ...newPromptsState[index], status: finalStatus, rejection_reason: finalReason, verifier: { email: user?.email || 'Anda' } };
+                        newPromptsState[index] = { ...newPromptsState[index], status: finalStatus, rejection_reason: finalReason, verifier: { email: user?.email || 'Anda' }, verified_at: new Date().toISOString() };
                     }
                 }
             }
@@ -318,9 +324,10 @@ const AdminVerification = () => {
             });
 
             // Optimistic update
+            const timestamp = new Date().toISOString();
             setPrompts(prev => prev.map(p =>
                 p.id === promptId
-                    ? { ...p, status: 'verified', verifier: { email: user?.email || 'Anda' } }
+                    ? { ...p, status: 'verified', verifier: { email: user?.email || 'Anda' }, verified_at: timestamp }
                     : p
             ));
 
@@ -388,9 +395,10 @@ const AdminVerification = () => {
             });
 
             // Optimistic update
+            const timestamp = new Date().toISOString();
             setPrompts(prev => prev.map(p =>
                 p.id === prompt.id
-                    ? { ...p, status: finalStatus, rejection_reason: finalReason, verifier: { email: user?.email || 'Anda' } }
+                    ? { ...p, status: finalStatus, rejection_reason: finalReason, verifier: { email: user?.email || 'Anda' }, verified_at: timestamp }
                     : p
             ));
 
@@ -440,9 +448,10 @@ const AdminVerification = () => {
                 });
 
                 // Optimistic update single
+                const timestamp = new Date().toISOString();
                 setPrompts(prev => prev.map(p =>
                     p.id === selectedPrompt.id
-                        ? { ...p, status: 'rejected', rejection_reason: rejectionReason, verifier: { email: user?.email || 'Anda' } }
+                        ? { ...p, status: 'rejected', rejection_reason: rejectionReason, verifier: { email: user?.email || 'Anda' }, verified_at: timestamp }
                         : p
                 ));
             } else {
@@ -469,9 +478,10 @@ const AdminVerification = () => {
                 });
 
                 // Optimistic update bulk
+                const timestamp = new Date().toISOString();
                 setPrompts(prev => prev.map(p =>
                     selectedPromptIds.includes(p.id)
-                        ? { ...p, status: 'rejected', rejection_reason: rejectionReason, verifier: { email: user?.email || 'Anda' } }
+                        ? { ...p, status: 'rejected', rejection_reason: rejectionReason, verifier: { email: user?.email || 'Anda' }, verified_at: timestamp }
                         : p
                 ));
 
@@ -570,7 +580,7 @@ const AdminVerification = () => {
                             {selectedPromptIds.length > 0 && (
                                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-5">
                                     <Button size="sm" onClick={handleBulkAIVerify} className="bg-blue-600 hover:bg-blue-700 text-white" disabled={actionLoading}>
-                                        <Sparkles className="w-4 h-4 mr-1" />
+                                        {actionLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
                                         Verifikasi AI ({selectedPromptIds.length})
                                     </Button>
                                     <Button size="sm" onClick={handleBulkVerify} className="bg-green-600 hover:bg-green-700" disabled={actionLoading}>
@@ -606,10 +616,10 @@ const AdminVerification = () => {
                                                 aria-label="Select all"
                                             />
                                         </TableHead>
-                                        <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('created_at')}>
+                                        <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('verified_at')}>
                                             <div className="flex items-center gap-2">
-                                                Tanggal
-                                                {getSortIcon('created_at')}
+                                                Tanggal Verifikasi
+                                                {getSortIcon('verified_at')}
                                             </div>
                                         </TableHead>
                                         <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('title')}>
@@ -661,7 +671,8 @@ const AdminVerification = () => {
                                                 />
                                             </TableCell>
                                             <TableCell className="whitespace-nowrap">
-                                                {format(new Date(prompt.created_at), 'dd MMM yyyy')}
+                                                {prompt.verified_at ? format(new Date(prompt.verified_at), 'dd MMM yyyy') : '-'}
+                                                {prompt.verified_at && <div className="text-xs text-muted-foreground">{format(new Date(prompt.verified_at), 'HH:mm')}</div>}
                                             </TableCell>
                                             <TableCell className="font-medium max-w-[200px] truncate" title={prompt.title}>
                                                 {prompt.title}
@@ -717,33 +728,32 @@ const AdminVerification = () => {
                                             )}
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="sm" onClick={() => openPreview(prompt)}>
-                                                        <Eye className="h-4 w-4 mr-1" />
-                                                        Lihat
+                                                    <Button variant="outline" size="sm" onClick={() => openPreview(prompt)} title="Lihat">
+                                                        <Eye className="h-4 w-4" />
                                                     </Button>
                                                     {prompt.status === 'pending' && (
-                                                        <>
-                                                            <Button
-                                                                variant="default"
-                                                                size="sm"
-                                                                className="bg-blue-600 hover:bg-blue-700 text-white"
-                                                                onClick={() => handleAIVerify(prompt)}
-                                                                disabled={actionLoading}
-                                                                title="Verifikasi by AI"
-                                                            >
-                                                                <Sparkles className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="default"
-                                                                size="sm"
-                                                                className="bg-green-600 hover:bg-green-700"
-                                                                onClick={() => handleVerify(prompt.id)}
-                                                                disabled={actionLoading}
-                                                                title="Verifikasi Manual"
-                                                            >
-                                                                <Check className="h-4 w-4" />
-                                                            </Button>
-                                                        </>
+                                                        <Button
+                                                            variant="default"
+                                                            size="sm"
+                                                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                            onClick={() => handleAIVerify(prompt)}
+                                                            disabled={actionLoading}
+                                                            title="Verifikasi by AI"
+                                                        >
+                                                            {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                                                        </Button>
+                                                    )}
+                                                    {prompt.status !== 'verified' && (
+                                                        <Button
+                                                            variant="default"
+                                                            size="sm"
+                                                            className="bg-green-600 hover:bg-green-700"
+                                                            onClick={() => handleVerify(prompt.id)}
+                                                            disabled={actionLoading}
+                                                            title="Verifikasi Manual"
+                                                        >
+                                                            <Check className="h-4 w-4" />
+                                                        </Button>
                                                     )}
                                                     {prompt.status !== 'rejected' && (
                                                         <Button
@@ -854,8 +864,7 @@ const AdminVerification = () => {
                                                 onClick={() => handleAIVerify(selectedPrompt)}
                                                 disabled={actionLoading}
                                             >
-                                                {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                <Sparkles className="mr-2 h-4 w-4" />
+                                                {actionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                                                 Verifikasi via AI
                                             </Button>
                                             <Button
