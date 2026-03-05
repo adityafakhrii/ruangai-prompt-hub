@@ -65,7 +65,7 @@ const AdminVerification = () => {
     const [actionLoading, setActionLoading] = useState(false);
 
     const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'verified' | 'rejected'>('pending');
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'verified_at', direction: 'desc' });
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'created_at', direction: 'desc' });
 
     useEffect(() => {
         if (!authLoading) {
@@ -540,7 +540,7 @@ const AdminVerification = () => {
                         <div className="flex flex-col sm:flex-row items-center gap-4">
                             <div className="flex bg-gray-100 dark:bg-muted p-1 rounded-lg">
                                 <button
-                                    onClick={() => { setFilterStatus('all'); setSelectedPromptIds([]); }}
+                                    onClick={() => { setFilterStatus('all'); setSelectedPromptIds([]); setSortConfig({ key: 'created_at', direction: 'desc' }); }}
                                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${filterStatus === 'all'
                                         ? 'bg-white dark:bg-background text-gray-900 dark:text-foreground shadow-sm'
                                         : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
@@ -549,7 +549,7 @@ const AdminVerification = () => {
                                     Semua ({counts.all})
                                 </button>
                                 <button
-                                    onClick={() => { setFilterStatus('pending'); setSelectedPromptIds([]); }}
+                                    onClick={() => { setFilterStatus('pending'); setSelectedPromptIds([]); setSortConfig({ key: 'created_at', direction: 'desc' }); }}
                                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${filterStatus === 'pending'
                                         ? 'bg-white dark:bg-background text-yellow-700 dark:text-yellow-500 shadow-sm'
                                         : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
@@ -558,7 +558,7 @@ const AdminVerification = () => {
                                     Pending ({counts.pending})
                                 </button>
                                 <button
-                                    onClick={() => { setFilterStatus('verified'); setSelectedPromptIds([]); }}
+                                    onClick={() => { setFilterStatus('verified'); setSelectedPromptIds([]); setSortConfig({ key: 'verified_at', direction: 'desc' }); }}
                                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${filterStatus === 'verified'
                                         ? 'bg-white dark:bg-background text-green-700 dark:text-green-500 shadow-sm'
                                         : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
@@ -567,7 +567,7 @@ const AdminVerification = () => {
                                     Verified ({counts.verified})
                                 </button>
                                 <button
-                                    onClick={() => { setFilterStatus('rejected'); setSelectedPromptIds([]); }}
+                                    onClick={() => { setFilterStatus('rejected'); setSelectedPromptIds([]); setSortConfig({ key: 'verified_at', direction: 'desc' }); }}
                                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${filterStatus === 'rejected'
                                         ? 'bg-white dark:bg-background text-red-700 dark:text-red-500 shadow-sm'
                                         : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground'
@@ -616,12 +616,22 @@ const AdminVerification = () => {
                                                 aria-label="Select all"
                                             />
                                         </TableHead>
-                                        <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('verified_at')}>
-                                            <div className="flex items-center gap-2">
-                                                Tanggal Verifikasi
-                                                {getSortIcon('verified_at')}
-                                            </div>
-                                        </TableHead>
+                                        {(filterStatus === 'all' || filterStatus === 'pending') && (
+                                            <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('created_at')}>
+                                                <div className="flex items-center gap-2">
+                                                    Tanggal Submit
+                                                    {getSortIcon('created_at')}
+                                                </div>
+                                            </TableHead>
+                                        )}
+                                        {filterStatus !== 'pending' && (
+                                            <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('verified_at')}>
+                                                <div className="flex items-center gap-2">
+                                                    Tanggal Verifikasi
+                                                    {getSortIcon('verified_at')}
+                                                </div>
+                                            </TableHead>
+                                        )}
                                         <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('title')}>
                                             <div className="flex items-center gap-2">
                                                 Judul
@@ -670,10 +680,18 @@ const AdminVerification = () => {
                                                     aria-label={`Select ${prompt.title}`}
                                                 />
                                             </TableCell>
-                                            <TableCell className="whitespace-nowrap">
-                                                {prompt.verified_at ? format(new Date(prompt.verified_at), 'dd MMM yyyy') : '-'}
-                                                {prompt.verified_at && <div className="text-xs text-muted-foreground">{format(new Date(prompt.verified_at), 'HH:mm')}</div>}
-                                            </TableCell>
+                                            {(filterStatus === 'all' || filterStatus === 'pending') && (
+                                                <TableCell className="whitespace-nowrap">
+                                                    {format(new Date(prompt.created_at), 'dd MMM yyyy')}
+                                                    <div className="text-xs text-muted-foreground">{format(new Date(prompt.created_at), 'HH:mm')}</div>
+                                                </TableCell>
+                                            )}
+                                            {filterStatus !== 'pending' && (
+                                                <TableCell className="whitespace-nowrap">
+                                                    {prompt.verified_at ? format(new Date(prompt.verified_at), 'dd MMM yyyy') : '-'}
+                                                    {prompt.verified_at && <div className="text-xs text-muted-foreground">{format(new Date(prompt.verified_at), 'HH:mm')}</div>}
+                                                </TableCell>
+                                            )}
                                             <TableCell className="font-medium max-w-[200px] truncate" title={prompt.title}>
                                                 {prompt.title}
                                             </TableCell>
