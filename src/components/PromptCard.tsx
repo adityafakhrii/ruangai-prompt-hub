@@ -30,7 +30,7 @@ const PromptCard = memo(({ title, category, fullPrompt, imageUrl, additionalInfo
 
   // Compute creator display name: use masked email if available, otherwise "Teman RAI"
   const creatorDisplayName = creatorEmail ? maskEmail(creatorEmail) : "Teman RAI";
-  
+
   // Optimize image URL
   const optimizedImageUrl = imageUrl ? getOptimizedImageUrl(imageUrl, 400) : '';
 
@@ -109,13 +109,16 @@ const PromptCard = memo(({ title, category, fullPrompt, imageUrl, additionalInfo
               loading={priority ? "eager" : "lazy"}
               decoding={priority ? "sync" : "async"}
               onLoad={() => setIsLoaded(true)}
-              className={`w-full h-full object-cover transition-all duration-500 ${
-                isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-              } group-hover:scale-105`}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                target.src = '/placeholder.svg';
+              }}
+              className={`w-full h-full object-cover transition-all duration-500 ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+                } group-hover:scale-105`}
             />
-            <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 ${
-              isLoaded ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
-            }`} />
+            <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 ${isLoaded ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
+              }`} />
 
             {/* Bookmark Button Overlay */}
             {onToggleBookmark && (

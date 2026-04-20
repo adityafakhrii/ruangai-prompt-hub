@@ -139,6 +139,11 @@ const ImageUpload = ({
             src={displayImage}
             alt="Preview"
             className="w-full h-48 object-contain"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.onerror = null;
+              target.src = '/placeholder.svg';
+            }}
           />
           <Button
             type="button"
@@ -160,12 +165,12 @@ const ImageUpload = ({
               <div className="bg-black/60 text-white text-xs px-2 py-1 rounded">
                 Ukuran: {remoteSize ? formatBytes(remoteSize) : 'Mengecek...'}
               </div>
-              
+
               {(!remoteSize || remoteSize > 1 * 1024 * 1024) && (
-                <Button 
-                  type="button" 
-                  size="sm" 
-                  variant="secondary" 
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
                   className="h-7 text-xs gap-1 shadow-lg"
                   onClick={handleCompressRemote}
                   disabled={isCompressing}

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { LogOut, ArrowLeft, BarChart2, MoreVertical } from "lucide-react";
+import { LogOut, ArrowLeft, BarChart2, MoreVertical, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, NavLink } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -33,105 +33,106 @@ const Navbar = () => {
   const closeSheet = () => setIsOpen(false);
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
-            <a href="/" className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <img src="https://image.web.id/images/clipboard-image-1753328088.png" alt="RuangAI Logo" className="h-10 w-17 mr-1" />
-              {/* <span className="hidden sm:inline">RuangAI Prompt</span>
+    <header className="sticky top-0 z-50 w-full flex flex-col">
+      <nav className="w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center gap-8">
+              <a href="/" className="flex items-center gap-2 text-xl font-bold text-foreground">
+                <img src="https://image.web.id/images/clipboard-image-1753328088.png" alt="RuangAI Logo" className="h-10 w-17 mr-1" />
+                {/* <span className="hidden sm:inline">RuangAI Prompt</span>
               <span className="sm:hidden">RuangAI</span> */}
-            </a>
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-6">
-              <NavLink to="/" className={getLinkClass}>
-                Home
-              </NavLink>
-              <NavLink to="/paling-banyak-copy" className={getLinkClass}>
-                Prompt Viral
-              </NavLink>
-              {user && (
-                <>
-                  <NavLink to="/prompt-saya" className={getLinkClass}>
-                    Prompt Saya
-                  </NavLink>
-                  <NavLink to="/prompt-tersimpan" className={getLinkClass}>
-                    Tersimpan
-                    <NewBadge className="ml-1.5" />
-                  </NavLink>
-                </>
-              )}
-              {isAdmin && (
-                <NavLink to="/admin/verification" className={getLinkClass}>
-                  Verifikasi Prompt
+              </a>
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-6">
+                <NavLink to="/" className={getLinkClass}>
+                  Home
                 </NavLink>
+                <NavLink to="/paling-banyak-copy" className={getLinkClass}>
+                  Prompt Viral
+                </NavLink>
+                {user && (
+                  <>
+                    <NavLink to="/prompt-saya" className={getLinkClass}>
+                      Prompt Saya
+                    </NavLink>
+                    <NavLink to="/prompt-tersimpan" className={getLinkClass}>
+                      Tersimpan
+                      <NewBadge className="ml-1.5" />
+                    </NavLink>
+                  </>
+                )}
+                {isAdmin && (
+                  <NavLink to="/admin/verification" className={getLinkClass}>
+                    Verifikasi Prompt
+                  </NavLink>
+                )}
+              </div>
+            </div>
+
+            {/* Desktop User Menu */}
+            <div className="hidden md:flex items-center gap-2">
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={() => navigate('/leaderboard')}
+                  title="Leaderboard"
+                >
+                  <BarChart2 className="h-[1.2rem] w-[1.2rem]" />
+                </Button>
+                <NewBadge variant="absolute" />
+              </div>
+              <ThemeToggle />
+              {user ? (
+                <>
+                  <span className="text-sm font-medium text-foreground mr-2">
+                    {user.user_metadata?.full_name || user.email}
+                  </span>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                        <MoreVertical className="h-[1.2rem] w-[1.2rem]" />
+                        <span className="sr-only">Open menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <a
+                          href="https://ruangai.codepolitan.com/"
+                          className="w-full flex items-center cursor-pointer"
+                        >
+                          <ArrowLeft className="h-4 w-4 mr-2" />
+                          Dashboard
+                        </a>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={signOut}
+                        className="cursor-pointer text-destructive focus:text-destructive"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => navigate('/auth')}
+                >
+                  Login
+                </Button>
               )}
             </div>
-          </div>
 
-          {/* Desktop User Menu */}
-          <div className="hidden md:flex items-center gap-2">
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-foreground"
-                onClick={() => navigate('/leaderboard')}
-                title="Leaderboard"
-              >
-                <BarChart2 className="h-[1.2rem] w-[1.2rem]" />
-              </Button>
-              <NewBadge variant="absolute" />
-            </div>
-            <ThemeToggle />
-            {user ? (
-              <>
-                <span className="text-sm font-medium text-foreground mr-2">
-                  {user.user_metadata?.full_name || user.email}
-                </span>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                      <MoreVertical className="h-[1.2rem] w-[1.2rem]" />
-                      <span className="sr-only">Open menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <a
-                        href="https://ruangai.codepolitan.com/"
-                        className="w-full flex items-center cursor-pointer"
-                      >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Dashboard
-                      </a>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={signOut}
-                      className="cursor-pointer text-destructive focus:text-destructive"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                className="rounded-full"
-                onClick={() => navigate('/auth')}
-              >
-                Login
-              </Button>
-            )}
-          </div>
-
-          {/* Mobile Menu Trigger - Hidden because we use Bottom Navigation */}
-          <div className="md:hidden">
-            {/* 
+            {/* Mobile Menu Trigger - Hidden because we use Bottom Navigation */}
+            <div className="md:hidden">
+              {/* 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -233,12 +234,21 @@ const Navbar = () => {
               </SheetContent>
             </Sheet>
             */}
-            {/* Show Theme Toggle only on mobile navbar since menu is gone */}
-            <ThemeToggle />
+              {/* Show Theme Toggle only on mobile navbar since menu is gone */}
+              <ThemeToggle />
+            </div>
           </div>
         </div>
+      </nav>
+
+      {/* Maintenance Banner */}
+      <div className="bg-red-500/10 border-b border-red-500/20 text-red-600 dark:text-red-500 px-4 py-2.5 text-xs sm:text-sm flex items-center justify-center text-center backdrop-blur bg-background/50">
+        <AlertTriangle className="h-4 w-4 mr-2 shrink-0" />
+        <p>
+          <strong className="font-semibold">Info Pemeliharaan:</strong> Mohon maaf, saat ini sedang berlangsung pemeliharaan server sehingga sebagian gambar mungkin tidak dapat ditampilkan. Terima kasih atas pengertiannya.
+        </p>
       </div>
-    </nav >
+    </header>
   );
 };
 

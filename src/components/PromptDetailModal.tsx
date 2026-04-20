@@ -172,6 +172,11 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                   alt={prompt.title}
                   className="w-full h-auto object-contain max-h-[350px] sm:max-h-[400px]"
                   loading="lazy"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = '/placeholder.svg';
+                  }}
                 />
               </div>
             )}
@@ -283,9 +288,9 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                       {isEditing ? "Edit Ulasan Anda" : "Berikan Ulasan Anda"}
                     </h4>
                     {isEditing && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="h-8 text-xs"
                         onClick={() => setIsEditing(false)}
                       >
@@ -333,9 +338,9 @@ const PromptDetailModal = ({ open, onOpenChange, prompt, onCopy }: PromptDetailM
                         ))}
                       </div>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="h-7 text-xs"
                       onClick={() => {
                         setRating(userReview.rating);

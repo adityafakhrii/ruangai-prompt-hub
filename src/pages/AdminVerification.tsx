@@ -857,6 +857,11 @@ const AdminVerification = () => {
                                             src={selectedPrompt.image_url}
                                             alt="Pratinjau Prompt"
                                             className="rounded-lg max-h-[300px] object-cover"
+                                            onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                target.onerror = null;
+                                                target.src = '/placeholder.svg';
+                                            }}
                                         />
                                     </div>
                                 )}
