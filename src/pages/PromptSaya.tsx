@@ -422,7 +422,7 @@ const PromptSaya = () => {
                                 <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
                                 <AlertTitle className="text-green-800 dark:text-green-300 font-semibold">Selamat! Anda memiliki {verifiedCount} prompt terverifikasi</AlertTitle>
                                 <AlertDescription className="text-green-700 dark:text-green-400 mt-1">
-                                    Anda berhak mendapatkan hadiah spesial. Silakan klaim dengan mengirimkan DM ke Instagram <a href="https://instagram.com/ruangi.id" target="_blank" rel="noopener noreferrer" className="font-bold underline hover:text-green-900 dark:hover:text-green-200">@ruangi.id</a>
+                                    Anda berhak mendapatkan hadiah spesial. Silakan klaim dengan mengirimkan DM ke Instagram <a href="https://instagram.com/ruangai.id" target="_blank" rel="noopener noreferrer" className="font-bold underline hover:text-green-900 dark:hover:text-green-200">@ruangai.id</a>
                                 </AlertDescription>
                             </Alert>
                         </div>
