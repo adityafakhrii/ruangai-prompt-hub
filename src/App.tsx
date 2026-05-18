@@ -1,13 +1,15 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";       
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";   
 import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { HelmetProvider } from "react-helmet-async";
 import { Suspense, lazy } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import Maintenance from "./pages/Maintenance";
+import { config } from "./config";
 
 // Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -17,7 +19,7 @@ const ViralPrompts = lazy(() => import("./pages/ViralPrompts"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const SavedPrompts = lazy(() => import("./pages/SavedPrompts"));
-const MostCopiedPrompts = lazy(() => import("./pages/MostCopiedPrompts"));
+const MostCopiedPrompts = lazy(() => import("./pages/MostCopiedPrompts"));      
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/About"));
 const CaraKerja = lazy(() => import("./pages/CaraKerja"));
@@ -26,7 +28,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Changelog = lazy(() => import("./pages/Changelog"));
-const AdminVerification = lazy(() => import("./pages/AdminVerification"));
+const AdminVerification = lazy(() => import("./pages/AdminVerification"));      
 const Notifications = lazy(() => import("./pages/Notifications"));
 const PromptDetail = lazy(() => import("./pages/PromptDetail"));
 import BottomNav from "@/components/BottomNav";
@@ -37,23 +39,33 @@ const queryClient = new QueryClient();
 
 // Loading fallback component
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
+  <div className="min-h-screen flex items-center justify-center bg-background"> 
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
   </div>
 );
 
 const AnimatedRoutes = () => {
+  if (config.maintenanceMode) {
+    return (
+      <Routes>
+        <Route path="/maintenance" element={<Maintenance />} />
+        <Route path="*" element={<Navigate to="/maintenance" replace />} />
+      </Routes>
+    );
+  }
+
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
       <Suspense fallback={<PageLoader />}>
         <Routes location={location} key={location.pathname}>
+          <Route path="/maintenance" element={<Navigate to="/" replace />} />
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/prompt-saya" element={<PromptSaya />} />
           <Route path="/viral" element={<ViralPrompts />} />
-          <Route path="/paling-banyak-copy" element={<MostCopiedPrompts />} />
+          <Route path="/paling-banyak-copy" element={<MostCopiedPrompts />} />  
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/prompt-tersimpan" element={<SavedPrompts />} />
@@ -61,11 +73,11 @@ const AnimatedRoutes = () => {
           <Route path="/about" element={<About />} />
           <Route path="/cara-kerja" element={<CaraKerja />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />       
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/changelog" element={<Changelog />} />
-          <Route path="/admin/verification" element={<AdminVerification />} />
+          <Route path="/admin/verification" element={<AdminVerification />} />  
           <Route path="/prompt/:slug" element={<PromptDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
@@ -82,14 +94,20 @@ const App = () => (
         <TooltipProvider>
           <Sonner />
           <BrowserRouter>
-            <ScrollToTop />
-            <AuthProvider>
-              <div className="pb-24 md:pb-0">
-                <AnimatedRoutes />
-              </div>
-              <BottomNav />
-              <WhatsNewModal />
-            </AuthProvider>
+            {config.maintenanceMode ? (
+              <AnimatedRoutes />
+            ) : (
+              <>
+                <ScrollToTop />
+                <AuthProvider>
+                  <div className="pb-24 md:pb-0">
+                    <AnimatedRoutes />
+                  </div>
+                  <BottomNav />
+                  <WhatsNewModal />
+                </AuthProvider>
+              </>
+            )}
           </BrowserRouter>
           <Analytics />
         </TooltipProvider>
