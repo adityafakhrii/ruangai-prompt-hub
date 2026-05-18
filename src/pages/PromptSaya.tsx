@@ -416,7 +416,7 @@ const PromptSaya = () => {
                         </Button>
                     )}
 
-                    {view === 'list' && verifiedCount >= 10 && (
+                    {/* {view === 'list' && verifiedCount >= 10 && (
                         <div className="mb-6">
                             <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
                                 <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -434,7 +434,7 @@ const PromptSaya = () => {
                                 Anda memiliki <span className="font-semibold text-primary">{verifiedCount}</span> prompt terverifikasi. Kumpulkan 10 prompt terverifikasi untuk mendapatkan hadiah!
                             </p>
                         </div>
-                    )}
+                    )} */}
 
                     {view === 'list' && verificationFeedback?.type === 'success' && (
                         <Alert className="mb-6 bg-green-50 border-green-500 text-green-900 shadow-sm relative pr-10">

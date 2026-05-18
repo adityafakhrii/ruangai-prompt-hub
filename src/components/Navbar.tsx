@@ -242,12 +242,12 @@ const Navbar = () => {
       </nav>
 
       {/* Maintenance Banner */}
-      <div className="bg-red-500/10 border-b border-red-500/20 text-red-600 dark:text-red-500 px-4 py-2.5 text-xs sm:text-sm flex items-center justify-center text-center backdrop-blur bg-background/50">
+      {/* <div className="bg-red-500/10 border-b border-red-500/20 text-red-600 dark:text-red-500 px-4 py-2.5 text-xs sm:text-sm flex items-center justify-center text-center backdrop-blur bg-background/50">
         <AlertTriangle className="h-4 w-4 mr-2 shrink-0" />
         <p>
           <strong className="font-semibold">Info Pemeliharaan:</strong> Mohon maaf, saat ini sedang berlangsung pemeliharaan server sehingga sebagian gambar mungkin tidak dapat ditampilkan. Terima kasih atas pengertiannya.
         </p>
-      </div>
+      </div> */}
     </header>
   );
 };
