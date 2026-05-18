@@ -116,7 +116,7 @@ const Leaderboard = () => {
               Leaderboard
             </h1>
             <p className="text-lightText text-sm md:text-lg">
-              Para pahlawan komunitas yang paling aktif berbagi prompt
+              Para kontributor prompt AI terbaik yang paling aktif berbagi prompt
             </p>
           </div>
           <Button onClick={handleShare} variant="outline" className="gap-2">
@@ -126,7 +126,7 @@ const Leaderboard = () => {
         </div>
 
         {/* Promo Banner */}
-        <div className="bg-gradient-to-r from-primary/20 to-secondary/20 p-4 md:p-6 rounded-xl border border-primary/20 mb-6 md:mb-10">
+        {/* <div className="bg-gradient-to-r from-primary/20 to-secondary/20 p-4 md:p-6 rounded-xl border border-primary/20 mb-6 md:mb-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
             <div>
               <h3 className="text-lg md:text-xl font-bold text-heading mb-1 md:mb-2">🎁 Reward Spesial Kontributor</h3>
@@ -141,7 +141,7 @@ const Leaderboard = () => {
               Klaim via DM Instagram
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* Leaderboard Table */}
         <Card>
