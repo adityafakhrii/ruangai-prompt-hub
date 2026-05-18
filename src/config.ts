@@ -4,5 +4,5 @@ export const config = {
    * Set to true to enable maintenance mode for all pages
    * Set to false to restore normal app functionality
    */
-  maintenanceMode: true,
+  maintenanceMode: false,
 };

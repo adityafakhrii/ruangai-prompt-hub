@@ -164,7 +164,7 @@ const PromptDetail = () => {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": prompt.title,
-    "image": optimizedImageUrl || "https://raiprompt.adityafakhri.com/iconbiru.png",
+    "image": optimizedImageUrl || "https://image.web.id/images/clipboard-image-1753328088.png",
     "datePublished": prompt.created_at,
     "author": {
       "@type": "Person",
@@ -175,10 +175,10 @@ const PromptDetail = () => {
       "name": "RuangAI Prompt Hub",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://raiprompt.adityafakhri.com/iconbiru.png"
+        "url": "https://image.web.id/images/clipboard-image-1753328088.png"
       }
     },
-    "description": prompt.full_prompt.substring(0, 150),
+    "description": prompt.full_prompt.substring(0, 200),
     "articleBody": prompt.full_prompt,
     "keywords": [prompt.category, "AI prompt", "ChatGPT", "Gemini", "Midjourney", "Prompt Engineering"].join(", ")
   };
@@ -186,9 +186,10 @@ const PromptDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={`${prompt.title} - RuangAI Prompt Hub`}
-        description={prompt.full_prompt.substring(0, 150)}
-        ogImage={prompt.image_url || undefined}
+        title={prompt.title}
+        description={prompt.full_prompt.substring(0, 200)}
+        ogImage={optimizedImageUrl}
+        ogType="article"
         keywords={[prompt.category, "AI prompt", "ChatGPT", "Gemini", "Prompt Engineering"]}
         jsonLd={jsonLd}
       />
