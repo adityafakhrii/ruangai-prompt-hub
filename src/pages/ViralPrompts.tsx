@@ -75,13 +75,29 @@ const ViralPrompts = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Prompt Viral"
-        description="Koleksi prompt AI yang sedang viral dan trending saat ini. Dapatkan inspirasi dari prompt populer."
+        title="Prompt Viral Terbaru 2026 | Kumpulan Prompt AI Trending"
+        description="Kumpulan prompt AI viral dan trending terbaru 2026 untuk ChatGPT, Midjourney, dan Gemini. Temukan prompt populer yang banyak dicopy oleh komunitas RuangAI!"
+        keywords={[
+          "prompt viral", 
+          "prompt ai trending", 
+          "prompt viral chatgpt", 
+          "prompt viral midjourney", 
+          "kumpulan prompt viral", 
+          "best ai prompts", 
+          "viral prompts 2026", 
+          "prompt populer", 
+          "trending ai prompts"
+        ]}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
           "name": "Prompt Viral - RuangAI Prompt Hub",
-          "description": "Koleksi prompt AI yang sedang viral dan trending saat ini."
+          "url": "https://prompt.ruangai.id/viral",
+          "description": "Koleksi prompt AI viral dan trending terbaru untuk ChatGPT, Midjourney, dan lainnya.",
+          "publisher": {
+            "@type": "Organization",
+            "name": "RuangAI"
+          }
         }}
       />
       <Navbar />

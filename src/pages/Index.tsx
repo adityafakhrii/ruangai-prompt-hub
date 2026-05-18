@@ -111,19 +111,49 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Home"
-        description="Temukan prompt AI terbaik untuk ChatGPT, Midjourney, dan lainnya. Koleksi prompt viral dan paling banyak dicopy."
-        keywords={["prompt AI", "ChatGPT prompts", "Gemini prompts", "Midjourney prompts", "katalog prompt", "prompt gratis", "prompt coding", "prompt marketing"]}
+        title="Kumpulan Prompt AI Terlengkap | ChatGPT, Midjourney, Gemini"
+        description="Koleksi prompt AI terlengkap dan terbaik untuk ChatGPT, Midjourney, Gemini, dan lainnya. Temukan prompt viral, coding, marketing, desain, dan masih banyak lagi. Gratis dan mudah disalin!"
+        keywords={[
+          "kumpulan prompt ai", 
+          "prompt ai", 
+          "chatgpt prompts", 
+          "midjourney prompts", 
+          "gemini prompts", 
+          "katalog prompt", 
+          "prompt gratis", 
+          "prompt coding", 
+          "prompt marketing", 
+          "prompt desain", 
+          "prompt viral", 
+          "best ai prompts", 
+          "prompt indonesia", 
+          "kumpulan prompt chatgpt", 
+          "kumpulan prompt midjourney",
+          "ai prompt library",
+          "prompt engineering",
+          "contoh prompt ai",
+          "prompt generator ai",
+          "prompt copywriting",
+          "prompt image ai"
+        ]}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "RuangAI Prompt Hub",
-          "url": "https://raiprompt.adityafakhri.com",
-          "description": "Katalog prompt AI terlengkap untuk ChatGPT, Gemini, dan lainnya.",
+          "url": "https://prompt.ruangai.id",
+          "description": "Katalog prompt AI terlengkap untuk ChatGPT, Gemini, Midjourney, dan AI lainnya. Temukan ribuan prompt viral dan terbaik.",
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://raiprompt.adityafakhri.com/?q={search_term_string}",
+            "target": "https://prompt.ruangai.id/?q={search_term_string}",
             "query-input": "required name=search_term_string"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "RuangAI",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://image.web.id/images/clipboard-image-1753328088.png"
+            }
           }
         }}
       />

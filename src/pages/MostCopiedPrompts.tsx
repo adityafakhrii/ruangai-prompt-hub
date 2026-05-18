@@ -75,13 +75,28 @@ const MostCopiedPrompts = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Prompt Paling Banyak Copy"
-        description="Daftar prompt AI yang paling banyak disalin dan digunakan oleh komunitas RuangAI."
+        title="Prompt Paling Banyak Dicopy & Terpopuler 2026"
+        description="Kumpulan prompt AI paling banyak dicopy dan terpopuler 2026 di RuangAI. Temukan prompt terbaik untuk ChatGPT, Midjourney, dan Gemini yang sudah terbukti efektif!"
+        keywords={[
+          "prompt paling banyak dicopy", 
+          "prompt terpopuler", 
+          "best prompts 2026", 
+          "prompt ai terbaik", 
+          "most copied prompts", 
+          "prompt chatgpt paling bagus", 
+          "prompt midjourney terbaik", 
+          "kumpulan prompt terpopuler"
+        ]}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
           "name": "Prompt Paling Banyak Copy - RuangAI Prompt Hub",
-          "description": "Daftar prompt AI yang paling banyak disalin dan digunakan oleh komunitas RuangAI."
+          "url": "https://prompt.ruangai.id/paling-banyak-copy",
+          "description": "Kumpulan prompt AI paling banyak dicopy dan terpopuler di RuangAI.",
+          "publisher": {
+            "@type": "Organization",
+            "name": "RuangAI"
+          }
         }}
       />
       <Navbar />

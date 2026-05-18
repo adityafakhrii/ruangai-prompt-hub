@@ -63,7 +63,7 @@ const Leaderboard = () => {
   };
 
   const handleShare = async () => {
-    const shareText = "Cek Leaderboard Kontributor Terbaik di RuangAI Prompt Hub! 🏆\nhttps://raiprompt.adityafakhri.com/leaderboard";
+    const shareText = "Cek Leaderboard Kontributor Terbaik di RuangAI Prompt Hub! 🏆\nhttps://prompt.ruangai.id/leaderboard";
 
     if (navigator.share) {
       try {
@@ -86,8 +86,26 @@ const Leaderboard = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEO
-        title="Leaderboard Kontributor"
-        description="Top kontributor prompt AI di RuangAI. Lihat siapa yang paling aktif berbagi!"
+        title="Leaderboard Kontributor Prompt AI Terbaik 2026"
+        description="Leaderboard top kontributor prompt AI terbaik di RuangAI. Lihat siapa yang paling aktif berbagi prompt ChatGPT, Midjourney, dan Gemini!"
+        keywords={[
+          "leaderboard prompt ai", 
+          "top kontributor", 
+          "kontributor prompt", 
+          "best contributors", 
+          "leaderboard ruangai"
+        ]}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Leaderboard Kontributor - RuangAI Prompt Hub",
+          "url": "https://prompt.ruangai.id/leaderboard",
+          "description": "Leaderboard top kontributor prompt AI di RuangAI.",
+          "publisher": {
+            "@type": "Organization",
+            "name": "RuangAI"
+          }
+        }}
       />
       <Navbar />
 
