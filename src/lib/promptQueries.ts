@@ -235,18 +235,14 @@ export const fetchPromptById = async (id: string) => {
  */
 export const fetchPromptBySlug = async (slug: string) => {
     // Strategy: 
-    // 1. Try to find prompts that roughly match the slug (replace dashes with wildcards)
-    // 2. Filter in JS to find the exact slug match
-    // This handles cases where original title has punctuation/special chars that are removed in slug
+    // 1. Try to find prompts that match when we slugify their title
+    // 2. If exact match not found, try more flexible matching
     
-    const potentialTitle = slug.split('-').join('%');
-    
-    // Fetch candidates (limit to 10 to avoid performance hit, usually we just need 1)
+    // First, fetch only verified prompts (publicly visible)
     const { data, error } = await supabase
         .from('prompts')
         .select('*, profiles:profiles_id(email)')
-        .ilike('title', `%${potentialTitle}%`)
-        .limit(10);
+        .eq('status', 'verified');
 
     if (error) {
         console.error('Error fetching prompt by slug:', error);
@@ -259,13 +255,35 @@ export const fetchPromptBySlug = async (slug: string) => {
 
     // Find the exact match by re-slugifying the titles
     const exactMatch = data.find(prompt => slugify(prompt.title) === slug);
+    
+    if (exactMatch) {
+        return { data: exactMatch as PromptWithCreator, error: null };
+    }
 
-    // If no exact match found, return the first one (fallback) or null
-    // Returning the first one might be safer if the slug algorithm slightly differs
-    // but ideally we want exact match. Let's try to be fuzzy if exact fails.
-    const result = exactMatch || data[0]; 
+    // Fallback: Try to find the best matching prompt
+    // Calculate similarity score by how many words match
+    const slugWords = slug.split('-').filter(w => w.length > 1);
+    
+    let bestMatch = null;
+    let bestScore = 0;
 
-    return { data: result as PromptWithCreator, error: null };
+    for (const prompt of data) {
+        const titleWords = prompt.title.toLowerCase().split(/[\s\-/]+/).filter(w => w.length > 1);
+        let score = 0;
+        
+        for (const slugWord of slugWords) {
+            if (titleWords.some(titleWord => titleWord.includes(slugWord) || slugWord.includes(titleWord))) {
+                score++;
+            }
+        }
+        
+        if (score > bestScore) {
+            bestScore = score;
+            bestMatch = prompt;
+        }
+    }
+
+    return { data: bestMatch as PromptWithCreator | null, error: null };
 };
 
 export const promptKeys = {

@@ -41,9 +41,9 @@ export const slugify = (text: string): string => {
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-')     // Replace spaces with -
-    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
-    .replace(/\-\-+/g, '-')   // Replace multiple - with single -
-    .replace(/^-+/, '')       // Trim - from start of text
-    .replace(/-+$/, '');      // Trim - from end of text
+    .replace(/[^\w\s-]/g, '-')  // Replace all special characters with hyphen
+    .replace(/\s+/g, '-')        // Replace spaces with hyphen
+    .replace(/-+/g, '-')          // Replace multiple hyphens with single hyphen
+    .replace(/^-+/, '')           // Trim hyphens from start
+    .replace(/-+$/, '');          // Trim hyphens from end
 };
