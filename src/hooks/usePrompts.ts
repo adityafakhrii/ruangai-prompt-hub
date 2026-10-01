@@ -3,8 +3,10 @@ import {
   fetchViralPromptsWithCreator,
   fetchMostCopiedPromptsWithCreator,
   fetchLatestPromptsWithCreator,
+  fetchLatestPromptDate,
   fetchAllPromptsWithCreator,
   fetchPopularKeywords,
+  promptKeys,
   PromptWithCreator
 } from "@/lib/promptQueries";
 
@@ -74,3 +76,14 @@ export const usePopularKeywords = (limit = 10) => {
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 };
+
+export const useLatestPromptDate = () => {
+  return useQuery({
+    queryKey: promptKeys.latestDate(),
+    queryFn: async () => {
+      return await fetchLatestPromptDate();
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+

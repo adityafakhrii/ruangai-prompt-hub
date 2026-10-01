@@ -286,6 +286,26 @@ export const fetchPromptBySlug = async (slug: string) => {
     return { data: bestMatch as PromptWithCreator | null, error: null };
 };
 
+/**
+ * Fetch the created_at timestamp of the most recently uploaded verified prompt
+ */
+export const fetchLatestPromptDate = async (): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from('prompts')
+    .select('created_at')
+    .eq('status', 'verified')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching latest prompt date:', error);
+    return null;
+  }
+
+  return data?.created_at || null;
+};
+
 export const promptKeys = {
   all: ['prompts'] as const,
   lists: () => [...promptKeys.all, 'list'] as const,
@@ -295,5 +315,7 @@ export const promptKeys = {
   viral: () => [...promptKeys.all, 'viral'] as const,
   mostCopied: () => [...promptKeys.all, 'mostCopied'] as const,
   latest: () => [...promptKeys.all, 'latest'] as const,
+  latestDate: () => [...promptKeys.all, 'latestDate'] as const,
   keywords: () => [...promptKeys.all, 'keywords'] as const,
 };
+

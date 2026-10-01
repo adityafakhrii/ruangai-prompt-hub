@@ -1,16 +1,20 @@
-import { Info, X, ChevronRight } from "lucide-react";
+import { X } from "lucide-react";
 import { useState } from "react";
+import { useLatestPromptDate } from "@/hooks/usePrompts";
 
 const InfoBar = () => {
   const [isVisible, setIsVisible] = useState(true);
-
-  const currentDate = new Date().toLocaleDateString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const { data: latestDate, isLoading } = useLatestPromptDate();
 
   if (!isVisible) return null;
+
+  const displayDate = latestDate
+    ? new Date(latestDate).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    : null;
 
   return (
     <div className="w-full bg-secondary text-white py-1.5 md:py-2">
@@ -22,7 +26,15 @@ const InfoBar = () => {
               Info
             </span>
             <p className="text-[10px] sm:text-sm text-slate-100 leading-tight truncate">
-              Prompt terus di-update berkala. Update terakhir: <span className="font-medium text-white">{currentDate}</span>.
+              Prompt terus di-update berkala. Update terakhir:{" "}
+              <span className="font-medium text-white">
+                {isLoading ? (
+                  <span className="inline-block w-24 h-3 bg-slate-700/60 rounded animate-pulse align-middle mx-1" />
+                ) : (
+                  displayDate || "Hari ini"
+                )}
+              </span>
+              .
             </p>
           </div>
 
@@ -41,3 +53,4 @@ const InfoBar = () => {
 };
 
 export default InfoBar;
+
